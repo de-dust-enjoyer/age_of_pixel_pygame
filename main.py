@@ -1,0 +1,2724 @@
+# import essential modules
+# system modules:
+import pygame
+import random
+import sys
+from math import atan, degrees
+# custom modules:
+import unit_info, turret_info, projectile_info
+from spritesheet import SpriteSheet
+from particle import Particle
+
+# initialize pygame module
+pygame.init()
+
+# main game class
+class Game:
+	def __init__(self):
+		# constants:
+		self.WINDOWTITLE = "AGE OF PIXEL"
+		self.FLOOR_LEVEL = 460
+		self.SCREEN_SIZE = (960, 540)
+		self.GRAVITY = 0.4
+
+		# dev mode
+		self.dev_mode = False
+		
+		# normal variables:
+		self.running = True
+		self.fullscreen = False
+		self.paused = False
+		self.game_won = False
+		self.game_over = False
+		
+		# clock object to keep constant framerate
+		self.clock = pygame.time.Clock()
+
+
+		# time variables to keep track of time
+		self.frames_passed = 0
+		self.seconds_passed = 30
+		self.minutes_passed = 14
+
+		# chooses if window should be fullscreen (work in progress: window scaling does not work propperly)
+		if self.fullscreen:
+			self.screen = pygame.display.set_mode(self.SCREEN_SIZE, pygame.FULLSCREEN)
+		else:
+			self.screen = pygame.display.set_mode(self.SCREEN_SIZE)
+		pygame.display.set_caption(self.WINDOWTITLE)
+
+		# changing menu variables
+		self.unit_menu_open = False
+		self.turret_menu_open = False
+		self.clicked = False
+		
+		# camera setup
+		self.camera_offset_x = 0
+		self.camera_move_speed = 10
+		self.scroll_speed = 40
+
+		# key_pressed variables
+		self.pan_right = False
+		self.pan_left = False
+
+		# list with all friendly units that are being trained
+		self.friendly_units_queue = []
+
+		# list containing only one unit, which is being trained
+		self.training = []
+		self.training_timer = 0
+		self.training_timer_goal = 5 * 60
+
+		# lists containing units on the battlefield in the correct order!!!
+		self.friendly_units = []
+		self.enemy_units = []
+
+		# lists containing turrets on screen
+		self.friendly_turrets = []
+		self.enemy_turrets = []
+
+		# variables determening if turret slot is taken
+		# friendly:
+		self.friendly_slots_free = {
+			1: False,
+			2: False,
+			3: False
+		}
+		# enemy:
+		self.enemy_slots_free = {
+			1: False,
+			2: False,
+			3: False
+		}
+
+		self.turret_buy_mode = False
+		self.turret_sell_mode = False
+
+		self.turret_id_to_buy = 0
+
+		# controlling enemy spawns
+		self.enemy_spawn_timer = 0
+		self.enemy_spawn_timer_goal = 5 * 60
+		self.spawn_options = [1]
+
+
+		# special attack cooldown
+		self.special_timer = 0
+		self.special_timer_goal = 50 * 60
+		self.percent_value_special = 100 / self.special_timer_goal * self.special_timer
+		self.special_available = False
+
+		# current player age
+		self.age = 1
+
+		self.particle = Particle((0,0,0), (50,50), (100,100), 8, "hello")
+
+		# current enemy age
+		self.enemy_age = 1
+
+		# player and enemy base health
+		self.friendly_base_health = 1000
+		self.enemy_base_health = 1000
+
+		# player and enemy base upgrade state
+		self.friendly_base_upgrade_state = 0
+		self.enemy_base_upgrade_state = 0
+
+		# base upgrade cost
+		self.upgrade_cost = 300
+	
+		# declaring pos where base upgrade modules should be placed
+		# tier 1 friendly
+		self.friendly_module_pos1_t1 = (50 + self.camera_offset_x, 275)
+		self.friendly_module_pos2_t1 = (50 + self.camera_offset_x, 275-64)
+		self.friendly_module_pos3_t1 = (50 + self.camera_offset_x, 275-128)
+		# tier 1 enemy
+		self.enemy_module_pos1_t1 = (1850 + self.camera_offset_x, 0)
+		self.enemy_module_pos2_t1 = (1850 + self.camera_offset_x, 0)
+		self.enemy_module_pos3_t1 = (1850 + self.camera_offset_x, 0)
+		# tier 2 friendly
+		self.friendly_module_pos1_t2 = (129 + self.camera_offset_x, 235)
+		self.friendly_module_pos2_t2 = (129 + self.camera_offset_x, 235-64)
+		self.friendly_module_pos3_t2 = (129 + self.camera_offset_x, 235-128)
+		# tier 2 enemy
+		self.enemy_module_pos1_t2 = (1850 + self.camera_offset_x, 0)
+		self.enemy_module_pos2_t2 = (1850 + self.camera_offset_x, 0)
+		self.enemy_module_pos3_t2 = (1850 + self.camera_offset_x, 0)
+		# tier 3 friendly
+		self.friendly_module_pos1_t3 = (80 + self.camera_offset_x, 270)
+		self.friendly_module_pos2_t3 = (80 + self.camera_offset_x, 270-64)
+		self.friendly_module_pos3_t3 = (80 + self.camera_offset_x, 270-128)
+		# tier 3 enemy
+		self.enemy_module_pos1_t3 = (1850 + self.camera_offset_x, 0)
+		self.enemy_module_pos2_t3 = (1850 + self.camera_offset_x, 0)
+		self.enemy_module_pos3_t3 = (1850 + self.camera_offset_x, 0)
+
+		# player and enemys money
+		self.friendly_money = 30000000
+		self.enemy_money = 10
+
+		# player and enemy exp
+		self.friendly_exp = 1000000
+		self.enemy_exp = 0
+
+		# treshholds for age upgrade
+		self.age2_treshhold = 12000
+		self.age3_treshhold = 50000
+
+		# combat variables
+		self.combat = False
+
+		# list containing all the blood particles on screen
+		self.blood_particles = []
+		# list containing all the meteors on screen
+		self.meteors = []
+		#list containing all the arrows on screen
+		self.arrows = []
+		#list containing all the planes on screen
+		self.planes = []
+		#list containing all the bullets shot by plane
+		self.bullets = []
+		#list containing all the dirt particles on screen
+		self.dirt_particles = []
+
+		# specifying button location and size
+		self.unit_select_button_rect = pygame.Rect(648, 8, 48, 48)
+		self.turret_select_button_rect = pygame.Rect(712, 8, 48, 48)
+		self.turret_upgrade_button_rect = pygame.Rect(776, 8, 48, 48)
+		self.special_attack_button_rect = pygame.Rect(840, 8, 48, 48)
+		self.age_advance_button_rect = pygame.Rect(904, 8, 48, 48)
+
+		self.unit_1_button_rect = pygame.Rect(648, 72, 48, 48)
+		self.unit_2_button_rect = pygame.Rect(712, 72, 48, 48)
+		self.unit_3_button_rect = pygame.Rect(776, 72, 48, 48)
+
+		self.turret_1_button_rect = pygame.Rect(712, 72, 48, 48)
+		self.turret_2_button_rect = pygame.Rect(776, 72, 48, 48)
+		self.turret_3_button_rect = pygame.Rect(840, 72, 48, 48)
+		self.turret_sell_button_rect = pygame.Rect(904, 72, 48, 48)
+
+		# importing game assets:
+
+		#	 font
+		self.font_10 = pygame.font.Font("assets/font/pixel_font.otf", 10)
+		self.font_12 = pygame.font.Font("assets/font/pixel_font.otf", 12)
+		self.font_14 = pygame.font.Font("assets/font/pixel_font.otf", 14)
+		self.font_16 = pygame.font.Font("assets/font/pixel_font.otf", 16)
+		self.font_18 = pygame.font.Font("assets/font/pixel_font.otf", 18)
+		self.font_20 = pygame.font.Font("assets/font/pixel_font.otf", 20)
+		self.font_50 = pygame.font.Font("assets/font/pixel_font.otf", 50)
+		#	 background
+		self.background = pygame.image.load("assets/background/Age_Of_War_background.png").convert_alpha()
+		self.background_pos = (0 + self.camera_offset_x, -540)
+		# 	player base stone age
+		self.friendly_base1_t1 = pygame.image.load("assets/bases/cave_base.png").convert_alpha()
+		self.friendly_base2_t1 = pygame.image.load("assets/bases/cave_base2.png").convert_alpha()
+		#	player base middle age
+		self.friendly_base1_t2 = pygame.image.load("assets/bases/aow_2_base_1.png").convert_alpha()
+		self.friendly_base2_t2 = pygame.image.load("assets/bases/aow_2_base_2.png").convert_alpha()
+		#	player base modern age
+		self.friendly_base1_t3 = pygame.image.load("assets/bases/aow_3_base_1.png").convert_alpha()
+		self.friendly_base2_t3 = pygame.image.load("assets/bases/aow_3_base_2.png").convert_alpha()
+		# 	create friendly base rect
+		self.friendly_base_rect = self.friendly_base1_t1.get_rect()
+		# 	set pos to const FLOOR LEVEL
+		self.friendly_base_rect.bottomleft = (0 + self.camera_offset_x, self.FLOOR_LEVEL)
+		# 	enemy base stone age (same as friendly base but flipped)
+		self.enemy_base1_t1 = pygame.transform.flip(self.friendly_base1_t1, True, False)
+		self.enemy_base2_t1 = pygame.transform.flip(self.friendly_base2_t1, True, False)
+		#	enemy base middle age
+		self.enemy_base1_t2 = pygame.transform.flip(self.friendly_base1_t2, True, False)
+		self.enemy_base2_t2 = pygame.transform.flip(self.friendly_base2_t2, True, False)
+		#	enemy base modern age
+		self.enemy_base1_t3 = pygame.transform.flip(self.friendly_base1_t3, True, False)
+		self.enemy_base2_t3 = pygame.transform.flip(self.friendly_base2_t3, True, False)
+		# 	create enemy base rect
+		self.enemy_base_rect = self.enemy_base1_t1.get_rect()
+		self.enemy_base_rect.bottomright = (self.SCREEN_SIZE[0] + self.camera_offset_x, self.FLOOR_LEVEL)
+		#	load base_upgrade_modules
+		self.base_upgrade_1 = pygame.image.load("assets/upgrade_modules/aow_1_turretmount.png").convert_alpha()
+		self.base_upgrade_2 = pygame.image.load("assets/upgrade_modules/aow_2_turretmount.png").convert_alpha()
+		self.base_upgrade_3 = pygame.image.load("assets/upgrade_modules/aow_3_turretmount.png").convert_alpha()
+		#	get base upgrade rects
+		self.base_upgrade_1_rect = self.base_upgrade_3.get_rect()
+		self.base_upgrade_2_rect = self.base_upgrade_3.get_rect()
+		self.base_upgrade_3_rect = self.base_upgrade_3.get_rect()
+		#	get enemy base upgrade rects
+		self.enemy_base_upgrade_1_rect = self.base_upgrade_3.get_rect()
+		self.enemy_base_upgrade_2_rect = self.base_upgrade_3.get_rect()
+		self.enemy_base_upgrade_3_rect = self.base_upgrade_3.get_rect()
+		# 	load the ui image
+		self.ui_main = pygame.image.load("assets/ui/aow_ui1.png").convert_alpha()
+
+		self.ui_units = pygame.image.load("assets/ui/aow_ui_units.png").convert_alpha()
+		self.ui_turrets = pygame.image.load("assets/ui/aow_ui_turrets.png").convert_alpha()
+		#   load special attack spritesheets
+		#	tier 1
+		self.tier1_special_sheet_img = pygame.image.load("assets/special_attack/tier1/aow_special_meteor.png").convert_alpha()
+		self.tier1_special_sheet = SpriteSheet(self.tier1_special_sheet_img)
+		#   tier 2
+		self.tier2_special_sheet_img = pygame.image.load("assets/special_attack/tier2/aow_special_arrow.png").convert_alpha()
+		self.tier2_special_sheet = SpriteSheet(self.tier2_special_sheet_img)
+		#   tier 3
+		self.tier3_special_sheet_img = pygame.image.load("assets/special_attack/tier3/aow_special_a10.png").convert_alpha()
+		self.tier3_special_bullet = pygame.image.load("assets/special_attack/tier3/aow_special_a10_bullet.png").convert_alpha()
+		self.tier3_special_sheet = SpriteSheet(self.tier3_special_sheet_img)
+		# 	load unit spritesheets
+		#	tier 1
+		self.unit_1_sheet_img = pygame.image.load("assets/units/tier1/aow_1_caveman1.png").convert_alpha()
+		self.unit_1_sheet = SpriteSheet(self.unit_1_sheet_img)
+		self.unit_2_sheet_img = pygame.image.load("assets/units/tier1/aow_1_caveman2.png").convert_alpha()
+		self.unit_2_sheet = SpriteSheet(self.unit_2_sheet_img)
+		self.unit_3_sheet_img = pygame.image.load("assets/units/tier1/aow_1_caveman3.png").convert_alpha()
+		self.unit_3_sheet = SpriteSheet(self.unit_3_sheet_img)
+		#	tier 2
+		self.unit_4_sheet_img = pygame.image.load("assets/units/tier2/aow_2_knight1.png").convert_alpha()
+		self.unit_4_sheet = SpriteSheet(self.unit_4_sheet_img)
+		self.unit_5_sheet_img = pygame.image.load("assets/units/tier2/aow_2_wizzard2.png").convert_alpha()
+		self.unit_5_sheet = SpriteSheet(self.unit_5_sheet_img)
+		self.unit_6_sheet_img = pygame.image.load("assets/units/tier2/aow_2_king3.png").convert_alpha()
+		self.unit_6_sheet = SpriteSheet(self.unit_6_sheet_img)
+		#	tier 3
+		self.unit_7_sheet_img = pygame.image.load("assets/units/tier3/aow_3_soldiert1.png").convert_alpha()
+		self.unit_7_sheet = SpriteSheet(self.unit_7_sheet_img)
+		self.unit_8_sheet_img = pygame.image.load("assets/units/tier3/aow_3_rambo.png").convert_alpha()
+		self.unit_8_sheet = SpriteSheet(self.unit_8_sheet_img)
+		self.unit_9_sheet_img = pygame.image.load("assets/units/tier3/aow_3_tank.png").convert_alpha()
+		self.unit_9_sheet = SpriteSheet(self.unit_9_sheet_img)
+		#	loading unit weapons
+		self.weapon_1_sheet_img = pygame.image.load("assets/weapons/tier1/aow_1_weapon_1.png").convert_alpha()
+		self.weapon_1_sheet = SpriteSheet(self.weapon_1_sheet_img)
+
+
+
+		#	loading turret spritesheets
+		#	tier 1
+		self.turret_1_sheet_img = pygame.image.load("assets/turrets/tier1/aow_1_turret_1.png").convert_alpha()
+		self.turret_1_sheet = SpriteSheet(self.turret_1_sheet_img)
+		self.turret_2_sheet_img = pygame.image.load("assets/turrets/tier1/aow_1_turret_2.png").convert_alpha()
+		self.turret_2_sheet = SpriteSheet(self.turret_2_sheet_img)
+		self.turret_3_sheet_img = pygame.image.load("assets/turrets/tier1/aow_1_turret_3.png").convert_alpha()	
+		self.turret_3_sheet = SpriteSheet(self.turret_3_sheet_img)
+		#	tier 2
+		self.turret_4_sheet_img = pygame.image.load("assets/turrets/tier2/aow_2_turret_1.png").convert_alpha()
+		self.turret_4_sheet = SpriteSheet(self.turret_4_sheet_img)
+		self.turret_5_sheet_img = pygame.image.load("assets/turrets/tier2/aow_2_turret_2.png").convert_alpha()
+		self.turret_5_sheet = SpriteSheet(self.turret_5_sheet_img)
+		self.turret_6_sheet_img = pygame.image.load("assets/turrets/tier2/aow_2_turret_3.png").convert_alpha()
+		self.turret_6_sheet = SpriteSheet(self.turret_6_sheet_img)
+		#	tier 3
+		self.turret_7_sheet_img = pygame.image.load("assets/turrets/tier3/aow_3_turret_1.png").convert_alpha()
+		self.turret_7_sheet = SpriteSheet(self.turret_7_sheet_img)
+		self.turret_8_sheet_img = pygame.image.load("assets/turrets/tier3/aow_3_turret_2.png").convert_alpha()
+		self.turret_8_sheet = SpriteSheet(self.turret_8_sheet_img)
+		self.turret_9_sheet_img = pygame.image.load("assets/turrets/tier3/aow_3_turret_3.png").convert_alpha()
+		self.turret_9_sheet = SpriteSheet(self.turret_9_sheet_img)
+		# 	loading projectile spritesheets
+		#	tier1
+		self.projectile_1_sheet_img = pygame.image.load("assets/projectiles/aow_1_projectile_1.png").convert_alpha()
+		self.projectile_1_sheet = SpriteSheet(self.projectile_1_sheet_img)
+		self.projectile_2_sheet_img = pygame.image.load("assets/projectiles/aow_1_projectile_2.png").convert_alpha()
+		self.projectile_2_sheet = SpriteSheet(self.projectile_2_sheet_img)
+		self.projectile_3_sheet_img = pygame.image.load("assets/projectiles/aow_1_projectile_3.png").convert_alpha()
+		self.projectile_3_sheet = SpriteSheet(self.projectile_3_sheet_img)
+		#	tier2
+		self.projectile_4_sheet_img = pygame.image.load("assets/projectiles/aow_2_projectile_1.png").convert_alpha()
+		self.projectile_4_sheet = SpriteSheet(self.projectile_4_sheet_img)
+		self.projectile_5_sheet_img = pygame.image.load("assets/projectiles/aow_2_projectile_2.png").convert_alpha()
+		self.projectile_5_sheet = SpriteSheet(self.projectile_5_sheet_img)
+		self.projectile_6_sheet_img = pygame.image.load("assets/projectiles/aow_2_projectile_3.png").convert_alpha()
+		self.projectile_6_sheet = SpriteSheet(self.projectile_6_sheet_img)
+		#	tier3
+		self.projectile_7_sheet_img = pygame.image.load("assets/projectiles/aow_3_projectile_1.png").convert_alpha()
+		self.projectile_7_sheet = SpriteSheet(self.projectile_7_sheet_img)
+		self.projectile_8_sheet_img = pygame.image.load("assets/projectiles/aow_3_projectile_2.png").convert_alpha()
+		self.projectile_8_sheet = SpriteSheet(self.projectile_8_sheet_img)
+		self.projectile_9_sheet_img = pygame.image.load("assets/projectiles/aow_3_projectile_3.png").convert_alpha()
+		self.projectile_9_sheet = SpriteSheet(self.projectile_9_sheet_img)
+
+
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>INPUT>LOOP>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+	def get_input(self):
+		for event in pygame.event.get():
+			# quits pygame if game window is closed
+			if event.type == pygame.QUIT:
+				pygame.quit()
+				sys.exit()
+			# sets key_pressed variables to True if key is pressed
+			if event.type == pygame.MOUSEBUTTONDOWN:
+				if event.button == 4:
+					if self.camera_offset_x >= -1912 + self.SCREEN_SIZE[0]:
+						self.camera_offset_x -= self.scroll_speed
+					else:
+						self.camera_offset_x = -1900 + self.SCREEN_SIZE[0]
+				elif event.button == 5:
+					if self.camera_offset_x <= -8:
+						self.camera_offset_x += self.scroll_speed
+			if event.type == pygame.MOUSEBUTTONUP:
+				if event.button == 4:
+					self.pan_right = False
+				elif event.button == 5:
+					self.pan_left = False
+
+			if event.type == pygame.KEYDOWN:
+				if event.key == pygame.K_ESCAPE:
+					if not self.paused:
+						self.paused = True
+					else:
+						self.paused = False
+				elif event.key == pygame.K_TAB:
+					# avtivates dev mode
+					if not self.dev_mode:
+						self.dev_mode = True
+					else:
+						self.dev_mode = False
+
+				elif event.key == pygame.K_d or event.key == pygame.K_RIGHT:
+					self.pan_right = True
+				elif event.key == pygame.K_a or event.key == pygame.K_LEFT:
+					self.pan_left = True
+				elif event.key == pygame.K_1:
+					self.buy_unit(1)
+				elif event.key == pygame.K_2:
+					self.buy_unit(2)
+				elif event.key == pygame.K_3:
+					self.buy_unit(3)
+				elif event.key == pygame.K_4:
+					self.enemy_buy_unit(1)
+				elif event.key == pygame.K_5:
+					self.enemy_buy_unit(2)
+				elif event.key == pygame.K_6:
+					self.enemy_buy_unit(3)
+
+			# sets key_pressed variables back to false if key is realeased
+			if event.type == pygame.KEYUP:
+				if event.key == pygame.K_d or event.key == pygame.K_RIGHT:
+					self.pan_right = False
+				elif event.key == pygame.K_a or event.key == pygame.K_LEFT:
+					self.pan_left = False
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>GAME>LOGIC>LOOP>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+	def calc_game_state(self):
+		#calculates unit positions and moves camera
+		self.move_camera()
+		self.handle_menu_selection()
+		self.handle_friendly_spawns()
+		self.handle_menu_selection()
+		self.unit_menu()
+		self.turret_menu()
+		self.place_turret_at_slot()
+		self.sell_turret_friendly()
+		turret.update()
+		projectile.update()
+		unit.update()
+		self.fix_movement_when_no_enemys_present()
+		self.check_game_over_game_won()
+		self.handle_buttons()
+		self.handle_special_cooldown()
+		blood_master.update()
+		meteor.update()
+		arrow.update()
+		plane.update()
+		bullet.update()
+		dirt.update()
+		self.update_global_time()
+		self.handle_enemy_progression()
+		self.spawn_enemys()
+
+#>>>>>>>>>>>>>>>>>>>>>>>>RENDERING>LOOP>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+	def render_new_frame(self):
+		self.screen.fill((000,000,000))
+		# render game objects
+		self.screen.blit(self.background, self.background_pos)
+		# render bases
+		self.draw_upgrade_modules()
+		self.draw_bases_1()
+		# render all units here:
+		# >>>>>
+		dirt.draw()
+		unit.draw()
+		self.draw_unit_healthbars()
+
+		blood_master.draw()
+		# >>>>>
+		self.draw_bases_2()
+		projectile.draw()
+		turret.draw()
+
+
+		# render_special attacks:
+		meteor.draw()
+		arrow.draw()
+		bullet.draw()
+		plane.draw()
+
+
+		# render ui at last pos to keep it in foreground!!
+		self.draw_ui()
+		if self.dev_mode:
+			pygame.draw.rect(self.particle.display_surf, self.particle.color, self.particle.rect)
+			self.render_text(f"FPS^          : {round(self.clock.get_fps())}", self.font_16, "black", (0,64))
+			self.render_text(f"MINUTES PASSED: {self.minutes_passed}", self.font_16, "black", (0,80))
+			self.render_text(f"ENEMY AGE     : {self.enemy_age}", self.font_16, "black", (0,96))
+			self.render_text(f"SPAWN OPTIONS : {self.spawn_options}", self.font_16, "black", (0,112))
+			self.render_text(f"SPAWN FREQ    : {round(self.enemy_spawn_timer_goal / 60)}", self.font_16, "black", (0,128))
+
+		# update the frame
+		pygame.display.flip()
+		
+		# wait for clock tick
+		self.clock.tick(60)
+
+	
+# >>>>>>>>>>>>>>>>>>>>>>MAIN>LOOP>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+	def mainloop(self):
+		# main game loop (doesnt stop until game.running is set to false)
+		while self.running:
+			if not self.paused and not self.game_over and not self.game_won:
+				# get user input:
+				self.get_input()
+				# do all the game logic:
+				self.calc_game_state()
+				# render the current frame:
+				self.render_new_frame()
+			
+
+			# freeze game if player won/lost or if game is paused
+			elif self.paused:
+				self.get_input()
+				self.render_text("paused", self.font_50, (0,0,0), (920/2 - 100,540/2 - 50))
+				pygame.display.flip()
+			elif self.game_won:
+				self.get_input()
+				self.render_text("GAME WON", self.font_50, (0,200,0), (920/2 - 140,540/2 - 50))
+				pygame.display.flip()
+			elif self.game_over:
+				self.get_input()
+				self.render_text("GAME OVER", self.font_50, (200,0,0), (920/2 - 150,540/2 - 50))
+				pygame.display.flip()
+
+
+#>>>>>>>>>>>>>>>>>>>>>>MAIN>LOOP>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>	
+
+
+
+	def update_global_time(self):
+		self.frames_passed += 1
+		if self.frames_passed == 60:
+			self.frames_passed = 0
+			self.seconds_passed += 1
+			if self.seconds_passed == 60:
+				self.seconds_passed = 0
+				self.minutes_passed += 1
+				
+
+
+	def handle_enemy_progression(self):
+		if self.minutes_passed == 1:
+			self.enemy_age = 1
+			self.spawn_options = [1,1,1,1,2]
+			self.enemy_spawn_timer_goal = 6 * 60
+
+		elif self.minutes_passed == 2:
+			self.enemy_age = 1
+			self.spawn_options = [1,2]
+			self.enemy_spawn_timer_goal = 6 * 60
+			self.enemy_base_upgrade_state = 1
+			self.enemy_slots_free[1] = True
+
+		elif self.minutes_passed == 3:
+			self.enemy_age = 1
+			self.spawn_options = [1,2,3]
+			self.enemy_spawn_timer_goal = 6 * 60
+			self.buy_turret_enemy()
+
+		elif self.minutes_passed == 4:
+			self.enemy_age = 1
+			self.spawn_options = [1,2,2,3,3,3]
+			self.enemy_spawn_timer_goal = 5 * 60
+
+		elif self.minutes_passed == 5:
+			self.enemy_age = 2
+			self.spawn_options = [4,4,5]
+			self.enemy_spawn_timer_goal = 6 * 60
+
+		elif self.minutes_passed == 6:
+			self.enemy_age = 2
+			self.spawn_options = [4,4,5,6]
+			self.enemy_spawn_timer_goal = 6 * 60
+
+		elif self.minutes_passed == 7:
+			self.enemy_age = 2
+			self.spawn_options = [4,5,6]
+			self.enemy_spawn_timer_goal = 5 * 60
+			self.enemy_base_upgrade_state = 2
+			self.enemy_slots_free[2] = True
+
+		elif self.minutes_passed == 8:
+			self.enemy_age = 2
+			self.spawn_options = [4,5,5,6]
+			self.enemy_spawn_timer_goal = 5 * 60
+			self.buy_turret_enemy()
+			self.remove_turrets_from_the_past()
+
+		elif self.minutes_passed == 9:
+			self.enemy_age = 2
+			self.spawn_options = [4,4,4,4,5]
+			self.enemy_spawn_timer_goal = 3 * 60
+
+		elif self.minutes_passed == 10:
+			self.enemy_age = 3
+			self.spawn_options = [7,7,7,8]
+			self.enemy_spawn_timer_goal = 5 * 60
+
+		elif self.minutes_passed == 11:
+			self.enemy_age = 3
+			self.spawn_options = [7,7,8,9]
+			self.enemy_spawn_timer_goal = 5 * 60
+
+		elif self.minutes_passed == 12:
+			self.enemy_age = 3
+			self.spawn_options = [7,8,9]
+			self.enemy_spawn_timer_goal = 5 * 60
+
+		elif self.minutes_passed == 13:
+			self.enemy_age = 3
+			self.spawn_options = [7,8,8,8,9]
+			self.enemy_spawn_timer_goal = 5 * 60
+
+		elif self.minutes_passed == 14:
+			self.enemy_age = 3
+			self.spawn_options = [7,7,7,7,7,7,8]
+			self.enemy_spawn_timer_goal = 3 * 60
+			self.enemy_base_upgrade_state = 3
+			self.enemy_slots_free[3] = True
+
+		elif self.minutes_passed == 15:
+			self.enemy_age = 3
+			self.spawn_options = [7,7,8,8,8,9,9]
+			self.enemy_spawn_timer_goal = 4 * 60
+			self.buy_turret_enemy()
+
+		elif self.minutes_passed == 16:
+			self.enemy_age = 3
+			self.spawn_options = [8,9,9,9,9,9]
+			self.enemy_spawn_timer_goal = 5 * 60
+
+		elif self.minutes_passed == 17:
+			self.enemy_age = 3
+			self.spawn_options = [7,8,9]
+			self.enemy_spawn_timer_goal = 4 * 60
+
+		elif self.minutes_passed == 18:
+			self.enemy_age = 3
+			self.enemy_spawn__options = [7,8,9]
+			self.enemy_spawn_timer_goal = 4 * 60
+
+		elif self.minutes_passed == 19:
+			self.enemy_age = 3
+			self.spawn_options = [7,8,9]
+			self.enemy_spawn_timer_goal = 3 * 60
+			self.remove_turrets_from_the_past()
+
+
+		elif self.minutes_passed >= 20:
+			self.enemy_age = 3
+			self.spawn_options = [9,9,9]
+			self.enemy_spawn_timer_goal = 3 * 60
+			self.buy_turret_enemy()
+
+	def spawn_enemys(self):
+		self.enemy_spawn_timer += 1
+		if self.enemy_spawn_timer >= self.enemy_spawn_timer_goal:
+			unit.spawn_enemy(random.choice(self.spawn_options))
+			self.enemy_spawn_timer = 0
+
+	def buy_turret_enemy(self):
+		for slot in self.enemy_slots_free:
+			if self.enemy_slots_free[slot] == True:
+				id = random.choice(self.spawn_options)
+				turret.spawn_turret(False, id, slot)
+				self.enemy_slots_free[slot] = False
+
+	def remove_turrets_from_the_past(self):
+		for turret in self.enemy_turrets:
+			if self.age == 2:
+				if turret.id == 1 or turret.id == 2 or turret.id == 3:
+					self.enemy_slots_free[turret.slot] = True
+					self.enemy_turrets.pop(self.enemy_turrets.index(turret))
+			elif self.age == 3:
+				if turret.id == 4 or turret.id == 5 or turret.id == 6:
+					self.enemy_slots_free[turret.slot] = True
+					self.enemy_turrets.pop(self.enemy_turrets.index(turret))
+
+
+
+
+	def draw_transparent_rect(self, size:tuple, color:tuple, alpha:int, pos:tuple):
+		surface = pygame.Surface(size, pygame.SRCALPHA)
+		surface.fill((color[0],color[1],color[2],alpha))
+		self.screen.blit(surface, pos)
+	
+
+	def handle_special_cooldown(self):
+		if self.special_available == False:
+			self.special_timer += 1
+			if self.special_timer == self.special_timer_goal:
+				self.special_timer = 0
+				self.special_available = True
+
+	def draw_special_cooldown(self):
+		# draws a semi transparent rect over the specialbutton to visualize the cooldown
+		if not self.special_available:
+			self.percent_value_special = 100 / self.special_timer_goal * self.special_timer
+			pixel_value = 48 / 100 * self.percent_value_special
+			cooldown_rect = pygame.Rect(0,pixel_value,48,48)
+			surface = pygame.Surface(cooldown_rect.size, pygame.SRCALPHA)
+			pygame.draw.rect(surface, (0,0,0,130), cooldown_rect)
+			self.screen.blit(surface, self.special_attack_button_rect)
+
+
+
+	def handle_buttons(self):
+		mouse_pos = pygame.mouse.get_pos()
+		if not self.clicked:
+			if self.turret_upgrade_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+				self.unit_menu_open = False
+				self.turret_menu_open = False
+				self.turret_buy_mode = False
+				self.turret_sell_mode = False
+				if not self.friendly_base_upgrade_state == 3:
+					if self.friendly_money >= self.upgrade_cost:
+						self.friendly_money -= self.upgrade_cost
+						self.friendly_base_upgrade_state += 1
+						self.friendly_slots_free[self.friendly_base_upgrade_state] = True
+						self.upgrade_cost *= 4
+				self.clicked = True
+			elif self.special_attack_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+				self.turret_buy_mode = False
+				self.turret_sell_mode = False
+				if self.age == 1:
+					if self.special_available:
+						meteor.rain = True
+						self.special_available = False
+				elif self.age == 2:
+					if self.special_available:
+						arrow.rain = True
+						self.special_available = False
+				elif self.age == 3:
+					if self.special_available:
+						plane.spawn()
+						self.special_available = False
+				self.clicked = True
+			elif self.age_advance_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+				self.turret_buy_mode = False
+				self.turret_sell_mode = False
+				self.unit_menu_open = False
+				self.turret_menu_open = False
+				self.age_advancment()
+				self.clicked = True
+			if pygame.mouse.get_pressed()[0] == 0:
+				self.clicked = False
+
+
+	def handle_menu_selection(self):
+		mouse_pos = pygame.mouse.get_pos()
+		if not self.clicked:
+			if self.unit_select_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+				self.turret_buy_mode = False
+				self.turret_sell_mode = False
+				if self.unit_menu_open == False:
+					self.unit_menu_open = True
+				elif self.unit_menu_open == True:
+					self.unit_menu_open = False
+				self.turret_menu_open = False
+				self.clicked = True
+			if self.turret_select_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+				self.turret_buy_mode = False
+				self.turret_sell_mode = False
+				if self.turret_menu_open == False:
+					self.turret_menu_open = True
+				elif self.turret_menu_open == True:
+					self.turret_menu_open = False
+				self.unit_menu_open = False
+				self.clicked = True
+		if pygame.mouse.get_pressed()[0] == 0:
+			self.clicked = False
+
+	def unit_menu(self):
+		mouse_pos = pygame.mouse.get_pos()
+		if self.unit_menu_open:
+			if self.age == 1:
+				if not self.clicked:
+					if self.unit_1_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.buy_unit(1)
+						self.clicked = True
+					elif self.unit_2_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.buy_unit(2)
+						self.clicked = True
+					elif self.unit_3_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.buy_unit(3)
+						self.clicked = True
+				if pygame.mouse.get_pressed()[0] == 0:
+					self.clicked = False
+			if self.age == 2:
+				if not self.clicked:
+					if self.unit_1_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.buy_unit(4)
+						self.clicked = True
+					elif self.unit_2_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.buy_unit(5)
+						self.clicked = True
+					elif self.unit_3_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.buy_unit(6)
+						self.clicked = True
+				if pygame.mouse.get_pressed()[0] == 0:
+					self.clicked = False
+			if self.age == 3:
+				if not self.clicked:
+					if self.unit_1_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.buy_unit(7)
+						self.clicked = True
+					elif self.unit_2_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.buy_unit(8)
+						self.clicked = True
+					elif self.unit_3_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.buy_unit(9)
+						self.clicked = True
+				if pygame.mouse.get_pressed()[0] == 0:
+					self.clicked = False
+
+	def turret_menu(self):
+		mouse_pos = pygame.mouse.get_pos()
+		if self.turret_menu_open:
+			if self.turret_sell_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+				if not self.turret_sell_mode:
+					self.turret_sell_mode = True
+				else:
+					self.turret_sell_mode = False
+				self.clicked = True
+			if self.age == 1:
+				if not self.clicked:
+					if self.turret_1_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.turret_buy_mode = True
+						self.turret_sell_mode = False
+						self.turret_id_to_buy = 1
+						self.clicked = True
+					elif self.turret_2_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.turret_buy_mode = True
+						self.turret_sell_mode = False
+						self.turret_id_to_buy = 2
+						self.clicked = True
+					elif self.turret_3_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.turret_buy_mode = True
+						self.turret_sell_mode = False
+						self.turret_id_to_buy = 3
+						self.clicked = True
+				if pygame.mouse.get_pressed()[0] == 0:
+					self.clicked = False
+			if self.age == 2:
+				if not self.clicked:
+					if self.turret_1_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.turret_buy_mode = True
+						self.turret_sell_mode = False
+						self.turret_id_to_buy = 4
+						self.clicked = True
+					elif self.turret_2_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.turret_buy_mode = True
+						self.turret_sell_mode = False
+						self.turret_id_to_buy = 5
+						self.clicked = True
+					elif self.turret_3_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.turret_buy_mode = True
+						self.turret_sell_mode = False
+						self.turret_id_to_buy = 6
+						self.clicked = True
+				if pygame.mouse.get_pressed()[0] == 0:
+					self.clicked = False
+			if self.age == 3:
+				if not self.clicked:
+					if self.turret_1_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.turret_buy_mode = True
+						self.turret_sell_mode = False
+						self.turret_id_to_buy = 7
+						self.clicked = True
+					elif self.turret_2_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.turret_buy_mode = True
+						self.turret_sell_mode = False
+						self.turret_id_to_buy = 8
+						self.clicked = True
+					elif self.turret_3_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.turret_buy_mode = True
+						self.turret_sell_mode = False
+						self.turret_id_to_buy = 9
+						self.clicked = True
+				if pygame.mouse.get_pressed()[0] == 0:
+					self.clicked = False
+
+	def place_turret_at_slot(self):
+		if self.turret_buy_mode and self.turret_id_to_buy != 0:
+			mouse_pos = pygame.mouse.get_pos()
+			if pygame.mouse.get_pressed()[0] == 1 and not self.clicked:
+				self.clicked = True
+				if self.friendly_slots_free[1] and self.base_upgrade_1_rect.collidepoint(mouse_pos):
+					self.buy_turret_friendly(self.turret_id_to_buy, 1)
+					self.turret_id_to_buy = 0
+					self.turret_buy_mode = False
+				elif self.friendly_slots_free[2] and self.base_upgrade_2_rect.collidepoint(mouse_pos):
+					self.buy_turret_friendly(self.turret_id_to_buy, 2)
+					self.turret_id_to_buy = 0
+					self.turret_buy_mode = False
+				elif self.friendly_slots_free[3] and self.base_upgrade_3_rect.collidepoint(mouse_pos):
+					self.buy_turret_friendly(self.turret_id_to_buy, 3)
+					self.turret_id_to_buy = 0
+					self.turret_buy_mode = False
+
+
+
+	def draw_base_healthbar(self):
+		healthbar_width = 7
+		friendly_health_rect = pygame.Rect(10 + self.camera_offset_x, game.FLOOR_LEVEL, healthbar_width, game.friendly_base_health /10)
+		friendly_health_rect.bottom = game.FLOOR_LEVEL
+		pygame.draw.rect(self.screen, (200,0,0), pygame.Rect(10 + self.camera_offset_x, game.FLOOR_LEVEL - 100, healthbar_width, 100))
+		pygame.draw.rect(self.screen, (0,200,0), friendly_health_rect)
+
+		enemy_health_rect = pygame.Rect(1900 + self.camera_offset_x, game.FLOOR_LEVEL, healthbar_width, game.enemy_base_health /10)
+		enemy_health_rect.bottom = game.FLOOR_LEVEL
+		pygame.draw.rect(self.screen, (200,0,0), pygame.Rect(1900 + self.camera_offset_x, game.FLOOR_LEVEL - 100, healthbar_width, 100))
+		pygame.draw.rect(self.screen, (0,200,0), enemy_health_rect)
+
+	def draw_unit_healthbars(self):
+		# draws unit health bar on mouse hover
+		mouse_pos = pygame.mouse.get_pos()
+		for unit in self.friendly_units + self.enemy_units:
+			if unit.unit_rect.collidepoint(mouse_pos):
+				max_health = unit_info.unit_health[unit.id]
+				health_percent = 100/max_health * unit.health
+				health_pixel = unit.unit_rect.width/100 * health_percent
+				red_rect = pygame.Surface((unit.unit_rect.width, 5))
+				red_rect.fill((200,000,000))
+				green_rect = pygame.Rect(0, 0, health_pixel, 5)
+				pygame.draw.rect(red_rect, (000,200,000), green_rect)
+				self.screen.blit(red_rect, (unit.unit_rect.x, unit.unit_rect.y - 10))
+
+	def draw_unit_prices(self):
+		# draws the price of the unit on mouse hover with color red when not affordable
+		mouse_pos = pygame.mouse.get_pos()
+		if self.unit_menu_open:
+			if self.age == 1:
+				if self.unit_1_button_rect.collidepoint(mouse_pos):
+					if self.friendly_money >= unit_info.unit_cost[1]:
+						color = (0,0,0)
+					else:
+						color = (200,0,0)
+					text = self.render_text(str(unit_info.unit_cost[1]), self.font_20, color, (self.unit_1_button_rect.x, 130))
+				if self.unit_2_button_rect.collidepoint(mouse_pos):
+					if self.friendly_money >= unit_info.unit_cost[2]:
+						color = (0,0,0)
+					else:
+						color = (200,0,0)
+					text = self.render_text(str(unit_info.unit_cost[2]), self.font_20, color, (self.unit_2_button_rect.x, 130))
+				if self.unit_3_button_rect.collidepoint(mouse_pos):
+					if self.friendly_money >= unit_info.unit_cost[3]:
+						color = (0,0,0)
+					else:
+						color = (200,0,0)
+					text = self.render_text(str(unit_info.unit_cost[3]), self.font_20, color, (self.unit_3_button_rect.x, 130))
+			elif self.age == 2:
+				if self.unit_1_button_rect.collidepoint(mouse_pos):
+					if self.friendly_money >= unit_info.unit_cost[4]:
+						color = (0,0,0)
+					else:
+						color = (200,0,0)
+					text = self.render_text(str(unit_info.unit_cost[4]), self.font_20, color, (self.unit_1_button_rect.x, 130))
+				if self.unit_2_button_rect.collidepoint(mouse_pos):
+					if self.friendly_money >= unit_info.unit_cost[5]:
+						color = (0,0,0)
+					else:
+						color = (200,0,0)
+					text = self.render_text(str(unit_info.unit_cost[5]), self.font_20, color, (self.unit_2_button_rect.x, 130))
+				if self.unit_3_button_rect.collidepoint(mouse_pos):
+					if self.friendly_money >= unit_info.unit_cost[6]:
+						color = (0,0,0)
+					else:
+						color = (200,0,0)
+					text = self.render_text(str(unit_info.unit_cost[6]), self.font_20, color, (self.unit_3_button_rect.x, 130))
+			elif self.age == 3:
+				if self.unit_1_button_rect.collidepoint(mouse_pos):
+					if self.friendly_money >= unit_info.unit_cost[7]:
+						color = (0,0,0)
+					else:
+						color = (200,0,0)
+					text = self.render_text(str(unit_info.unit_cost[7]), self.font_20, color, (self.unit_1_button_rect.x, 130))
+				if self.unit_2_button_rect.collidepoint(mouse_pos):
+					if self.friendly_money >= unit_info.unit_cost[8]:
+						color = (0,0,0)
+					else:
+						color = (200,0,0)
+					text = self.render_text(str(unit_info.unit_cost[8]), self.font_20, color, (self.unit_2_button_rect.x, 130))
+				if self.unit_3_button_rect.collidepoint(mouse_pos):
+					if self.friendly_money >= unit_info.unit_cost[9]:
+						color = (0,0,0)
+					else:
+						color = (200,0,0)
+					text = self.render_text(str(unit_info.unit_cost[9]), self.font_20, color, (self.unit_3_button_rect.x, 130))
+	
+
+	def draw_turret_prices(self):
+		# draws the price of the turret on mouse hover with color red when not affordable
+		mouse_pos = pygame.mouse.get_pos()
+		if self.turret_menu_open:
+			if self.turret_sell_button_rect.collidepoint(mouse_pos):
+				text = self.render_text("sell for 1/2 the buy price", self.font_12, (0,0,0), (self.turret_1_button_rect.x - 10, 130))
+			if self.age == 1:
+				if self.turret_1_button_rect.collidepoint(mouse_pos):
+					if self.friendly_money >= turret_info.turret_cost[1]:
+						color = (0,0,0)
+					else:
+						color = (200,0,0)
+					text = self.render_text(str(turret_info.turret_cost[1]), self.font_20, color, (self.turret_1_button_rect.x, 130))
+				elif self.turret_2_button_rect.collidepoint(mouse_pos):
+					if self.friendly_money >= turret_info.turret_cost[2]:
+						color = (0,0,0)
+					else:
+						color = (200,0,0)
+					text = self.render_text(str(turret_info.turret_cost[2]), self.font_20, color, (self.turret_2_button_rect.x, 130))
+				elif self.turret_3_button_rect.collidepoint(mouse_pos):
+					if self.friendly_money >= turret_info.turret_cost[3]:
+						color = (0,0,0)
+					else:
+						color = (200,0,0)
+					text = self.render_text(str(turret_info.turret_cost[3]), self.font_20, color, (self.turret_3_button_rect.x, 130))
+			elif self.age == 2:
+				if self.turret_1_button_rect.collidepoint(mouse_pos):
+					if self.friendly_money >= turret_info.turret_cost[4]:
+						color = (0,0,0)
+					else:
+						color = (200,0,0)
+					text = self.render_text(str(turret_info.turret_cost[4]), self.font_20, color, (self.turret_1_button_rect.x, 130))
+				elif self.turret_2_button_rect.collidepoint(mouse_pos):
+					if self.friendly_money >= turret_info.turret_cost[5]:
+						color = (0,0,0)
+					else:
+						color = (200,0,0)
+					text = self.render_text(str(turret_info.turret_cost[5]), self.font_20, color, (self.turret_2_button_rect.x, 130))
+				elif self.turret_3_button_rect.collidepoint(mouse_pos):
+					if self.friendly_money >= turret_info.turret_cost[6]:
+						color = (0,0,0)
+					else:
+						color = (200,0,0)
+					text = self.render_text(str(turret_info.turret_cost[6]), self.font_20, color, (self.turret_3_button_rect.x, 130))
+			elif self.age == 3:
+				if self.turret_1_button_rect.collidepoint(mouse_pos):
+					if self.friendly_money >= turret_info.turret_cost[7]:
+						color = (0,0,0)
+					else:
+						color = (200,0,0)
+					text = self.render_text(str(turret_info.turret_cost[7]), self.font_20, color, (self.turret_1_button_rect.x, 130))
+				elif self.turret_2_button_rect.collidepoint(mouse_pos):
+					if self.friendly_money >= turret_info.turret_cost[8]:
+						color = (0,0,0)
+					else:
+						color = (200,0,0)
+					text = self.render_text(str(turret_info.turret_cost[8]), self.font_20, color, (self.turret_2_button_rect.x, 130))
+				elif self.turret_3_button_rect.collidepoint(mouse_pos):
+					if self.friendly_money >= turret_info.turret_cost[9]:
+						color = (0,0,0)
+					else:
+						color = (200,0,0)
+					text = self.render_text(str(turret_info.turret_cost[9]), self.font_20, color, (self.turret_3_button_rect.x, 130))
+	
+	def draw_base_upgrade_cost(self):
+		mouse_pos = pygame.mouse.get_pos()
+		if self.friendly_money >= self.upgrade_cost:
+			color = (0,0,0)
+		else:
+			color = (200,0,0)
+		if self.unit_menu_open == False and self.turret_menu_open == False and self.friendly_base_upgrade_state != 3 and self.turret_upgrade_button_rect.collidepoint(mouse_pos):
+			self.render_text(str(self.upgrade_cost), self.font_20, color, (self.turret_upgrade_button_rect.x, 64))
+
+	def draw_age_advancement_cost(self):
+		mouse_pos = pygame.mouse.get_pos()
+		if self.age == 1:
+			if self.friendly_exp >= self.age2_treshhold:
+				color = (0,0,0)
+			else:
+				color = (200,0,0)
+			if self.unit_menu_open == False and self.turret_menu_open == False and self.age_advance_button_rect.collidepoint(mouse_pos):
+				self.render_text(f"{round(self.age2_treshhold/1000)}k", self.font_20, color, (self.age_advance_button_rect.x, 64))
+		elif self.age == 2:
+			if self.friendly_exp >= self.age3_treshhold:
+				color = (0,0,0)
+			else:
+				color = (200,0,0)
+			if self.unit_menu_open == False and self.turret_menu_open == False and self.age_advance_button_rect.collidepoint(mouse_pos):
+				self.render_text(f"{round(self.age3_treshhold/1000)}k", self.font_20, color, (self.age_advance_button_rect.x, 64))
+				
+	
+	def check_game_over_game_won(self):
+		if self.friendly_base_health <= 0:
+			self.game_over = True
+		elif self.enemy_base_health <= 0:
+			self.game_won = True
+
+
+
+	def draw_units_to_menu(self):
+		if self.unit_menu_open:
+			if self.age == 1:
+				unit_1_ui = self.unit_1_sheet.get_image(0, (16, 16), (1,0,0), 1)
+				unit_1_ui = pygame.transform.scale(unit_1_ui, (48, 48))
+				unit_1_ui.set_colorkey((1,0,0))
+				self.screen.blit(unit_1_ui, self.unit_1_button_rect)
+	
+				unit_2_ui = self.unit_2_sheet.get_image(0, (16, 16), (1,0,0), 1)
+				unit_2_ui = pygame.transform.scale(unit_2_ui, (48, 48))
+				unit_2_ui.set_colorkey((1,0,0))
+				self.screen.blit(unit_2_ui, self.unit_2_button_rect)
+	
+				unit_3_ui = self.unit_3_sheet.get_image(0, (32, 32), (1,0,0), 1)
+				unit_3_ui = pygame.transform.scale(unit_3_ui, (48, 48))
+				unit_3_ui.set_colorkey((1,0,0))
+				self.screen.blit(unit_3_ui, self.unit_3_button_rect)
+			elif self.age == 2:
+				unit_1_ui = self.unit_4_sheet.get_image(0, (16, 16), (1,0,0), 1)
+				unit_1_ui = pygame.transform.scale(unit_1_ui, (48, 48))
+				unit_1_ui.set_colorkey((1,0,0))
+				self.screen.blit(unit_1_ui, self.unit_1_button_rect)
+
+				unit_2_ui = self.unit_5_sheet.get_image(0, (16, 16), (1,0,0), 1)
+				unit_2_ui = pygame.transform.scale(unit_2_ui, (48, 48))
+				unit_2_ui.set_colorkey((1,0,0))
+				self.screen.blit(unit_2_ui, self.unit_2_button_rect)
+
+				unit_3_ui = self.unit_6_sheet.get_image(0, (32, 32), (1,0,0), 1)
+				unit_3_ui = pygame.transform.scale(unit_3_ui, (48, 48))
+				unit_3_ui.set_colorkey((1,0,0))
+				self.screen.blit(unit_3_ui, self.unit_3_button_rect)
+
+			elif self.age == 3:
+				unit_1_ui = self.unit_7_sheet.get_image(0, (16, 16), (1,0,0), 1)
+				unit_1_ui = pygame.transform.scale(unit_1_ui, (48, 48))
+				unit_1_ui.set_colorkey((1,0,0))
+				self.screen.blit(unit_1_ui, self.unit_1_button_rect)
+
+				unit_2_ui = self.unit_8_sheet.get_image(0, (16, 16), (1,0,0), 1)
+				unit_2_ui = pygame.transform.scale(unit_2_ui, (48, 48))
+				unit_2_ui.set_colorkey((1,0,0))
+				self.screen.blit(unit_2_ui, self.unit_2_button_rect)
+
+				unit_3_ui = self.unit_9_sheet.get_image(0, (32, 32), (1,0,0), 1)
+				unit_3_ui = pygame.transform.scale(unit_3_ui, (48, 48))
+				unit_3_ui.set_colorkey((1,0,0))
+				self.screen.blit(unit_3_ui, self.unit_3_button_rect)
+
+	def draw_turrets_to_menu(self):
+		if self.turret_menu_open:
+			if self.age == 1:
+				turret_1_ui = self.turret_1_sheet.get_image(0, (32, 32), (1,0,0), 1)
+				turret_1_ui = pygame.transform.scale(turret_1_ui, (48, 48))
+				turret_1_ui.set_colorkey((1,0,0))
+				self.screen.blit(turret_1_ui, self.turret_1_button_rect)
+	
+				turret_2_ui = self.turret_2_sheet.get_image(0, (32, 32), (1,0,0), 1)
+				turret_2_ui = pygame.transform.scale(turret_2_ui, (48, 48))
+				turret_2_ui.set_colorkey((1,0,0))
+				self.screen.blit(turret_2_ui, self.turret_2_button_rect)
+	
+				turret_3_ui = self.turret_3_sheet.get_image(0, (32, 64), (1,0,0), 1)
+				turret_3_ui = pygame.transform.scale(turret_3_ui, (48, 48))
+				turret_3_ui.set_colorkey((1,0,0))
+				self.screen.blit(turret_3_ui, self.turret_3_button_rect)
+			elif self.age == 2:
+				turret_1_ui = self.turret_4_sheet.get_image(0, (48, 64), (1,0,0), 1)
+				turret_1_ui = pygame.transform.scale(turret_1_ui, (48, 48))
+				turret_1_ui.set_colorkey((1,0,0))
+				self.screen.blit(turret_1_ui, self.turret_1_button_rect)
+
+				turret_2_ui = self.turret_5_sheet.get_image(0, (48, 64), (1,0,0), 1)
+				turret_2_ui = pygame.transform.scale(turret_2_ui, (48, 48))
+				turret_2_ui.set_colorkey((1,0,0))
+				self.screen.blit(turret_2_ui, self.turret_2_button_rect)
+
+				turret_3_ui = self.turret_6_sheet.get_image(0, (64, 64), (1,0,0), 1)
+				turret_3_ui = pygame.transform.scale(turret_3_ui, (64, 64))
+				turret_3_ui.set_colorkey((1,0,0))
+				self.screen.blit(turret_3_ui, (self.turret_3_button_rect.x - 16, self.turret_3_button_rect.y - 8))
+
+			elif self.age == 3:
+				turret_1_ui = self.turret_7_sheet.get_image(0, (64, 64), (1,0,0), 1)
+				turret_1_ui = pygame.transform.scale(turret_1_ui, (48, 48))
+				turret_1_ui.set_colorkey((1,0,0))
+				self.screen.blit(turret_1_ui, self.turret_1_button_rect)
+
+				turret_2_ui = self.turret_8_sheet.get_image(0, (64, 64), (1,0,0), 1)
+				turret_2_ui = pygame.transform.scale(turret_2_ui, (48, 48))
+				turret_2_ui.set_colorkey((1,0,0))
+				self.screen.blit(turret_2_ui, self.turret_2_button_rect)
+
+				turret_3_ui = self.turret_9_sheet.get_image(0, (64, 64), (1,0,0), 1)
+				turret_3_ui = pygame.transform.scale(turret_3_ui, (48, 48))
+				turret_3_ui.set_colorkey((1,0,0))
+				self.screen.blit(turret_3_ui, self.turret_3_button_rect)
+
+	def age_advancment(self):
+		if self.age == 1 and self.friendly_exp >= self.age2_treshhold:
+			self.age = 2
+		elif self.age == 2 and self.friendly_exp >= self.age3_treshhold:
+			self.age = 3
+
+
+
+	def buy_turret_friendly(self, id:int, slot:int):
+		if self.friendly_money >= turret_info.turret_cost[id] and self.friendly_slots_free[slot] == True:
+			turret.spawn_turret(True, id, slot)
+			self.friendly_money -= turret_info.turret_cost[id]
+			self.friendly_slots_free[slot] = False
+
+	def sell_turret_friendly(self):
+		mouse_pos = pygame.mouse.get_pos()
+		if self.turret_sell_mode:
+			for turret in self.friendly_turrets:
+				if turret.turret_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1 and not self.clicked:
+					self.clicked = True
+					self.friendly_turrets.pop(self.friendly_turrets.index(turret))
+					self.friendly_money += turret.sell_value
+					self.friendly_slots_free[turret.slot] = True
+
+	def buy_unit(self, id):
+		if self.friendly_money >= unit_info.unit_cost[id]:
+			self.friendly_money -= unit_info.unit_cost[id]
+			unit.spawn_friendly(id)
+
+
+
+
+	def handle_spawn_queue(self):
+		if len(self.friendly_units_queue) != 0:
+			if len(self.training) == 0:
+				self.training.append(self.friendly_units_queue[0])
+				self.friendly_units_queue.pop(0)
+		
+	def handle_unit_training(self):
+		if len(self.training) != 0:
+			self.training_timer += 1
+			if self.training_timer == self.training_timer_goal:
+				self.training_timer = 0
+				self.friendly_units.append(self.training[0])
+				self.training.pop(0)
+
+	def handle_friendly_spawns(self):
+		self.handle_spawn_queue()
+		self.handle_unit_training()
+
+
+	def draw_units_in_training(self):
+		for unit in self.training:
+			self.screen.blit(pygame.transform.scale(unit.frame1_surf, (32, 32)), (16, 16))
+
+	def draw_training_progress_bar(self):
+		pygame.draw.rect(self.screen, (100, 200, 100), pygame.Rect(70, 27, self.training_timer * 0.943, 10))
+
+
+	def render_text(self, text:str, font:pygame.font.Font, color:tuple, pos:tuple):
+		text = font.render(text, False, color)
+		self.screen.blit(text, pos)
+
+
+	def draw_money_and_exp(self):
+		self.render_text(f"coins: {round(self.friendly_money)}", self.font_20, (0,0,0), (70,1))
+		self.render_text(f"e x p: {round(self.friendly_exp)}", self.font_20, (0,0,0), (70,38))
+
+	def draw_free_turret_slots(self):
+		if self.turret_buy_mode:
+			if self.age == 1:
+				if self.friendly_slots_free[1]:
+					self.draw_transparent_rect(self.base_upgrade_1_rect.size, (0,255,0), 100, self.friendly_module_pos1_t1)
+				if self.friendly_slots_free[2]:
+					self.draw_transparent_rect(self.base_upgrade_1_rect.size, (0,255,0), 100, self.friendly_module_pos2_t1)
+				if self.friendly_slots_free[3]:
+					self.draw_transparent_rect(self.base_upgrade_1_rect.size, (0,255,0), 100, self.friendly_module_pos3_t1)
+			if self.age == 2:
+				if self.friendly_slots_free[1]:
+					self.draw_transparent_rect(self.base_upgrade_1_rect.size, (0,255,0), 100, self.friendly_module_pos1_t2)
+				if self.friendly_slots_free[2]:
+					self.draw_transparent_rect(self.base_upgrade_1_rect.size, (0,255,0), 100, self.friendly_module_pos2_t2)
+				if self.friendly_slots_free[3]:
+					self.draw_transparent_rect(self.base_upgrade_1_rect.size, (0,255,0), 100, self.friendly_module_pos3_t2)
+			if self.age == 3:
+				if self.friendly_slots_free[1]:
+					self.draw_transparent_rect(self.base_upgrade_1_rect.size, (0,255,0), 100, self.friendly_module_pos1_t3)
+				if self.friendly_slots_free[2]:
+					self.draw_transparent_rect(self.base_upgrade_1_rect.size, (0,255,0), 100, self.friendly_module_pos2_t3)
+				if self.friendly_slots_free[3]:
+					self.draw_transparent_rect(self.base_upgrade_1_rect.size, (0,255,0), 100, self.friendly_module_pos3_t3)
+
+	def draw_sellable_turrets(self):
+		if self.turret_sell_mode:
+			for turret in self.friendly_turrets:
+				self.draw_transparent_rect(turret.turret_rect.size, (255,0,0), 100, turret.turret_rect.topleft)
+
+
+	def draw_ui(self):
+		self.screen.blit(self.ui_main, (0, 0))
+		if self.unit_menu_open:
+			self.turret_menu_open = False
+			self.screen.blit(self.ui_units, (0, 0))
+		elif self.turret_menu_open:
+			self.unit_menu_open = False
+			self.screen.blit(self.ui_turrets, (0, 0))
+		self.draw_units_in_training()
+		self.draw_training_progress_bar()
+		self.draw_units_to_menu()
+		self.draw_turrets_to_menu()
+		self.draw_money_and_exp()
+		self.draw_base_healthbar()
+		self.draw_special_cooldown()
+		self.draw_unit_prices()
+		self.draw_turret_prices()
+		self.draw_base_upgrade_cost()
+		self.draw_age_advancement_cost()
+		self.draw_free_turret_slots()
+		self.draw_sellable_turrets()
+
+	def move_camera(self):
+		# moves every object on screen (every static object needs to be moved here)
+		self.background_pos = (0 + self.camera_offset_x, -540)
+		self.friendly_base_rect.bottomleft = (0 + self.camera_offset_x, self.FLOOR_LEVEL)
+		self.enemy_base_rect.bottomright = (1920 + self.camera_offset_x, self.FLOOR_LEVEL)
+		# tier 1 friendly
+		self.friendly_module_pos1_t1 = (50 + self.camera_offset_x, 275)
+		self.friendly_module_pos2_t1 = (50 + self.camera_offset_x, 275-64)
+		self.friendly_module_pos3_t1 = (50 + self.camera_offset_x, 275-128)
+		# tier 1 enemy
+		self.enemy_module_pos1_t1 = (1850 + self.camera_offset_x, 275)
+		self.enemy_module_pos2_t1 = (1850 + self.camera_offset_x, 275-64)
+		self.enemy_module_pos3_t1 = (1850 + self.camera_offset_x, 275-128)
+		# tier 2 friendly
+		self.friendly_module_pos1_t2 = (129 + self.camera_offset_x, 235)
+		self.friendly_module_pos2_t2 = (129 + self.camera_offset_x, 235-64)
+		self.friendly_module_pos3_t2 = (129 + self.camera_offset_x, 235-128)
+		# tier 2 enemy
+		self.enemy_module_pos1_t2 = (1823 + self.camera_offset_x, 235)
+		self.enemy_module_pos2_t2 = (1823 + self.camera_offset_x, 235-64)
+		self.enemy_module_pos3_t2 = (1823 + self.camera_offset_x, 235-128)
+		# tier 3 friendly
+		self.friendly_module_pos1_t3 = (80 + self.camera_offset_x, 270)
+		self.friendly_module_pos2_t3 = (80 + self.camera_offset_x, 270-64)
+		self.friendly_module_pos3_t3 = (80 + self.camera_offset_x, 270-128)
+		# tier 3 enemy
+		self.enemy_module_pos1_t3 = (1872 + self.camera_offset_x, 270)
+		self.enemy_module_pos2_t3 = (1872 + self.camera_offset_x, 270-64)
+		self.enemy_module_pos3_t3 = (1872 + self.camera_offset_x, 270-128)
+
+
+
+
+		if self.pan_left:
+			if self.camera_offset_x <= -8:
+				self.camera_offset_x += self.camera_move_speed
+		elif self.pan_right:
+			if self.camera_offset_x >= -1912 + self.SCREEN_SIZE[0]:
+				self.camera_offset_x -= self.camera_move_speed
+
+	def fix_movement_when_no_enemys_present(self):
+		if len(self.friendly_units) == 0:
+			self.combat = False
+			for enemy in self.enemy_units:
+				enemy.moving = True
+				enemy.fighting = False
+		elif len(self.enemy_units) == 0:
+			self.combat = False
+			for friendly in self.friendly_units:
+				friendly.moving = True
+				friendly.fighting = False
+
+	
+	# two functions becouse units need to be rendered inbetween the two laiers of bases
+	def draw_bases_1(self):
+		if self.age == 1:
+			self.screen.blit(self.friendly_base1_t1, self.friendly_base_rect)
+		elif self.age == 2:
+			self.screen.blit(self.friendly_base1_t2, (self.friendly_base_rect.x, self.friendly_base_rect.y - 63))
+		elif self.age == 3:
+			self.screen.blit(self.friendly_base1_t3, (self.friendly_base_rect.x, self.friendly_base_rect.y - 63))
+
+		if self.enemy_age == 1:
+			self.screen.blit(self.enemy_base1_t1, self.enemy_base_rect)
+		elif self.enemy_age == 2:
+			self.screen.blit(self.enemy_base1_t2, (self.enemy_base_rect.x, self.enemy_base_rect.y - 63))
+		elif self.enemy_age == 3:
+			self.screen.blit(self.enemy_base1_t3, (self.enemy_base_rect.x, self.enemy_base_rect.y - 63))
+
+	def draw_bases_2(self):
+		if self.age == 1:
+			self.screen.blit(self.friendly_base2_t1, self.friendly_base_rect)
+		elif self.age == 2:
+			self.screen.blit(self.friendly_base2_t2, (self.friendly_base_rect.x, self.friendly_base_rect.y - 63))
+		elif self.age == 3:
+			self.screen.blit(self.friendly_base2_t3, (self.friendly_base_rect.x, self.friendly_base_rect.y - 63))
+
+		if self.enemy_age == 1:
+			self.screen.blit(self.enemy_base2_t1, self.enemy_base_rect)
+		elif self.enemy_age == 2:
+			self.screen.blit(self.enemy_base2_t2, (self.enemy_base_rect.x, self.enemy_base_rect.y - 63))
+		elif self.enemy_age == 3:
+			self.screen.blit(self.enemy_base2_t3, (self.enemy_base_rect.x, self.enemy_base_rect.y - 63))
+
+	def draw_upgrade_modules(self):
+
+		if self.age == 1:
+			self.base_upgrade_1_rect.topleft = self.friendly_module_pos1_t1
+			self.base_upgrade_2_rect.topleft = self.friendly_module_pos2_t1
+			self.base_upgrade_3_rect.topleft = self.friendly_module_pos3_t1
+			module = self.base_upgrade_1
+			if self.friendly_base_upgrade_state == 1:
+				self.screen.blit(module, self.friendly_module_pos1_t1)
+			elif self.friendly_base_upgrade_state == 2:
+				self.screen.blit(module, self.friendly_module_pos1_t1)
+				self.screen.blit(module, self.friendly_module_pos2_t1)
+			elif self.friendly_base_upgrade_state == 3:
+				self.screen.blit(module, self.friendly_module_pos1_t1)
+				self.screen.blit(module, self.friendly_module_pos2_t1)
+				self.screen.blit(module, self.friendly_module_pos3_t1)
+		elif self.age == 2:
+			self.base_upgrade_1_rect.topleft = self.friendly_module_pos1_t2
+			self.base_upgrade_2_rect.topleft = self.friendly_module_pos2_t2
+			self.base_upgrade_3_rect.topleft = self.friendly_module_pos3_t2
+			module = self.base_upgrade_2
+			if self.friendly_base_upgrade_state == 1:
+				self.screen.blit(module, self.friendly_module_pos1_t2)
+			elif self.friendly_base_upgrade_state == 2:
+				self.screen.blit(module, self.friendly_module_pos1_t2)
+				self.screen.blit(module, self.friendly_module_pos2_t2)
+			elif self.friendly_base_upgrade_state == 3:
+				self.screen.blit(module, self.friendly_module_pos1_t2)
+				self.screen.blit(module, self.friendly_module_pos2_t2)
+				self.screen.blit(module, self.friendly_module_pos3_t2)
+		elif self.age == 3:
+			self.base_upgrade_1_rect.topleft = self.friendly_module_pos1_t3
+			self.base_upgrade_2_rect.topleft = self.friendly_module_pos2_t3
+			self.base_upgrade_3_rect.topleft = self.friendly_module_pos3_t3
+			module = self.base_upgrade_3
+			if self.friendly_base_upgrade_state == 1:
+				self.screen.blit(module, self.friendly_module_pos1_t3)
+			elif self.friendly_base_upgrade_state == 2:
+				self.screen.blit(module, self.friendly_module_pos1_t3)
+				self.screen.blit(module, self.friendly_module_pos2_t3)
+			elif self.friendly_base_upgrade_state == 3:
+				self.screen.blit(module, self.friendly_module_pos1_t3)
+				self.screen.blit(module, self.friendly_module_pos2_t3)
+				self.screen.blit(module, self.friendly_module_pos3_t3)
+		if self.enemy_age == 1:
+			self.enemy_base_upgrade_1_rect.topleft = self.enemy_module_pos1_t1
+			self.enemy_base_upgrade_2_rect.topleft = self.enemy_module_pos2_t1
+			self.enemy_base_upgrade_3_rect.topleft = self.enemy_module_pos3_t1
+			module = self.base_upgrade_1
+			if self.enemy_base_upgrade_state == 1:
+				self.screen.blit(module, self.enemy_module_pos1_t1)
+			elif self.enemy_base_upgrade_state == 2:
+				self.screen.blit(module, self.enemy_module_pos1_t1)
+				self.screen.blit(module, self.enemy_module_pos2_t1)
+			elif self.enemy_base_upgrade_state == 3:
+				self.screen.blit(module, self.enemy_module_pos1_t1)
+				self.screen.blit(module, self.enemy_module_pos2_t1)
+				self.screen.blit(module, self.enemy_module_pos3_t1)
+		elif self.enemy_age == 2:
+			self.enemy_base_upgrade_1_rect.topleft = self.enemy_module_pos1_t2
+			self.enemy_base_upgrade_2_rect.topleft = self.enemy_module_pos2_t2
+			self.enemy_base_upgrade_3_rect.topleft = self.enemy_module_pos3_t2
+			module = self.base_upgrade_2
+			if self.enemy_base_upgrade_state == 1:
+				self.screen.blit(module, self.enemy_module_pos1_t2)
+			elif self.enemy_base_upgrade_state == 2:
+				self.screen.blit(module, self.enemy_module_pos1_t2)
+				self.screen.blit(module, self.enemy_module_pos2_t2)
+			elif self.enemy_base_upgrade_state == 3:
+				self.screen.blit(module, self.enemy_module_pos1_t2)
+				self.screen.blit(module, self.enemy_module_pos2_t2)
+				self.screen.blit(module, self.enemy_module_pos3_t2)
+		elif self.enemy_age == 3:
+			self.enemy_base_upgrade_1_rect.topleft = self.enemy_module_pos1_t3
+			self.enemy_base_upgrade_2_rect.topleft = self.enemy_module_pos2_t3
+			self.enemy_base_upgrade_3_rect.topleft = self.enemy_module_pos3_t3
+			module = self.base_upgrade_3
+			if self.enemy_base_upgrade_state == 1:
+				self.screen.blit(module, self.enemy_module_pos1_t3)
+			elif self.enemy_base_upgrade_state == 2:
+				self.screen.blit(module, self.enemy_module_pos1_t3)
+				self.screen.blit(module, self.enemy_module_pos2_t3)
+			elif self.enemy_base_upgrade_state == 3:
+				self.screen.blit(module, self.enemy_module_pos1_t3)
+				self.screen.blit(module, self.enemy_module_pos2_t3)
+				self.screen.blit(module, self.enemy_module_pos3_t3)
+
+
+
+
+
+
+
+class Turret:
+	def __init__(self, friendly:bool, id:int, slot:int):
+		self.id = id
+		self.friendly = friendly
+		self.slot = slot
+		self.damage = turret_info.turret_damage[id]
+		self.min_distance = turret_info.turret_min_dist[id]
+		self.fire_rate = turret_info.turret_fire_rate[id]
+		self.shoottimer = 0
+		self.shoottimer_goal = round(60 / self.fire_rate)
+		self.units_in_range = []
+		self.projectiles = []
+		self.cost = turret_info.turret_cost[id]
+		self.rotation = 0
+		self.sell_value = self.cost/2
+		self.range = turret_info.turret_range[id]
+		self.frames = turret_info.turret_frames[id]
+		self.is_catapult = turret_info.turret_is_catapult[id]
+		self.is_static = turret_info.turret_is_static[id]
+		self.drawing_line = False
+		self.target_pos = (0,0)
+		self.animation_state = 0
+		self.has_shot = False
+		if self.frames < 1:
+			self.animation_timer = 0
+			self.animation_timer_goal = 60/self.frames
+
+
+		if self.id == 1:
+			self.frame1_surf = game.turret_1_sheet.get_image(0, (32,32), (1,0,0), 2)
+		elif self.id == 2:
+			self.frame1_surf = game.turret_2_sheet.get_image(0, (32,32), (1,0,0), 2)
+		elif self.id == 3:
+			self.frame1_surf = game.turret_3_sheet.get_image(0, (64,64), (1,0,0), 2)
+		elif self.id == 4:
+			self.frame1_surf = game.turret_4_sheet.get_image(0, (64,64), (1,0,0), 2)
+		elif self.id == 5:
+			self.frame1_surf = game.turret_5_sheet.get_image(0, (64,64), (1,0,0), 1.1)
+			self.frame2_surf = game.turret_5_sheet.get_image(1, (64,64), (1,0,0), 1.1)
+			self.frame3_surf = game.turret_5_sheet.get_image(2, (64,64), (1,0,0), 1.1)
+		elif self.id == 6:
+			self.frame1_surf = game.turret_6_sheet.get_image(0, (64,64), (1,0,0), 1.5)
+			self.frame2_surf = game.turret_6_sheet.get_image(1, (64,64), (1,0,0), 1.5)
+			self.frame3_surf = game.turret_6_sheet.get_image(2, (64,64), (1,0,0), 1.5)
+			self.frame4_surf = game.turret_6_sheet.get_image(3, (64,64), (1,0,0), 1.5)
+		elif self.id == 7:
+			self.frame1_surf = game.turret_7_sheet.get_image(0, (64,64), (1,0,0), 1)
+			self.frame2_surf = game.turret_7_sheet.get_image(1, (64,64), (1,0,0), 1)
+			self.frame3_surf = game.turret_7_sheet.get_image(2, (64,64), (1,0,0), 1)
+			self.frame4_surf = game.turret_7_sheet.get_image(3, (64,64), (1,0,0), 1)
+		elif self.id == 8:
+			self.frame1_surf = game.turret_8_sheet.get_image(0, (64,64), (1,0,0), 1)
+			self.frame2_surf = game.turret_8_sheet.get_image(1, (64,64), (1,0,0), 1)
+			self.frame3_surf = game.turret_8_sheet.get_image(2, (64,64), (1,0,0), 1)
+			self.frame4_surf = game.turret_8_sheet.get_image(3, (64,64), (1,0,0), 1)
+		elif self.id == 9:
+			self.frame1_surf = game.turret_9_sheet.get_image(0, (64,64), (1,0,0), 1)
+
+		self.turret_rect = self.frame1_surf.get_rect()
+		self.turret_rect_rotate = self.turret_rect
+
+		if not self.friendly:
+			self.frame1_surf = pygame.transform.flip(self.frame1_surf, True, False)
+			self.frame1_surf.set_colorkey((1,000,000))
+			if self.frames > 1:
+				self.frame2_surf = pygame.transform.flip(self.frame2_surf, True, False)
+				self.frame2_surf.set_colorkey((1,000,000))
+				if self.frames > 2:
+					self.frame3_surf = pygame.transform.flip(self.frame3_surf, True, False)
+					self.frame3_surf.set_colorkey((1,000,000))
+
+		if self.friendly:
+			self.turret_range_rect = pygame.Rect(self.turret_rect.right + self.min_distance, 0, self.range, game.FLOOR_LEVEL)
+		else:
+			self.turret_range_rect = pygame.Rect(self.turret_rect.left - (self.range + self.min_distance), 0, self.range, game.FLOOR_LEVEL)
+
+
+	def update_pos(self):
+		for turret in game.friendly_turrets:
+			if game.age == 1:
+				if turret.slot == 1:
+					turret.turret_rect.center = (game.friendly_module_pos1_t1[0] + game.base_upgrade_1_rect.width / 2,
+												 game.friendly_module_pos1_t1[1] + game.base_upgrade_1_rect.height / 2)
+				elif turret.slot == 2:
+					turret.turret_rect.center = (game.friendly_module_pos2_t1[0] + game.base_upgrade_2_rect.width / 2,
+												 game.friendly_module_pos2_t1[1] + game.base_upgrade_2_rect.height / 2)
+				elif turret.slot == 3:
+					turret.turret_rect.center = (game.friendly_module_pos3_t1[0] + game.base_upgrade_3_rect.width / 2,
+												 game.friendly_module_pos3_t1[1] + game.base_upgrade_3_rect.height / 2)
+			elif game.age == 2:
+				if turret.slot == 1:
+					turret.turret_rect.center = (game.friendly_module_pos1_t2[0] + game.base_upgrade_1_rect.width / 2,
+												 game.friendly_module_pos1_t2[1] + game.base_upgrade_1_rect.height / 2)
+				elif turret.slot == 2:
+					turret.turret_rect.center = (game.friendly_module_pos2_t2[0] + game.base_upgrade_2_rect.width / 2,
+												 game.friendly_module_pos2_t2[1] + game.base_upgrade_2_rect.height / 2)
+				elif turret.slot == 3:
+					turret.turret_rect.center = (game.friendly_module_pos3_t2[0] + game.base_upgrade_3_rect.width / 2,
+												 game.friendly_module_pos3_t2[1] + game.base_upgrade_3_rect.height / 2)
+			elif game.age == 3:
+				if turret.slot == 1:
+					turret.turret_rect.center = (game.friendly_module_pos1_t3[0] + game.base_upgrade_1_rect.width / 2,
+												 game.friendly_module_pos1_t3[1] + game.base_upgrade_1_rect.height / 2)
+				elif turret.slot == 2:
+					turret.turret_rect.center = (game.friendly_module_pos2_t3[0] + game.base_upgrade_2_rect.width / 2,
+												 game.friendly_module_pos2_t3[1] + game.base_upgrade_2_rect.height / 2)
+				elif turret.slot == 3:
+					turret.turret_rect.center = (game.friendly_module_pos3_t3[0] + game.base_upgrade_3_rect.width / 2,
+												 game.friendly_module_pos3_t3[1] + game.base_upgrade_3_rect.height / 2)
+		for turret in game.enemy_turrets:
+			if game.enemy_age == 1:
+				if turret.slot == 1:
+					turret.turret_rect.center = (game.enemy_module_pos1_t1[0] + game.base_upgrade_1_rect.width / 2,
+												 game.enemy_module_pos1_t1[1] + game.base_upgrade_1_rect.height / 2)
+				elif turret.slot == 2:
+					turret.turret_rect.center = (game.enemy_module_pos2_t1[0] + game.base_upgrade_2_rect.width / 2,
+												 game.enemy_module_pos2_t1[1] + game.base_upgrade_2_rect.height / 2)
+				elif turret.slot == 3:
+					turret.turret_rect.center = (game.enemy_module_pos3_t1[0] + game.base_upgrade_3_rect.width / 2,
+												 game.enemy_module_pos3_t1[1] + game.base_upgrade_3_rect.height / 2)
+			elif game.enemy_age == 2:
+				if turret.slot == 1:
+					turret.turret_rect.center = (game.enemy_module_pos1_t2[0] + game.base_upgrade_1_rect.width / 2,
+												 game.enemy_module_pos1_t2[1] + game.base_upgrade_1_rect.height / 2)
+				elif turret.slot == 2:
+					turret.turret_rect.center = (game.enemy_module_pos2_t2[0] + game.base_upgrade_2_rect.width / 2,
+												 game.enemy_module_pos2_t2[1] + game.base_upgrade_2_rect.height / 2)
+				elif turret.slot == 3:
+					turret.turret_rect.center = (game.enemy_module_pos3_t2[0] + game.base_upgrade_3_rect.width / 2,
+												 game.enemy_module_pos3_t2[1] + game.base_upgrade_3_rect.height / 2)
+			elif game.enemy_age == 3:
+				if turret.slot == 1:
+					turret.turret_rect.center = (game.enemy_module_pos1_t3[0] + game.base_upgrade_1_rect.width / 2,
+												 game.enemy_module_pos1_t3[1] + game.base_upgrade_1_rect.height / 2)
+				elif turret.slot == 2:
+					turret.turret_rect.center = (game.enemy_module_pos2_t3[0] + game.base_upgrade_2_rect.width / 2,
+												 game.enemy_module_pos2_t3[1] + game.base_upgrade_2_rect.height / 2)
+				elif turret.slot == 3:
+					turret.turret_rect.center = (game.enemy_module_pos3_t3[0] + game.base_upgrade_3_rect.width / 2,
+												 game.enemy_module_pos3_t3[1] + game.base_upgrade_3_rect.height / 2)
+		
+
+	def update_range_rect(self):
+		if self.friendly:
+			self.turret_range_rect = pygame.Rect(self.turret_rect.right + self.min_distance, 0, self.range, game.FLOOR_LEVEL)
+		else:
+			self.turret_range_rect = pygame.Rect(self.turret_rect.left - (self.range + self.min_distance), 0, self.range, game.FLOOR_LEVEL)
+
+
+	def update_rotation(self):
+		#	for non catapult turrets
+		for turret in game.friendly_turrets:
+			if not turret.is_catapult and not turret.is_static:
+				if  len(turret.units_in_range) > 0:
+					# get x and y pos of first unit in turret range
+					unit_y = game.FLOOR_LEVEL - turret.units_in_range[0].unit_rect.height / 2
+					unit_x = turret.units_in_range[0].unit_rect.x - turret.units_in_range[0].unit_rect.width / 2
+					# get x and y pos of turret
+					turret_y = turret.turret_rect.center[1]
+					turret_x = turret.turret_rect.center[0]
+					# calculate differece beweet unit and turret
+					delta_y = unit_y - turret_y
+					delta_x = unit_x - turret_x
+					# calculate rotation angle to point at unit
+					if delta_x > 0:
+						turret.rotation = round(degrees(atan(delta_y/delta_x))) * -1
+				else:
+					turret.rotation = 0
+		for turret in game.enemy_turrets:
+			if not turret.is_catapult and not turret.is_static:
+				if len(turret.units_in_range) > 0:
+					# get x and y pos of first unit in turret range
+					unit_y = game.FLOOR_LEVEL - turret.units_in_range[0].unit_rect.height / 2
+					unit_x = turret.units_in_range[0].unit_rect.x + turret.units_in_range[0].unit_rect.width / 2
+					# get x and y pos of turret
+					turret_y = turret.turret_rect.center[1]
+					turret_x = turret.turret_rect.center[0]
+					# calculate differece beweet unit and turret
+					delta_y = unit_y - turret_y
+					delta_x = turret_x - unit_x
+					# calculate rotation angle to point at unit
+					if delta_x > 0:
+						turret.rotation = round(degrees(atan(delta_y/delta_x)))
+				else:
+					turret.rotation = 0
+
+
+	
+	def attack_static(self):
+		for turret in game.friendly_turrets:
+			if turret.is_static and len(turret.units_in_range) > 0:
+				turret.target_pos = turret.units_in_range[0].unit_rect.center
+				turret.shoottimer += 1
+				if turret.shoottimer >= turret.shoottimer_goal / 2:
+					turret.drawing_line = True
+
+				if turret.shoottimer >= turret.shoottimer_goal + random.randint(1,30):
+					turret.drawing_line = False
+					turret.shoottimer = 0
+					if turret.units_in_range[0].moving:
+						projectile = Projectile((turret.units_in_range[0].unit_rect.center[0] - unit.movement_speed* 240 + random.randint(-20,20), -32 - random.randint(1,32)), (0,1), 0, turret.id, True)
+					else:
+						projectile = Projectile((turret.units_in_range[0].unit_rect.center[0] - 180 + random.randint(-20,20), -32 - random.randint(1,32)), (0,0), 0, turret.id, True)
+					turret.projectiles.append(projectile)
+
+		for turret in game.enemy_turrets:
+			if turret.is_static and len(turret.units_in_range) > 0:
+				turret.target_pos = turret.units_in_range[0].unit_rect.center
+				turret.shoottimer += 1
+				if turret.shoottimer >= turret.shoottimer_goal / 2:
+					turret.drawing_line = True
+
+				if turret.shoottimer >= turret.shoottimer_goal + random.randint(1,30):
+					turret.drawing_line = False
+					turret.shoottimer = 0
+					if turret.units_in_range[0].moving:
+						projectile = Projectile((turret.units_in_range[0].unit_rect.center[0] + unit.movement_speed* 240 + random.randint(-20,20), -32 - random.randint(1,32)), (0,1), 0, turret.id, False)
+					else:
+						projectile = Projectile((turret.units_in_range[0].unit_rect.center[0] + 180 + random.randint(-20,20), -32 - random.randint(1,32)), (0,0), 0, turret.id, False)
+					turret.projectiles.append(projectile)
+
+
+	def attack_catapult(self):
+		for turret in game.friendly_turrets:
+			if turret.is_catapult and len(turret.units_in_range) > 0:
+				if not turret.has_shot:
+					turret.shoottimer += 1
+					if turret.shoottimer >= turret.shoottimer_goal:
+						turret.rotation -= 10
+						if turret.rotation <= -120:
+							projectile = Projectile(turret.turret_rect.midtop, 
+							(turret.units_in_range[0].unit_rect.center[0] - turret.turret_rect.midtop[0],
+							turret.units_in_range[0].unit_rect.center[1] - turret.turret_rect.midtop[1]),
+							10, turret.id, True)
+							turret.projectiles.append(projectile)
+							turret.has_shot = True
+							turret.shoottimer = 0
+
+				else:
+					turret.rotation += 2
+					if turret.rotation >= 0:
+						turret.has_shot = False
+			elif turret.is_catapult and len(turret.units_in_range) == 0 and turret.rotation < 0:
+				turret.rotation += 2
+
+		for turret in game.enemy_turrets:
+			if turret.is_catapult and len(turret.units_in_range) > 0:
+				if not turret.has_shot:
+					turret.shoottimer += 1
+					if turret.shoottimer >= turret.shoottimer_goal:
+						turret.rotation += 10
+						if turret.rotation >= 120:
+							projectile = Projectile(turret.turret_rect.midtop, 
+							(turret.turret_rect.midtop[0] - turret.units_in_range[0].unit_rect.center[0],
+							turret.units_in_range[0].unit_rect.center[1] - turret.turret_rect.midtop[1]),
+							10, turret.id, False)
+							turret.projectiles.append(projectile)
+							turret.has_shot = True
+							turret.shoottimer = 0
+
+				else:
+					turret.rotation -= 2
+					if turret.rotation <= 0:
+						turret.has_shot = False
+			elif turret.is_catapult and len(turret.units_in_range) == 0 and turret.rotation > 0:
+				turret.rotation -= 2
+
+
+
+
+	def rotate_turret(self):
+		if self.animation_state == 0:
+			rotated_surf = pygame.transform.rotate(self.frame1_surf, self.rotation)
+			rotated_surf.set_colorkey((1,0,0))
+			self.turret_rect_rotate = rotated_surf.get_rect(center= self.turret_rect.center)
+		elif self.animation_state == 1:
+			rotated_surf = pygame.transform.rotate(self.frame2_surf, self.rotation)
+			rotated_surf.set_colorkey((1,0,0))
+			self.turret_rect_rotate = rotated_surf.get_rect(center= self.turret_rect.center)
+		elif self.animation_state == 2:
+			rotated_surf = pygame.transform.rotate(self.frame3_surf, self.rotation)
+			rotated_surf.set_colorkey((1,0,0))
+			self.turret_rect_rotate = rotated_surf.get_rect(center= self.turret_rect.center)
+		elif self.animation_state == 3:
+			rotated_surf = pygame.transform.rotate(self.frame4_surf, self.rotation)
+			rotated_surf.set_colorkey((1,0,0))
+			self.turret_rect_rotate = rotated_surf.get_rect(center= self.turret_rect.center)
+		return rotated_surf
+
+
+	def find_first_enemy_in_range(self):
+		for turret in game.friendly_turrets:
+			turret.update_range_rect()
+			for unit in game.enemy_units:
+				if unit.unit_rect.colliderect(turret.turret_range_rect) and not unit in turret.units_in_range:
+					turret.units_in_range.append(unit)
+				if not unit.unit_rect.colliderect(turret.turret_range_rect) and unit in turret.units_in_range:
+					turret.units_in_range.pop(turret.units_in_range.index(unit))
+
+		for turret in game.enemy_turrets:
+			turret.update_range_rect()
+			for unit in game.friendly_units:
+				if unit.unit_rect.colliderect(turret.turret_range_rect) and not unit in turret.units_in_range:
+					turret.units_in_range.append(unit)
+				if not unit.unit_rect.colliderect(turret.turret_range_rect) and unit in turret.units_in_range:
+					turret.units_in_range.pop(turret.units_in_range.index(unit))
+
+	def shoot_enemy(self):
+		for turret in game.friendly_turrets:
+			if not turret.is_catapult and not turret.is_static:
+				if len(turret.units_in_range) > 0:
+					turret.shoottimer += 1
+					if turret.shoottimer == turret.shoottimer_goal:
+						turret.shoottimer = 0
+						projectile = Projectile(turret.turret_rect.center,
+						 (turret.units_in_range[0].unit_rect.center[0] - turret.turret_rect.center[0],
+						  turret.units_in_range[0].unit_rect.center[1] - turret.turret_rect.center[1]),
+						  turret.rotation, turret.id, True)
+						turret.projectiles.append(projectile)
+		
+		for turret in game.enemy_turrets:
+			if not turret.is_catapult and not turret.is_static:
+				if len(turret.units_in_range) > 0:
+					turret.shoottimer += 1
+					if turret.shoottimer == turret.shoottimer_goal:
+						turret.shoottimer = 0
+						projectile = Projectile(turret.turret_rect.center,
+						 (turret.turret_rect.center[0] - turret.units_in_range[0].unit_rect.center[0],
+						  turret.units_in_range[0].unit_rect.center[1] - turret.turret_rect.center[1]),
+						  turret.rotation , turret.id, False)
+						turret.projectiles.append(projectile)
+
+
+
+
+	def remove_unit_from_list_if_dead(self):
+		for turret in game.friendly_turrets:
+			turret_range_rect = pygame.Rect(turret.turret_rect.right, 0, turret.range, game.FLOOR_LEVEL)
+			for unit in turret.units_in_range:
+				if not unit in game.enemy_units or not unit.unit_rect.colliderect(turret_range_rect):
+					turret.units_in_range.pop(turret.units_in_range.index(unit))
+
+		for turret in game.enemy_turrets:
+			turret_range_rect = pygame.Rect(turret.turret_rect.left - turret.range, 0, turret.range, game.FLOOR_LEVEL)
+			for unit in turret.units_in_range:
+				if not unit in game.friendly_units or not unit.unit_rect.colliderect(turret_range_rect):
+					turret.units_in_range.pop(turret.units_in_range.index(unit))
+
+
+	def spawn_turret(self, friendly:bool, id:int, slot:int):
+		turret = Turret(friendly, id, slot)
+		if friendly:
+			game.friendly_turrets.append(turret)
+		else:
+			game.enemy_turrets.append(turret)
+
+	def sell(self):
+		if self.friendly:
+			game.friendly_turrets.pop(game.friendly_turrets.index(self))
+			game.friendly_slots_free[self.slot] = True
+
+	def draw(self):
+		for turret in game.friendly_turrets:
+			game.screen.blit(turret.rotate_turret(), turret.turret_rect_rotate)
+			if game.dev_mode:
+				game.draw_transparent_rect(turret.turret_range_rect.size, (0,255,0), 50, turret.turret_range_rect.topleft)
+			if turret.drawing_line:
+				pygame.draw.line(game.screen, (200,0,0), (turret.turret_rect.midright[0] - 5, turret.turret_rect.midright[1] + 6), turret.target_pos)
+		for turret in game.enemy_turrets:
+			game.screen.blit(turret.rotate_turret(), turret.turret_rect_rotate)
+			if game.dev_mode:
+				game.draw_transparent_rect(turret.turret_range_rect.size, (255,0,0), 50, turret.turret_range_rect.topleft)
+			if turret.drawing_line:
+				pygame.draw.line(game.screen, (200,0,0), (turret.turret_rect.midleft[0] + 5, turret.turret_rect.midleft[1] + 6), turret.target_pos)
+
+		
+
+	def update(self):
+		self.update_pos()
+		self.update_rotation()
+		self.find_first_enemy_in_range()
+		self.remove_unit_from_list_if_dead()
+		self.shoot_enemy()
+		self.attack_catapult()
+		self.attack_static()
+
+
+
+class Projectile:
+	def __init__(self, starting_pos:tuple, direction:tuple, angle:int, id:int, friendly:bool):
+		self.starting_pos = starting_pos
+		self.x_pos = self.starting_pos[0]
+		self.y_pos = self.starting_pos[1]
+		self.camera_offset_x = game.camera_offset_x
+		self.direction = direction
+		self.friendly = friendly
+		self.rotation = angle
+		self.falling_vel = 0
+		self.forward_vel = 3
+		self.id = id
+		self.vel = projectile_info.projectile_vel[self.id]
+		self.animation_state = 0
+		if self.id == 1:
+			self.frame1_surf = game.projectile_1_sheet.get_image(0, (8,8), (1,0,0), 1)
+		elif self.id == 2:
+			self.frame1_surf = game.projectile_2_sheet.get_image(0, (8,8), (1,0,0), 1)
+		elif self.id == 3:
+			self.frame1_surf = game.projectile_3_sheet.get_image(0, (16,16), (1,0,0), 1)
+		elif self.id == 4:
+			self.frame1_surf = game.projectile_4_sheet.get_image(0, (16,16), (1,0,0), 1)
+		elif self.id == 5:
+			self.frame1_surf = game.projectile_5_sheet.get_image(0, (32, 9), (1,0,0), 1)
+		elif self.id == 6:
+			self.frame1_surf = game.projectile_6_sheet.get_image(0, (16,16), (1,0,0), 0.7)
+		elif self.id == 7:
+			self.frame1_surf = game.projectile_7_sheet.get_image(0, (16, 3), (1,0,0), 1)
+		elif self.id == 8:
+			self.frame1_surf = game.projectile_8_sheet.get_image(0, (32, 7), (1,0,0), 1)
+			self.frame2_surf = game.projectile_8_sheet.get_image(1, (32, 7), (1,0,0), 1)
+		elif self.id == 9:
+			self.frame1_surf = game.projectile_9_sheet.get_image(0, (32,16), (1,0,0), 1)
+		self.rect = self.frame1_surf.get_rect(center= self.starting_pos)
+		self.rect_rotate = self.rect
+		if not self.friendly:
+			if self.id != 8:
+				self.frame1_surf = pygame.transform.flip(self.frame1_surf, True, False)
+				self.frame1_surf.set_colorkey((1,0,0))
+			elif self.id == 8:
+				self.frame1_surf = pygame.transform.flip(self.frame1_surf, True, False)
+				self.frame1_surf.set_colorkey((1,0,0))
+				self.frame2_surf = pygame.transform.flip(self.frame2_surf, True, False)
+				self.frame2_surf.set_colorkey((1,0,0))
+
+
+
+	def rotate_image(self):
+		if self.animation_state == 0:
+			rotated_surf = pygame.transform.rotate(self.frame1_surf, self.rotation)
+			rotated_surf.set_colorkey((1,0,0))
+			self.rect_rotate = rotated_surf.get_rect(center= self.rect.center)
+		elif self.animation_state == 1:
+			rotated_surf = pygame.transform.rotate(self.frame2_surf, self.rotation)
+			rotated_surf.set_colorkey((1,0,0))
+			self.rect_rotate = rotated_surf.get_rect(center= self.rect.center)
+		return rotated_surf
+
+	def move(self):
+		for turret in game.friendly_turrets:
+			for projectile in turret.projectiles:
+				x_camera_offset_dif = projectile.camera_offset_x - game.camera_offset_x
+				if projectile.id != 9:
+					projectile.x_pos += projectile.direction[0] * projectile.vel
+					projectile.y_pos += projectile.direction[1] * projectile.vel
+				else:
+					projectile.falling_vel += 0.2
+					if projectile.forward_vel > 0:
+						projectile.forward_vel -= 0.01
+
+					projectile.x_pos += projectile.forward_vel
+					projectile.y_pos += projectile.falling_vel
+					projectile.get_rotation_angle()
+					
+				projectile.rect.center = (projectile.x_pos - x_camera_offset_dif, projectile.y_pos)
+				if projectile.rect.y >= 600:
+					turret.projectiles.pop(turret.projectiles.index(projectile))
+
+
+		for turret in game.enemy_turrets:
+			for projectile in turret.projectiles:
+				x_camera_offset_dif = projectile.camera_offset_x - game.camera_offset_x
+				if projectile.id != 9:
+					projectile.x_pos += projectile.direction[0] * projectile.vel * -1
+					projectile.y_pos += projectile.direction[1] * projectile.vel
+				else:
+					projectile.falling_vel += 0.2
+					if projectile.forward_vel < 0:
+						projectile.forward_vel += 0.01
+
+					projectile.x_pos -= projectile.forward_vel
+					projectile.y_pos += projectile.falling_vel
+					projectile.get_rotation_angle()
+	
+				projectile.rect.center = (projectile.x_pos - x_camera_offset_dif, projectile.y_pos)
+				if projectile.rect.y >= 600:
+					turret.projectiles.pop(turret.projectiles.index(projectile))
+	
+
+	def get_rotation_angle(self):
+		if self.id == 9:
+			if self.friendly:
+				max_rotation = 90 / game.FLOOR_LEVEL
+				current_rotation = max_rotation * self.y_pos
+				self.rotation = current_rotation * -1
+			else:
+				max_rotation = 90 / game.FLOOR_LEVEL
+				current_rotation = max_rotation * self.y_pos
+				self.rotation = current_rotation
+
+
+
+	def check_for_collision(self):
+		for turret in game.friendly_turrets:
+			for projectile in turret.projectiles:
+				for unit in turret.units_in_range:
+					if unit.unit_rect.colliderect(projectile.rect):
+						try:
+							unit.get_hurt(turret_info.turret_damage[projectile.id])
+							turret.projectiles.pop(turret.projectiles.index(projectile))
+							if projectile.id == 1:
+								blood_master.spawn_cluster(projectile.rect.center, True, (100,255,100), (2,2), False, 4)
+							elif projectile.id == 2:
+								blood_master.spawn_cluster(projectile.rect.center, True, "yellow", (2,2), False, 1)
+								blood_master.spawn_cluster(projectile.rect.center, True, "white", (2,2), False, 1)
+							elif projectile.id == 5:
+								blood_master.spawn_cluster(projectile.rect.center, True, (139,69,19), (5,5), False, 4)
+							elif projectile.id == 6:
+								blood_master.spawn_cluster(projectile.rect.center, True, (40,40,40), (6,6), False, 4)
+							elif projectile.id == 7:
+								blood_master.spawn_cluster(projectile.rect.center, True, "yellow", (1,1), False, 3)
+							elif projectile.id == 8:
+								blood_master.spawn_cluster(projectile.rect.center, True, "orange", (3,3), False, 4)
+								blood_master.spawn_cluster(projectile.rect.center, True, (30,30,30), (5,5), False, 5)
+								blood_master.spawn_cluster(projectile.rect.center, True, "grey", (2,2), False, 3)
+
+						except ValueError:
+							print("ValueError")
+
+		for turret in game.enemy_turrets:
+			for projectile in turret.projectiles:
+				for unit in turret.units_in_range:
+					if unit.unit_rect.colliderect(projectile.rect):
+						try:
+							unit.get_hurt(turret_info.turret_damage[projectile.id])
+							turret.projectiles.pop(turret.projectiles.index(projectile))
+							if projectile.id == 1:
+								blood_master.spawn_cluster(projectile.rect.center, True, (100,255,100), (2,2), False, 4)
+							elif projectile.id == 2:
+								blood_master.spawn_cluster(projectile.rect.center, True, "yellow", (2,2), False, 1)
+								blood_master.spawn_cluster(projectile.rect.center, True, "white", (2,2), False, 1)
+							elif projectile.id == 5:
+								blood_master.spawn_cluster(projectile.rect.center, True, (139,69,19), (5,5), False, 4)
+							elif projectile.id == 6:
+								blood_master.spawn_cluster(projectile.rect.center, True, (40,40,40), (6,6), False, 4)
+							elif projectile.id == 7:
+								blood_master.spawn_cluster(projectile.rect.center, True, "yellow", (1,1), False, 3)
+							elif projectile.id == 8:
+								blood_master.spawn_cluster(projectile.rect.center, True, "orange", (3,3), False, 4)
+								blood_master.spawn_cluster(projectile.rect.center, True, (30,30,30), (5,5), False, 5)
+								blood_master.spawn_cluster(projectile.rect.center, True, "grey", (2,2), False, 3)
+
+						except ValueError:
+							print("ValueError")
+
+	def update(self):
+		projectile.move()
+		projectile.check_for_collision()
+
+		
+	
+				
+	
+
+	def draw(self):
+		for turret in game.friendly_turrets:
+			for bullet in turret.projectiles:
+				game.screen.blit(bullet.rotate_image(), bullet.rect_rotate)
+
+		for turret in game.enemy_turrets:
+			for bullet in turret.projectiles:
+				game.screen.blit(bullet.rotate_image(), bullet.rect_rotate)
+	
+
+
+
+
+
+
+class Unit:
+	# universal unit class for both enemy and friendly units
+	def __init__(self, friendly:bool, id:int):
+		self.friendly = friendly
+		self.moving = True
+		self.fighting = False
+		self.weapon_rotation = 90
+		self.id = id
+		self.movement_speed = 1
+		self.fall_speed = 0
+		self.ranged = unit_info.is_unit_ranged
+		self.cost = unit_info.unit_cost[self.id]
+		self.exp_value = unit_info.unit_cost[self.id]
+		self.kill_value = unit_info.unit_cost[self.id] / 2
+		self.health = unit_info.unit_health[self.id]
+		self.damage = unit_info.unit_damage[self.id]
+		self.animation_frames = unit_info.animation_frames[self.id]
+		self.animation_state = 0
+		self.animation_timer = 0
+		self.animation_timer_goal = 60 / unit_info.animation_frames[self.id]
+		self.attack_timer = 0
+		self.attack_timer_goal = 2 * 60
+
+		# extracts the animation frames from spritesheet using the get_image method
+		if self.id == 1:
+			self.frame1_surf = game.unit_1_sheet.get_image(0, (16, 16), (1, 0, 0), 2)
+			self.frame2_surf = game.unit_1_sheet.get_image(1, (16, 16), (1, 0, 0), 2)
+			self.frame3_surf = game.unit_1_sheet.get_image(2, (16, 16), (1, 0, 0), 2)
+			self.frame4_surf = game.unit_1_sheet.get_image(3, (16, 16), (1, 0, 0), 2)
+			self.unit_rect = self.frame1_surf.get_rect()
+
+			self.weapon_surf = game.weapon_1_sheet.get_image(0, (128,128), (1,0,0), 0.8)
+			self.weapon_rect = self.weapon_surf.get_rect()
+			self.weapon_rect_rotate = self.weapon_rect
+
+		elif self.id == 2:
+			self.frame1_surf = game.unit_2_sheet.get_image(0, (16, 16), (1, 0, 0), 2)
+			self.frame2_surf = game.unit_2_sheet.get_image(1, (16, 16), (1, 0, 0), 2)
+			self.frame3_surf = game.unit_2_sheet.get_image(2, (16, 16), (1, 0, 0), 2)
+			self.frame4_surf = game.unit_2_sheet.get_image(3, (16, 16), (1, 0, 0), 2)
+			self.unit_rect = self.frame1_surf.get_rect()
+
+		elif self.id == 3:
+			self.frame1_surf = game.unit_3_sheet.get_image(0, (32, 32), (1, 0, 0), 2)
+			self.frame2_surf = game.unit_3_sheet.get_image(1, (32, 32), (1, 0, 0), 2)
+			self.frame3_surf = game.unit_3_sheet.get_image(0, (32, 32), (1, 0, 0), 2)
+			self.frame4_surf = game.unit_3_sheet.get_image(1, (32, 32), (1, 0, 0), 2)
+			self.unit_rect = self.frame1_surf.get_rect()
+
+		elif self.id == 4:
+			self.frame1_surf = game.unit_4_sheet.get_image(0, (16, 16), (1, 0, 0), 2)
+			self.frame2_surf = game.unit_4_sheet.get_image(1, (16, 16), (1, 0, 0), 2)
+			self.frame3_surf = game.unit_4_sheet.get_image(2, (16, 16), (1, 0, 0), 2)
+			self.frame4_surf = game.unit_4_sheet.get_image(3, (16, 16), (1, 0, 0), 2)
+			self.unit_rect = self.frame1_surf.get_rect()
+		elif self.id == 5:
+			self.frame1_surf = game.unit_5_sheet.get_image(0, (16, 16), (1, 0, 0), 2)
+			self.frame2_surf = game.unit_5_sheet.get_image(1, (16, 16), (1, 0, 0), 2)
+			self.frame3_surf = game.unit_5_sheet.get_image(2, (16, 16), (1, 0, 0), 2)
+			self.frame4_surf = game.unit_5_sheet.get_image(3, (16, 16), (1, 0, 0), 2)
+			self.unit_rect = self.frame1_surf.get_rect()
+		elif self.id == 6:
+			self.frame1_surf = game.unit_6_sheet.get_image(0, (32, 32), (1, 0, 0), 2)
+			self.frame2_surf = game.unit_6_sheet.get_image(1, (32, 32), (1, 0, 0), 2)
+			self.frame3_surf = game.unit_6_sheet.get_image(2, (32, 32), (1, 0, 0), 2)
+			self.frame4_surf = game.unit_6_sheet.get_image(3, (32, 32), (1, 0, 0), 2)
+			self.unit_rect = self.frame1_surf.get_rect()
+		elif self.id == 7:
+			self.frame1_surf = game.unit_7_sheet.get_image(0, (16, 16), (1, 0, 0), 2)
+			self.frame2_surf = game.unit_7_sheet.get_image(1, (16, 16), (1, 0, 0), 2)
+			self.frame3_surf = game.unit_7_sheet.get_image(2, (16, 16), (1, 0, 0), 2)
+			self.frame4_surf = game.unit_7_sheet.get_image(3, (16, 16), (1, 0, 0), 2)
+			self.unit_rect = self.frame1_surf.get_rect()
+		elif self.id == 8:
+			self.frame1_surf = game.unit_8_sheet.get_image(0, (16, 16), (1, 0, 0), 2)
+			self.frame2_surf = game.unit_8_sheet.get_image(1, (16, 16), (1, 0, 0), 2)
+			self.frame3_surf = game.unit_8_sheet.get_image(2, (16, 16), (1, 0, 0), 2)
+			self.frame4_surf = game.unit_8_sheet.get_image(3, (16, 16), (1, 0, 0), 2)
+			self.unit_rect = self.frame1_surf.get_rect()
+		elif self.id == 9:
+			self.frame1_surf = game.unit_9_sheet.get_image(0, (32, 32), (1, 0, 0), 3)
+			self.frame2_surf = game.unit_9_sheet.get_image(1, (32, 32), (1, 0, 0), 3)
+			self.frame3_surf = game.unit_9_sheet.get_image(2, (32, 32), (1, 0, 0), 3)
+			self.frame4_surf = game.unit_9_sheet.get_image(3, (32, 32), (1, 0, 0), 3)
+			self.unit_rect = self.frame1_surf.get_rect()
+
+		
+			# flip the unit if its from the enemy
+		if not self.friendly:
+			self.x_pos = 1920 - 32
+			self.frame1_surf = pygame.transform.flip(self.frame1_surf, True, False)
+			self.frame1_surf.set_colorkey((1,000,000))
+			self.frame2_surf = pygame.transform.flip(self.frame2_surf, True, False)
+			self.frame2_surf.set_colorkey((1,000,000))
+			self.frame3_surf = pygame.transform.flip(self.frame3_surf, True, False)
+			self.frame3_surf.set_colorkey((1,000,000))
+			self.frame4_surf = pygame.transform.flip(self.frame4_surf, True, False)
+			self.frame4_surf.set_colorkey((1,000,000))
+
+		else:
+			self.x_pos = 32
+
+		self.unit_rect.bottomleft = (self.x_pos, game.FLOOR_LEVEL)
+		
+		# create smaller rect infront of the unit to make it stop when in combat
+		if self.friendly:
+			self.front_rect = pygame.Rect(self.x_pos + self.unit_rect.width, game.FLOOR_LEVEL, 6, self.unit_rect.height)
+			self.front_rect.bottom = game.FLOOR_LEVEL
+		else:
+			self.front_rect = pygame.Rect(self.x_pos - self.unit_rect.width, game.FLOOR_LEVEL, 6, self.unit_rect.height)
+			self.front_rect.bottom = game.FLOOR_LEVEL
+
+	def spawn_friendly(self, id):
+		unit = Unit(True, id)
+		game.friendly_units_queue.append(unit)
+		game.friendly_exp += unit_info.unit_exp_value[id]/2
+
+	def spawn_enemy(self, id):
+		unit = Unit(False, id)
+		game.enemy_units.append(unit)
+		game.enemy_exp += unit_info.unit_exp_value[id]/2
+
+	def check_if_in_enemy_base(self):
+		for unit in game.friendly_units:
+			if unit.unit_rect.bottomright[0] >= 1900 + game.camera_offset_x:
+				game.friendly_units.pop(game.friendly_units.index(unit))
+				game.enemy_base_health -= unit.damage
+		for enemy in game.enemy_units:
+			if enemy.unit_rect.bottomleft[0] <= 20 + game.camera_offset_x:
+				game.enemy_units.pop(game.enemy_units.index(enemy))
+				game.friendly_base_health -= enemy.damage
+
+
+	def move(self):
+		for unit in game.friendly_units:
+			if unit.moving:
+				unit.x_pos += unit.movement_speed
+				unit.unit_rect.x = unit.x_pos + game.camera_offset_x
+				unit.front_rect.x = unit.x_pos + unit.unit_rect.width + game.camera_offset_x
+			else:
+				unit.unit_rect.x = unit.x_pos + game.camera_offset_x
+				unit.front_rect.x = unit.x_pos + unit.unit_rect.width + game.camera_offset_x
+			unit.unit_rect.y += unit.fall_speed
+			#unit.weapon_rect.center = (unit.unit_rect.center[0] - 3, unit.unit_rect.center[1] + 4) 
+
+		for unit in game.enemy_units:
+			if unit.moving:
+				unit.x_pos -= unit.movement_speed
+				unit.unit_rect.x = unit.x_pos + game.camera_offset_x
+				unit.front_rect.bottomright = (unit.x_pos + game.camera_offset_x, game.FLOOR_LEVEL)
+			else:
+				unit.unit_rect.x = unit.x_pos + game.camera_offset_x
+				unit.front_rect.bottomright = (unit.x_pos + game.camera_offset_x, game.FLOOR_LEVEL)
+			unit.unit_rect.y += unit.fall_speed
+	
+	def rotate_weapon(self):
+		rotated_surf = pygame.transform.rotate(self.weapon_surf, self.weapon_rotation)
+		rotated_surf.set_colorkey((1,0,0))
+		self.weapon_rect_rotate = rotated_surf.get_rect(center= self.weapon_rect.center)
+		return rotated_surf
+
+
+
+	def update_animation_state(self):
+		for unit in game.friendly_units + game.enemy_units:
+			if unit.moving:
+				unit.animation_timer += 1
+				if unit.animation_timer == unit.animation_timer_goal:
+					unit.animation_timer = 0
+					if unit.animation_state < unit.animation_frames - 1:
+						unit.animation_state += 1
+					else:
+						unit.animation_state = 0
+			else:
+				unit.animation_state = 0
+
+
+	def check_health(self):
+		for unit in game.friendly_units:
+			if unit.health <= 0:
+				unit.fall_speed += game.GRAVITY
+				game.combat = False
+				unit.fighting = False
+				unit.moving = False
+				unit.unit_rect.x -= unit.fall_speed
+				
+				if unit.unit_rect.y >= 500:
+					game.friendly_units.pop(game.friendly_units.index(unit))
+					game.enemy_money += unit.kill_value * 1.5
+					game.enemy_exp += unit_info.unit_exp_value[unit.id]
+		for unit in game.enemy_units:
+			if unit.health <= 0:
+				unit.fall_speed += game.GRAVITY
+				game.combat = False
+				unit.fighting = False
+				unit.moving = False
+				unit.unit_rect.x += unit.fall_speed
+				
+				if unit.unit_rect.y >= 500:
+					game.enemy_units.pop(game.enemy_units.index(unit))
+					game.friendly_money += unit.kill_value
+					game.friendly_exp += unit_info.unit_exp_value[unit.id]
+
+	def handle_combat(self):
+		for unit in game.friendly_units:
+			for enemy in game.enemy_units:
+				if unit.unit_rect.colliderect(enemy.unit_rect):
+					unit.moving = False
+					enemy.moving = False
+					game.combat = True
+					unit.fighting = True
+					enemy.fighting = True
+				if game.combat == False:
+					unit.moving = True
+					unit.fighting = False
+					enemy.moving = True
+					enemy.fighting = False
+	
+		if game.combat:
+			for unit in game.friendly_units:
+				for friendly in game.friendly_units:
+					if unit.front_rect.colliderect(friendly.unit_rect):
+						unit.moving = False
+
+			for unit in game.enemy_units:
+				for enemy in game.enemy_units:
+					if unit.front_rect.colliderect(enemy.unit_rect):
+						unit.moving = False
+		
+
+	def attack(self):
+		for unit in game.friendly_units:
+			if unit.fighting:
+				unit.weapon_rotation -= 3
+				unit.attack_timer += 1
+				if unit.attack_timer == unit.attack_timer_goal:
+					unit.attack_timer = 0
+					for enemy in game.enemy_units:
+						if enemy.fighting:
+							enemy.get_hurt(unit.damage)
+							
+
+		for enemy in game.enemy_units:
+			if enemy.fighting:
+				enemy.attack_timer += 1
+				if enemy.attack_timer == enemy.attack_timer_goal:
+					enemy.attack_timer = 0
+					for unit in game.friendly_units:
+						if unit.fighting:
+							unit.get_hurt(enemy.damage)
+
+
+	
+	def get_hurt(self, amount):
+		self.health -= amount
+		if not self.id == 9:
+			blood_master.spawn_cluster(self.unit_rect.center, self.friendly, (200,0,0), (8,8), True, 20)
+		else:
+			blood_master.spawn_cluster(self.unit_rect.center, self.friendly, (249,233,9), (4,4), False, 10)
+			blood_master.spawn_cluster(self.unit_rect.center, self.friendly, (20,20,20), (4,4), False, 10)
+
+
+			
+	def draw(self):
+		for unit in game.friendly_units:
+			if unit.animation_state == 0:
+				game.screen.blit(unit.frame1_surf, unit.unit_rect)
+			elif unit.animation_state == 1:
+				game.screen.blit(unit.frame2_surf, unit.unit_rect)
+			elif unit.animation_state == 2:
+				game.screen.blit(unit.frame3_surf, unit.unit_rect)
+			elif unit.animation_state == 3:
+				game.screen.blit(unit.frame4_surf, unit.unit_rect)
+			#game.screen.blit(unit.rotate_weapon(), unit.weapon_rect_rotate)
+
+		for unit in game.enemy_units:
+			if unit.animation_state == 0:
+				game.screen.blit(unit.frame1_surf, unit.unit_rect)
+			elif unit.animation_state == 1:
+				game.screen.blit(unit.frame2_surf, unit.unit_rect)
+			elif unit.animation_state == 2:
+				game.screen.blit(unit.frame3_surf, unit.unit_rect)
+			elif unit.animation_state == 3:
+				game.screen.blit(unit.frame4_surf, unit.unit_rect)
+		
+
+
+	def update(self):
+		self.move()
+		self.update_animation_state()
+		self.handle_combat()
+		self.attack()
+		self.check_health()
+		self.check_if_in_enemy_base()
+
+
+
+
+
+class Dirt:
+	def __init__(self, pos):
+		self.x_pos = pos[0]
+		self.y_pos = pos[1]
+		self.color = (64,41,5)
+		self.width = 2
+		self.height = 2
+		self.fall_vel = 0
+		self.death_timer = 0
+		self.death_timer_goal = 10
+		self.x_direction = random.randint(-1, 1)
+		self.y_direction = random.randint(-4, 1)
+
+
+	def spawn_cluster(self, pos):
+		dirt1 = Dirt(pos)
+		dirt2 = Dirt(pos)
+		dirt3 = Dirt(pos)
+		dirt4 = Dirt(pos)
+		dirt5 = Dirt(pos)
+		dirt6 = Dirt(pos)
+		dirt7 = Dirt(pos)
+		dirt8 = Dirt(pos)
+		dirt9 = Dirt(pos)
+		dirt10 = Dirt(pos)
+		dirt11 = Dirt(pos)
+		dirt12 = Dirt(pos)
+		game.dirt_particles.append(dirt1)
+		game.dirt_particles.append(dirt2)
+		game.dirt_particles.append(dirt3)
+		game.dirt_particles.append(dirt4)
+		game.dirt_particles.append(dirt5)
+		game.dirt_particles.append(dirt6)
+		game.dirt_particles.append(dirt7)
+		game.dirt_particles.append(dirt8)
+		game.dirt_particles.append(dirt9)
+		game.dirt_particles.append(dirt10)
+		game.dirt_particles.append(dirt11)
+		game.dirt_particles.append(dirt12)
+	def move(self):
+		for dirt in game.dirt_particles:
+			dirt.x_pos += dirt.x_direction
+			dirt.y_pos += dirt.y_direction
+			dirt.fall_vel += game.GRAVITY
+			dirt.y_pos += dirt.fall_vel
+	def check_if_dead(self):
+		for dirt in game.dirt_particles:
+			dirt.death_timer += 1
+			if dirt.death_timer == dirt.death_timer_goal:
+				game.dirt_particles.pop(game.dirt_particles.index(dirt))
+
+	def update(self):
+		self.move()
+		self.check_if_dead()
+
+	def draw(self):
+		for dirt in game.dirt_particles:
+			pygame.draw.rect(game.screen, dirt.color, pygame.Rect(dirt.x_pos, dirt.y_pos, dirt.width, dirt.height))
+
+class Blood:
+	def __init__(self, pos:tuple, friendly:bool, color:tuple, size:tuple, stays_on_screen:bool = True):
+		self.friendly = friendly
+		self.camera_offset_x = game.camera_offset_x
+		self.x_pos = pos[0]
+		self.y_pos = pos[1]
+		self.color = color
+		self.width = size[0]
+		self.height = size[1]
+		self.stays_on_screen = stays_on_screen
+		self.fall_vel = 0
+		if self.friendly:
+			self.x_direction = random.randint(-4, 1)
+			self.y_direction = random.randint(-6, 1)
+		elif not self.friendly:
+			self.x_direction = random.randint(-1, 4)
+			self.y_direction = random.randint(-6, 1)
+
+		self.rect = pygame.Rect(self.x_pos, self.y_pos, self.height, self.width)
+
+
+	def spawn_cluster(self, pos, friendly, color, size, stays_on_screen, number:int):
+		for i in range(number):
+			blood_part = Blood(pos, friendly, color, size, stays_on_screen)
+			game.blood_particles.append(blood_part)
+		
+		
+
+
+	def move(self):
+		for blood in game.blood_particles:
+			x_camera_offset_dif = blood.camera_offset_x - game.camera_offset_x
+			blood.x_pos += blood.x_direction
+			blood.y_pos += blood.y_direction
+			blood.fall_vel += game.GRAVITY
+			blood.y_pos += blood.fall_vel	
+			if blood.y_pos >= game.SCREEN_SIZE[1] - blood.height and blood.stays_on_screen:
+				blood.fall_vel = 0
+				blood.x_direction = 0
+				blood.y_direction = 0
+				blood.fall_vel -= game.GRAVITY
+				blood.y_direction += 0.02
+			if blood.y_pos >= game.SCREEN_SIZE[1]:
+				game.blood_particles.pop(game.blood_particles.index(blood))
+			blood.rect.topleft = (blood.x_pos - x_camera_offset_dif, blood.y_pos)
+
+	def draw(self):
+		for blood in game.blood_particles:
+			pygame.draw.rect(game.screen, blood.color, blood.rect)
+
+	def update(self):
+		self.move()
+
+
+
+class Meteor():
+	def __init__(self, pos):
+		self.x_pos = pos[0]
+		self.y_pos = pos[1]
+		self.fall_speed = 4
+		self.spawntimer = 0
+		self.spawntimer_goal = 5
+		self.duration_timer = 0
+		self.duration_timer_goal = 7*60
+		self.rain = False
+		self.animation_state = 0
+		self.animation_timer = 0
+		self.animation_timer_goal = 5
+		self.frame1_surf = game.tier1_special_sheet.get_image(0, (32, 64), (1,0,0), 1)
+		self.frame2_surf = game.tier1_special_sheet.get_image(1, (32, 64), (1,0,0), 1)
+		self.frame3_surf = game.tier1_special_sheet.get_image(2, (32, 64), (1,0,0), 1)
+		self.frame4_surf = game.tier1_special_sheet.get_image(3, (32, 64), (1,0,0), 1)
+		self.rect = self.frame1_surf.get_rect()
+		self.rect.topleft = (self.x_pos + game.camera_offset_x, self.y_pos)
+
+	def spawn_meteor(self):
+		meteor = Meteor((random.randint(0, 1920), -128))
+		game.meteors.append(meteor)
+
+	def spawn_meteor_rain(self):
+		if self.rain:
+			if self.duration_timer <= self.duration_timer_goal:
+				self.duration_timer += 1
+				self.spawntimer += 1
+				if self.spawntimer >= self.spawntimer_goal:
+					self.spawn_meteor()
+					self.spawntimer = 0
+	
+			else:
+				self.duration_timer = 0
+				self.rain = False
+
+	def move(self):
+		for meteor in game.meteors:
+			meteor.rect.x = meteor.x_pos + game.camera_offset_x
+			
+			meteor.y_pos += meteor.fall_speed
+			meteor.rect.y = meteor.y_pos
+
+			if meteor.y_pos > 600:
+				game.meteors.pop(game.meteors.index(meteor))
+
+	def update_animation_state(self):
+		for meteor in game.meteors:
+			meteor.animation_timer += 1
+			if meteor.animation_timer == meteor.animation_timer_goal:
+				if meteor.animation_state == 0:
+					meteor.animation_state = 1
+				elif meteor.animation_state == 1:
+					meteor.animation_state = 2
+				elif meteor.animation_state == 2:
+					meteor.animation_state = 3
+				elif meteor.animation_state == 3:
+					meteor.animation_state = 0
+				meteor.animation_timer = 0
+
+	def draw(self):
+		for meteor in game.meteors:
+			if meteor.animation_state == 0:
+				game.screen.blit(self.frame1_surf, meteor.rect)
+			if meteor.animation_state == 1:
+				game.screen.blit(self.frame2_surf, meteor.rect)
+			if meteor.animation_state == 2:
+				game.screen.blit(self.frame3_surf, meteor.rect)
+			if meteor.animation_state == 3:
+				game.screen.blit(self.frame4_surf, meteor.rect)
+
+	def check_if_unit_hit(self):
+		for unit in game.enemy_units:
+			for meteor in game.meteors:
+				if meteor.rect.colliderect(unit.unit_rect):
+					unit.get_hurt(unit.health + 20)
+			
+
+	def update(self):
+		self.spawn_meteor_rain()
+		self.move()
+		self.update_animation_state()
+		self.check_if_unit_hit()
+
+
+
+
+
+class Arrow():
+	def __init__(self, pos):
+		self.x_pos = pos[0]
+		self.y_pos = pos[1]
+		self.fall_speed = 6
+		self.spawntimer = 0
+		self.spawntimer_goal = 3
+		self.duration_timer = 0
+		self.duration_timer_goal = 7*60
+		self.rain = False
+		self.frame1_surf = game.tier2_special_sheet.get_image(0, (8, 16), (1,0,0), 2)
+		self.rect = self.frame1_surf.get_rect()
+		self.rect.topleft = (self.x_pos + game.camera_offset_x, self.y_pos)
+
+	def spawn_arrow(self):
+		arrow = Arrow((random.randint(0, 1920), -128))
+		game.arrows.append(arrow)
+
+	def spawn_arrow_rain(self):
+		if self.rain:
+			if self.duration_timer <= self.duration_timer_goal:
+				self.duration_timer += 1
+				self.spawntimer += 1
+				if self.spawntimer >= self.spawntimer_goal:
+					self.spawn_arrow()
+					self.spawntimer = 0
+	
+			else:
+				self.duration_timer = 0
+				self.rain = False
+
+	def move(self):
+		for arrow in game.arrows:
+			arrow.rect.x = arrow.x_pos + game.camera_offset_x
+			
+			arrow.y_pos += arrow.fall_speed
+			arrow.rect.y = arrow.y_pos
+
+			if arrow.y_pos > 600:
+				game.arrows.pop(game.arrows.index(arrow))
+
+
+	def draw(self):
+		for arrow in game.arrows:
+			game.screen.blit(self.frame1_surf, arrow.rect)
+			
+
+	def check_if_unit_hit(self):
+		for unit in game.enemy_units:
+			for arrow in game.arrows:
+				if arrow.rect.colliderect(unit.unit_rect):
+					unit.get_hurt(unit.health + 20)
+					game.arrows.pop(game.arrows.index(arrow))
+			
+
+	def update(self):
+		self.spawn_arrow_rain()
+		self.move()
+		self.check_if_unit_hit()
+
+
+
+class A10:
+	def __init__(self):
+		self.altitude = 200
+		self.x_pos = -500
+		self.movement_speed = 8
+		self.shoottimer = 0
+		self.shoottimer_goal = 3
+		self.animation_state = 0
+		self.animation_timer = 0
+		self.animation_timer_goal = 15
+		self.frame1_surf = game.tier3_special_sheet.get_image(0, (64, 32), (1,0,0), 2)
+		self.frame2_surf = game.tier3_special_sheet.get_image(1, (64, 32), (1,0,0), 2)
+		self.rect = self.frame1_surf.get_rect()
+
+	def spawn(self):
+		a10 = A10()
+		game.planes.append(a10)
+	
+	
+	def shoot(self):
+		for plane in game.planes:
+			if plane.x_pos  >= 200 + game.camera_offset_x:
+				plane.shoottimer += 1
+				if plane.shoottimer == plane.shoottimer_goal:
+					plane.shoottimer = 0
+					bullet.spawn(plane.rect.center)
+
+	def move(self):
+		for plane in game.planes:
+			plane.x_pos += plane.movement_speed
+			plane.rect.topleft = (plane.x_pos + game.camera_offset_x, plane.altitude)
+			if plane.x_pos >= 1920:
+				game.planes.pop(game.planes.index(plane))
+
+	def update_animation_state(self):
+		for plane in game.planes:
+			plane.animation_timer += 1
+			if plane.animation_timer == plane.animation_timer_goal:
+				plane.animation_timer = 0
+				if plane.animation_state == 0:
+					plane.animation_state = 1
+				elif plane.animation_state == 1:
+					plane.animation_state = 0
+
+	def draw(self):
+		for plane in game.planes:
+			if plane.animation_state == 0:
+				game.screen.blit(plane.frame1_surf, plane.rect)
+			elif plane.animation_state == 1:
+				game.screen.blit(plane.frame2_surf, plane.rect)
+
+	
+	def update(self):
+		self.move()
+		self.shoot()
+		self.update_animation_state()
+
+
+class Bullet:
+	def __init__(self, pos):
+		self.x_pos = pos[0]
+		self.y_pos = pos[1]
+		self.vel_x = random.randint(24, 26)
+		self.vel_y = random.randint(9, 10)
+		self.surf = game.tier3_special_bullet
+		self.rect = self.surf.get_rect()
+
+	def spawn(self, pos):
+		bullet = Bullet(pos)
+		game.bullets.append(bullet)
+
+	def move(self):
+		for bullet in game.bullets:
+			bullet.x_pos += bullet.vel_x
+			bullet.y_pos += bullet.vel_y
+			bullet.rect.topleft = (bullet.x_pos, bullet.y_pos)
+			if bullet.y_pos >= game.FLOOR_LEVEL:
+				dirt.spawn_cluster(bullet.rect.center)
+				game.bullets.pop(game.bullets.index(bullet))
+
+	def check_if_collide_with_unit(self):
+		for bullet in game.bullets:
+			for unit in game.enemy_units:
+				try:
+					if bullet.rect.colliderect(unit.unit_rect):
+						game.bullets.pop(game.bullets.index(bullet))
+						unit.get_hurt(90)
+				except ValueError:
+					print("ValueError")
+
+	def draw(self):
+		for bullet in game.bullets:
+			game.screen.blit(bullet.surf, bullet.rect)
+
+	def update(self):
+		self.move()
+		self.check_if_collide_with_unit()
+
+
+
+
+
+
+# creates "game"-object and master instances of other classes
+game = Game()
+meteor = Meteor((0,0))
+arrow = Arrow((0,0))
+plane = A10()
+bullet = Bullet((0,0))
+dirt = Dirt((0,0))
+blood_master = Blood((100,100), False, (0,0,0), (1,1))
+turret = Turret(False, 1, 1)
+projectile = Projectile((0,0), (1,1), 1, 1, True)
+# master class to controll units
+unit = Unit(False, 3)
+
+# starts the main game loop
+game.mainloop()
