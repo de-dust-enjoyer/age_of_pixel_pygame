@@ -110,8 +110,6 @@ class Game:
 		# current player age
 		self.age = 1
 
-		self.particle = Particle((0,0,0), (50,50), (100,100), 8, "hello")
-
 		# current enemy age
 		self.enemy_age = 1
 
@@ -179,6 +177,8 @@ class Game:
 		self.bullets = []
 		#list containing all the dirt particles on screen
 		self.dirt_particles = []
+		#list containing particle objects
+		self.particles = []
 
 		# specifying button location and size
 		self.unit_select_button_rect = pygame.Rect(648, 8, 48, 48)
@@ -423,6 +423,7 @@ class Game:
 		plane.update()
 		bullet.update()
 		dirt.update()
+		particle.update()
 		self.update_global_time()
 		self.handle_enemy_progression()
 		self.spawn_enemys()
@@ -443,6 +444,7 @@ class Game:
 		self.draw_unit_healthbars()
 
 		blood_master.draw()
+		particle.draw()
 		# >>>>>
 		self.draw_bases_2()
 		projectile.draw()
@@ -2452,17 +2454,93 @@ class Blood:
 
 
 class Particle:
-	def __init__(self, color:tuple, size:tuple, starting_pos:tuple, lifetime:int, type:str, camera_offset_x:int = 0, alpha:int = 255):
+	def __init__(self, color:tuple, size:tuple, starting_pos:tuple, lifetime:int, type:str, alpha:int = 255):
 		self.color = (color[0], color[1], color[2], alpha)
 		self.width = size[0]
 		self.height = size[1]
 		self.starting_pos_x = starting_pos[0]
 		self.starting_pos_y = starting_pos[1]
+		self.x_vel = 0
+		self.y_vel = 0
 		self.lifetime = lifetime * 60
+		self.lifetimer = 0
 		self.type = type
-		self.starting_camera_offset = camera_offset_x
+		self.starting_camera_offset = game.camera_offset_x
 		self.rect = pygame.Rect(self.starting_pos_x, self.starting_pos_y, self.width, self.height)
-		
+
+		if self.type == "no_gravity":
+			self.x_direction = random.randint(-1, 1)
+			self.y_direction = random.randint(-1, 1)
+			self.x_vel = random.randint(0, 4)
+			self.y_vel = random.randint(0, 4)
+
+		elif self.type == "gravity":
+			self.x_direction = random.randint(-1, 1)
+			self.y_direction = -1
+			self.x_vel = random.randint(0, 4)
+			self.y_vel = -4
+
+		elif self.type == "smoke":
+			self.x_direction = random.randint(-1, 1)
+			self.y_direction = -1
+			self.x_vel = random.randint(-4, 4)
+			self.y_vel = -3
+
+		elif self.type == "none":
+			self.x_direction = random.randint(-1, 1)
+			self.y_direction = random.randint(-1, 1)
+			self.x_vel = random.randint(0, 4)
+			self.y_vel = random.randint(0, 4)
+
+
+	def move(self):
+		x_camera_offset_dif = self.starting_camera_offset - game.camera_offset_x
+
+		if self.type == "gravity":
+			self.y_vel += game.GRAVITY
+			self.x_pos += self.x_direction * self.x_vel
+			self.y_pos += self.y_direction * self.y_vel
+
+		elif self.type == "no_gravity":
+			self.x_pos += self.x_direction * self.x_vel
+			self.y_pos += self.y_direction * self.y_vel
+
+		elif self.type == "smoke":
+			self.x_pos += self.x_direction * self.x_vel
+			self.y_pos += self.y_direction * self.y_vel
+
+		self.rect.topleft = (self.x_pos - x_camera_offset_dif, self.y_pos)
+
+
+
+
+
+
+
+	def check_lifetime(self):
+		self.lifetimer += 1
+		if self.lifetimer == self.lifetime:
+			game.particles.pop(game.particles.index(self))
+
+
+
+	def create_transparent_surf(self):
+		surf = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+		surf.fill(self.color)
+		return surf
+
+
+	def draw(self):
+		for particle in game.particles:
+			if not particle.type == "none":
+				game.screen.blit(particle.create_transparent_surf(), particle.rect)
+
+
+
+	def update(self):
+		for particle in game.particles:
+			particle.check_lifetime()
+			particle.move()
 
 
 
@@ -2728,6 +2806,7 @@ plane = A10()
 bullet = Bullet((0,0))
 dirt = Dirt((0,0))
 blood_master = Blood((100,100), False, (0,0,0), (1,1))
+particle = Particle((0,0,0), (1,1), (0,0), 1, "none")
 turret = Turret(False, 1, 1)
 projectile = Projectile((0,0), (1,1), 1, 1, True)
 # master class to controll units
