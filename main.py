@@ -1984,9 +1984,9 @@ class Projectile:
 							elif projectile.id == 7:
 								blood_master.spawn_cluster(projectile.rect.center, True, "yellow", (1,1), False, 3)
 							elif projectile.id == 8:
-								blood_master.spawn_cluster(projectile.rect.center, True, "orange", (3,3), False, 4)
-								blood_master.spawn_cluster(projectile.rect.center, True, (30,30,30), (5,5), False, 5)
-								blood_master.spawn_cluster(projectile.rect.center, True, "grey", (2,2), False, 3)
+								particle.spawn_explosion(projectile.rect.center, (30,30,30), 1, (255,100,0), 0.3, (255,165,0), 0.7, (4,4), 5)
+							elif projectile.id == 9:
+								particle.spawn_explosion(projectile.rect.center, (30,30,30), 1, (255,100,0), 0.3, (255,165,0), 0.7, (4,4), 10)
 
 						except ValueError:
 							print("ValueError")
@@ -2010,9 +2010,9 @@ class Projectile:
 							elif projectile.id == 7:
 								blood_master.spawn_cluster(projectile.rect.center, True, "yellow", (1,1), False, 3)
 							elif projectile.id == 8:
-								blood_master.spawn_cluster(projectile.rect.center, True, "orange", (3,3), False, 4)
-								blood_master.spawn_cluster(projectile.rect.center, True, (30,30,30), (5,5), False, 5)
-								blood_master.spawn_cluster(projectile.rect.center, True, "grey", (2,2), False, 3)
+								particle.spawn_explosion(projectile.rect.center, (30,30,30), 1, (255,100,0), 0.3, (255,165,0), 0.7, (4,4), 5)
+							elif projectile.id == 9:
+								particle.spawn_explosion(projectile.rect.center, (30,30,30), 1, (255,100,0), 0.3, (255,165,0), 0.7, (4,4), 10)
 
 						except ValueError:
 							print("ValueError")
@@ -2458,25 +2458,26 @@ class Particle:
 		self.color = (color[0], color[1], color[2], alpha)
 		self.width = size[0]
 		self.height = size[1]
-		self.starting_pos_x = starting_pos[0]
-		self.starting_pos_y = starting_pos[1]
+		self.x_pos = starting_pos[0]
+		self.y_pos = starting_pos[1]
+		self.starting_pos_x = self.x_pos
+		self.starting_pos_y = self.y_pos
 		self.x_vel = 0
 		self.y_vel = 0
-		self.lifetime = lifetime * 60
+		self.lifetime = round(lifetime * 60)
 		self.lifetimer = 0
 		self.type = type
 		self.starting_camera_offset = game.camera_offset_x
-		self.rect = pygame.Rect(self.starting_pos_x, self.starting_pos_y, self.width, self.height)
+		self.rect = pygame.Rect(self.x_pos, self.y_pos, self.width, self.height)
 
 		if self.type == "no_gravity":
 			self.x_direction = random.randint(-1, 1)
 			self.y_direction = random.randint(-1, 1)
-			self.x_vel = random.randint(0, 4)
+			self.x_vel = random.randint(0, 7)
 			self.y_vel = random.randint(0, 4)
 
 		elif self.type == "gravity":
 			self.x_direction = random.randint(-1, 1)
-			self.y_direction = -1
 			self.x_vel = random.randint(0, 4)
 			self.y_vel = -4
 
@@ -2484,7 +2485,7 @@ class Particle:
 			self.x_direction = random.randint(-1, 1)
 			self.y_direction = -1
 			self.x_vel = random.randint(-4, 4)
-			self.y_vel = -3
+			self.y_vel = 3
 
 		elif self.type == "none":
 			self.x_direction = random.randint(-1, 1)
@@ -2494,37 +2495,38 @@ class Particle:
 
 
 	def move(self):
+		# method to determine how every particle should move
 		x_camera_offset_dif = self.starting_camera_offset - game.camera_offset_x
 
 		if self.type == "gravity":
+			# particle moves in random direction and gets pulled down by gravity
 			self.y_vel += game.GRAVITY
 			self.x_pos += self.x_direction * self.x_vel
-			self.y_pos += self.y_direction * self.y_vel
+			self.y_pos += self.y_vel
 
 		elif self.type == "no_gravity":
+			# particle moves in random direction
 			self.x_pos += self.x_direction * self.x_vel
 			self.y_pos += self.y_direction * self.y_vel
 
 		elif self.type == "smoke":
+			# particle moves in random dircetion an x axis and up
 			self.x_pos += self.x_direction * self.x_vel
 			self.y_pos += self.y_direction * self.y_vel
 
+		# assign pos variables to rect atribute
 		self.rect.topleft = (self.x_pos - x_camera_offset_dif, self.y_pos)
 
 
-
-
-
-
-
 	def check_lifetime(self):
+		# if max lifetime is reached remove particle
 		self.lifetimer += 1
 		if self.lifetimer == self.lifetime:
 			game.particles.pop(game.particles.index(self))
 
 
-
 	def create_transparent_surf(self):
+		# create surface object to allow for transparent particles
 		surf = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
 		surf.fill(self.color)
 		return surf
@@ -2535,12 +2537,30 @@ class Particle:
 			if not particle.type == "none":
 				game.screen.blit(particle.create_transparent_surf(), particle.rect)
 
-
-
 	def update(self):
 		for particle in game.particles:
 			particle.check_lifetime()
 			particle.move()
+
+	def spawn_explosion(self, pos:tuple, smoke_color:tuple, 
+						smoke_lifetime:int, color_1:tuple, 
+						color_1_lifetime:int, color_2:tuple, 
+						color_2_lifetime:int, part_size:tuple, 
+						part_count:int):
+		
+		for i in range(part_count):
+			smoke_particle = Particle(smoke_color, part_size, pos, smoke_lifetime, "smoke", 40)
+			game.particles.append(smoke_particle)
+
+			particle_gravity = Particle(color_1, part_size, pos, color_1_lifetime, "gravity")
+			game.particles.append(particle_gravity)
+			particle_gravity = Particle(color_1, part_size, pos, color_1_lifetime, "no_gravity")
+			game.particles.append(particle_gravity)
+
+			particle_no_gravity = Particle(color_2, part_size, pos, color_2_lifetime, "gravity")
+			game.particles.append(particle_no_gravity)
+			particle_no_gravity = Particle(color_2, part_size, pos, color_2_lifetime, "no_gravity")
+			game.particles.append(particle_no_gravity)
 
 
 
