@@ -54,7 +54,7 @@ class Game:
 		# camera setup
 		self.camera_offset_x = 0
 		self.camera_move_speed = 10
-		self.scroll_speed = 40
+		self.scroll_speed = 20
 
 		# key_pressed variables
 		self.pan_right = False
@@ -114,8 +114,8 @@ class Game:
 		self.enemy_age = 1
 
 		# player and enemy base health
-		self.friendly_base_health = 1000
-		self.enemy_base_health = 1000
+		self.friendly_base_health = 500
+		self.enemy_base_health = 500
 
 		# player and enemy base upgrade state
 		self.friendly_base_upgrade_state = 0
@@ -151,11 +151,11 @@ class Game:
 		self.enemy_module_pos3_t3 = (1850 + self.camera_offset_x, 0)
 
 		# player and enemys money
-		self.friendly_money = 30000000
+		self.friendly_money = 300
 		self.enemy_money = 10
 
 		# player and enemy exp
-		self.friendly_exp = 1000000
+		self.friendly_exp = 0
 		self.enemy_exp = 0
 
 		# treshholds for age upgrade
@@ -461,7 +461,6 @@ class Game:
 		# render ui at last pos to keep it in foreground!!
 		self.draw_ui()
 		if self.dev_mode:
-			pygame.draw.rect(self.particle.display_surf, self.particle.color, self.particle.rect)
 			self.render_text(f"FPS^          : {round(self.clock.get_fps())}", self.font_16, "black", (0,64))
 			self.render_text(f"MINUTES PASSED: {self.minutes_passed}", self.font_16, "black", (0,80))
 			self.render_text(f"ENEMY AGE     : {self.enemy_age}", self.font_16, "black", (0,96))
@@ -883,14 +882,16 @@ class Game:
 
 	def draw_base_healthbar(self):
 		healthbar_width = 7
-		friendly_health_rect = pygame.Rect(10 + self.camera_offset_x, game.FLOOR_LEVEL, healthbar_width, game.friendly_base_health /10)
+		healthbar_height = 100
+
+		friendly_health_rect = pygame.Rect(10 + self.camera_offset_x, game.FLOOR_LEVEL, healthbar_width, game.friendly_base_health /5)
 		friendly_health_rect.bottom = game.FLOOR_LEVEL
-		pygame.draw.rect(self.screen, (200,0,0), pygame.Rect(10 + self.camera_offset_x, game.FLOOR_LEVEL - 100, healthbar_width, 100))
+		pygame.draw.rect(self.screen, (200,0,0), pygame.Rect(10 + self.camera_offset_x, game.FLOOR_LEVEL - 100, healthbar_width, healthbar_height))
 		pygame.draw.rect(self.screen, (0,200,0), friendly_health_rect)
 
-		enemy_health_rect = pygame.Rect(1900 + self.camera_offset_x, game.FLOOR_LEVEL, healthbar_width, game.enemy_base_health /10)
+		enemy_health_rect = pygame.Rect(1900 + self.camera_offset_x, game.FLOOR_LEVEL, healthbar_width, game.enemy_base_health /5)
 		enemy_health_rect.bottom = game.FLOOR_LEVEL
-		pygame.draw.rect(self.screen, (200,0,0), pygame.Rect(1900 + self.camera_offset_x, game.FLOOR_LEVEL - 100, healthbar_width, 100))
+		pygame.draw.rect(self.screen, (200,0,0), pygame.Rect(1900 + self.camera_offset_x, game.FLOOR_LEVEL - 100, healthbar_width, healthbar_height))
 		pygame.draw.rect(self.screen, (0,200,0), enemy_health_rect)
 
 	def draw_unit_healthbars(self):
