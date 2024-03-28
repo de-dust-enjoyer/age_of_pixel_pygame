@@ -89,3 +89,18 @@ is_unit_ranged = {
 	8: False,
 	9: True
 }
+
+has_weapon = {
+	#tier 1
+	1: True,
+	2: True,
+	3: True,
+	#tier 2
+	4: True,
+	5: True,
+	6: True,
+	# tier 3
+	7: True,
+	8: True,
+	9: False
+}
