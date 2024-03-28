@@ -38,7 +38,6 @@ class Game:
 		self.frames_passed = 0
 		self.seconds_passed = 0
 		self.minutes_passed = 0
-
 		# chooses if window should be fullscreen (work in progress: window scaling does not work propperly)
 		if self.fullscreen:
 			self.screen = pygame.display.set_mode(self.SCREEN_SIZE, pygame.FULLSCREEN)
@@ -151,11 +150,11 @@ class Game:
 		self.enemy_module_pos3_t3 = (1850 + self.camera_offset_x, 0)
 
 		# player and enemys money
-		self.friendly_money = 300
+		self.friendly_money = 30000000
 		self.enemy_money = 10
 
 		# player and enemy exp
-		self.friendly_exp = 0
+		self.friendly_exp = 100000000
 		self.enemy_exp = 0
 
 		# treshholds for age upgrade
@@ -1488,7 +1487,7 @@ class Turret:
 		self.target_pos = (0,0)
 		self.animation_state = 0
 		self.has_shot = False
-		if self.frames < 1:
+		if self.frames > 1:
 			self.animation_timer = 0
 			self.animation_timer_goal = 60/self.frames
 
@@ -1520,6 +1519,7 @@ class Turret:
 			self.frame2_surf = game.turret_8_sheet.get_image(1, (64,64), (1,0,0), 1)
 			self.frame3_surf = game.turret_8_sheet.get_image(2, (64,64), (1,0,0), 1)
 			self.frame4_surf = game.turret_8_sheet.get_image(3, (64,64), (1,0,0), 1)
+			self.rockets = 2
 		elif self.id == 9:
 			self.frame1_surf = game.turret_9_sheet.get_image(0, (64,64), (1,0,0), 1)
 
@@ -1535,11 +1535,55 @@ class Turret:
 				if self.frames > 2:
 					self.frame3_surf = pygame.transform.flip(self.frame3_surf, True, False)
 					self.frame3_surf.set_colorkey((1,000,000))
+					if self.frames > 3:
+						self.frame4_surf = pygame.transform.flip(self.frame4_surf, True, False)
+						self.frame4_surf.set_colorkey((1,000,000))
 
 		if self.friendly:
 			self.turret_range_rect = pygame.Rect(self.turret_rect.right + self.min_distance, 0, self.range, game.FLOOR_LEVEL)
 		else:
 			self.turret_range_rect = pygame.Rect(self.turret_rect.left - (self.range + self.min_distance), 0, self.range, game.FLOOR_LEVEL)
+
+
+	
+	def update_animation_state(self):
+		for turret in game.friendly_turrets + game.enemy_turrets:
+			if turret.id == 5:
+				if turret.shoottimer == 0:
+					turret.animation_state = 0
+				elif turret.shoottimer == round(turret.shoottimer_goal/2):
+					turret.animation_state = 1
+				elif turret.shoottimer == round(turret.shoottimer_goal/1.5):
+					turret.animation_state = 2
+
+			elif turret.id == 6:
+				if turret.shoottimer == 0:
+					turret.animation_state = 1
+				elif turret.shoottimer == 5:
+					turret.animation_state = 2
+				elif turret.shoottimer == 10:
+					turret.animation_state = 3
+				elif turret.shoottimer == 15:
+					turret.animation_state = 0
+
+			elif turret.id == 7:
+				if turret.shoottimer == 0:
+					turret.animation_state = 1
+				elif turret.shoottimer == 3:
+					turret.animation_state = 2
+				elif turret.shoottimer == 6:
+					turret.animation_state = 3
+				elif turret.shoottimer == 9:
+					turret.animation_state = 0
+			
+			elif turret.id == 8:
+				if turret.rockets == 2:
+					turret.animation_state = 0
+				elif turret.rockets == 1:
+					turret.animation_state = 1
+				elif turret.rockets == 0:
+					turret.animation_state = 2
+
 
 
 	def update_pos(self):
@@ -1763,7 +1807,7 @@ class Turret:
 					turret.units_in_range.append(unit)
 				if not unit.unit_rect.colliderect(turret.turret_range_rect) and unit in turret.units_in_range:
 					turret.units_in_range.pop(turret.units_in_range.index(unit))
-
+					turret.shoottimer = 0
 		for turret in game.enemy_turrets:
 			turret.update_range_rect()
 			for unit in game.friendly_units:
@@ -1771,19 +1815,40 @@ class Turret:
 					turret.units_in_range.append(unit)
 				if not unit.unit_rect.colliderect(turret.turret_range_rect) and unit in turret.units_in_range:
 					turret.units_in_range.pop(turret.units_in_range.index(unit))
+					turret.shoottimer = 0
 
 	def shoot_enemy(self):
 		for turret in game.friendly_turrets:
 			if not turret.is_catapult and not turret.is_static:
 				if len(turret.units_in_range) > 0:
 					turret.shoottimer += 1
+					if turret.id == 8:
+						if turret.rockets == 0 and turret.shoottimer == round(turret.shoottimer_goal/2):
+							turret.rockets = 2
 					if turret.shoottimer == turret.shoottimer_goal:
 						turret.shoottimer = 0
-						projectile = Projectile(turret.turret_rect.center,
-						 (turret.units_in_range[0].unit_rect.center[0] - turret.turret_rect.center[0],
-						  turret.units_in_range[0].unit_rect.center[1] - turret.turret_rect.center[1]),
-						  turret.rotation, turret.id, True)
+						if turret.id != 8:
+							projectile = Projectile(turret.turret_rect.center,
+							 (turret.units_in_range[0].unit_rect.center[0] - turret.turret_rect.center[0],
+							  turret.units_in_range[0].unit_rect.center[1] - turret.turret_rect.center[1]),
+							  turret.rotation, turret.id, True)
+						else:
+							if turret.rockets == 2:
+								projectile = Projectile((turret.turret_rect.center[0], turret.turret_rect.center[1] - 7),
+							 (turret.units_in_range[0].unit_rect.center[0] - turret.turret_rect.center[0],
+							  turret.units_in_range[0].unit_rect.center[1] - turret.turret_rect.center[1]),
+							  turret.rotation, turret.id, True)
+							elif turret.rockets == 1:
+								projectile = Projectile((turret.turret_rect.center[0], turret.turret_rect.center[1] + 7),
+							 (turret.units_in_range[0].unit_rect.center[0] - turret.turret_rect.center[0],
+							  turret.units_in_range[0].unit_rect.center[1] - turret.turret_rect.center[1]),
+							  turret.rotation, turret.id, True)
+
 						turret.projectiles.append(projectile)
+						if turret.id == 8:
+							if turret.rockets > 0:
+								turret.rockets -= 1
+							
 		
 		for turret in game.enemy_turrets:
 			if not turret.is_catapult and not turret.is_static:
@@ -1847,9 +1912,11 @@ class Turret:
 		self.update_rotation()
 		self.find_first_enemy_in_range()
 		self.remove_unit_from_list_if_dead()
+		self.update_animation_state()
 		self.shoot_enemy()
 		self.attack_catapult()
 		self.attack_static()
+
 
 
 
@@ -2048,7 +2115,9 @@ class Unit:
 		self.friendly = friendly
 		self.moving = True
 		self.fighting = False
-		self.weapon_rotation = 90
+		self.has_weapon = unit_info.has_weapon[id]
+		if self.has_weapon:
+			self.weapon_rotation = 90
 		self.id = id
 		self.movement_speed = 1
 		self.fall_speed = 0
