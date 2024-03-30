@@ -1,5 +1,3 @@
-import pygame
-
 unit_cost = {
 	# tier 1
 	1: 10,
