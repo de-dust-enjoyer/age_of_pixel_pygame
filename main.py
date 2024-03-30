@@ -161,9 +161,6 @@ class Game:
 		self.age2_treshhold = 12000
 		self.age3_treshhold = 50000
 
-		# combat variables
-		self.combat = False
-
 		# list containing all the blood particles on screen
 		self.blood_particles = []
 		# list containing all the meteors on screen
@@ -2138,7 +2135,6 @@ class Unit:
 	def __init__(self, friendly:bool, id:int):
 		self.friendly = friendly
 		self.moving = True
-		self.fighting = False
 		self.has_weapon = unit_info.has_weapon[id]
 		self.rotation = 0
 		self.scale = 1
@@ -2186,7 +2182,7 @@ class Unit:
 			self.unit_rect = self.frame1_surf.get_rect()
 			self.unit_rect_rotate = self.unit_rect
 
-			self.weapon_surf = game.weapon_2_sheet.get_image(0, (128,128), (1,0,0), 0.8)
+			self.weapon_surf = game.weapon_2_sheet.get_image(0, (128,128), (1,0,0), 0.6)
 			self.weapon_rect = self.weapon_surf.get_rect()
 			self.weapon_rect_rotate = self.weapon_rect
 			self.weapon_offset_x = 3
@@ -2202,7 +2198,7 @@ class Unit:
 			self.unit_rect = self.frame1_surf.get_rect()
 			self.unit_rect_rotate = self.unit_rect
 
-			self.weapon_surf = game.weapon_3_sheet.get_image(0, (128,128), (1,0,0), 0.8)
+			self.weapon_surf = game.weapon_3_sheet.get_image(0, (128,128), (1,0,0), 0.6)
 			self.weapon_rect = self.weapon_surf.get_rect()
 			self.weapon_rect_rotate = self.weapon_rect
 			self.weapon_offset_x = 3
@@ -2218,7 +2214,7 @@ class Unit:
 			self.unit_rect = self.frame1_surf.get_rect()
 			self.unit_rect_rotate = self.unit_rect
 
-			self.weapon_surf = game.weapon_4_sheet.get_image(0, (128,128), (1,0,0), 0.8)
+			self.weapon_surf = game.weapon_4_sheet.get_image(0, (128,128), (1,0,0), 0.6)
 			self.weapon_rect = self.weapon_surf.get_rect()
 			self.weapon_rect_rotate = self.weapon_rect
 			self.weapon_offset_x = 3
@@ -2234,7 +2230,7 @@ class Unit:
 			self.unit_rect = self.frame1_surf.get_rect()
 			self.unit_rect_rotate = self.unit_rect
 
-			self.weapon_surf = game.weapon_5_sheet.get_image(0, (128,128), (1,0,0), 0.8)
+			self.weapon_surf = game.weapon_5_sheet.get_image(0, (128,128), (1,0,0), 0.6)
 			self.weapon_rect = self.weapon_surf.get_rect()
 			self.weapon_rect_rotate = self.weapon_rect
 			self.weapon_offset_x = 3
@@ -2250,7 +2246,7 @@ class Unit:
 			self.unit_rect = self.frame1_surf.get_rect()
 			self.unit_rect_rotate = self.unit_rect
 
-			self.weapon_surf = game.weapon_6_sheet.get_image(0, (128,128), (1,0,0), 0.8)
+			self.weapon_surf = game.weapon_6_sheet.get_image(0, (128,128), (1,0,0), 0.6)
 			self.weapon_rect = self.weapon_surf.get_rect()
 			self.weapon_rect_rotate = self.weapon_rect
 			self.weapon_offset_x = 3
@@ -2266,7 +2262,7 @@ class Unit:
 			self.unit_rect = self.frame1_surf.get_rect()
 			self.unit_rect_rotate = self.unit_rect
 
-			self.weapon_surf = game.weapon_7_sheet.get_image(0, (128,128), (1,0,0), 0.8)
+			self.weapon_surf = game.weapon_7_sheet.get_image(0, (128,128), (1,0,0), 0.6)
 			self.weapon_rect = self.weapon_surf.get_rect()
 			self.weapon_rect_rotate = self.weapon_rect
 			self.weapon_offset_x = 3
@@ -2282,7 +2278,7 @@ class Unit:
 			self.unit_rect = self.frame1_surf.get_rect()
 			self.unit_rect_rotate = self.unit_rect
 
-			self.weapon_surf = game.weapon_8_sheet.get_image(0, (128,128), (1,0,0), 0.8)
+			self.weapon_surf = game.weapon_8_sheet.get_image(0, (128,128), (1,0,0), 0.6)
 			self.weapon_rect = self.weapon_surf.get_rect()
 			self.weapon_rect_rotate = self.weapon_rect
 			self.weapon_offset_x = 3
@@ -2329,6 +2325,15 @@ class Unit:
 		else:
 			self.front_rect = pygame.Rect(self.x_pos - self.unit_rect.width, game.FLOOR_LEVEL, 6, self.unit_rect.height)
 			self.front_rect.bottom = game.FLOOR_LEVEL
+
+
+		if self.ranged and self.friendly:
+			self.range_rect = pygame.Rect(self.unit_rect.topright[0], self.unit_rect.topright[1], self.unit_rect.width, self.unit_rect.height)
+		if self.ranged and not self.friendly:
+			self.range_rect = pygame.Rect(self.unit_rect.topleft[0], self.unit_rect.topleft[1], self.unit_rect.width, self.unit_rect.height)
+		elif not self.ranged:
+			self.melee_combat = False
+
 
 	def rotate_and_scale(self):
 		if self.animation_state == 0:
@@ -2382,6 +2387,7 @@ class Unit:
 				unit.unit_rect.x = unit.x_pos + game.camera_offset_x
 				unit.front_rect.x = unit.x_pos + unit.unit_rect.width + game.camera_offset_x
 			unit.unit_rect.y += unit.fall_speed
+			#	triggers the idle walking animation
 			if unit.has_weapon:
 				unit.weapon_rect.center = (unit.unit_rect.center[0] - unit.weapon_offset_x, unit.unit_rect.center[1] + unit.weapon_offset_y) 
 				unit.weapon_walking_animation()
@@ -2395,6 +2401,7 @@ class Unit:
 				unit.unit_rect.x = unit.x_pos + game.camera_offset_x
 				unit.front_rect.bottomright = (unit.x_pos + game.camera_offset_x, game.FLOOR_LEVEL)
 			unit.unit_rect.y += unit.fall_speed
+			#	triggers the idle walking animation
 			if unit.has_weapon:
 				unit.weapon_rect.center = (unit.unit_rect.center[0] + unit.weapon_offset_x, unit.unit_rect.center[1] + unit.weapon_offset_y) 
 				unit.weapon_walking_animation()
@@ -2404,6 +2411,8 @@ class Unit:
 		rotated_surf.set_colorkey((1,0,0))
 		self.weapon_rect_rotate = rotated_surf.get_rect(center= self.weapon_rect.center)
 		return rotated_surf
+
+	
 
 	def weapon_walking_animation(self):
 		if self.moving:
@@ -2427,9 +2436,6 @@ class Unit:
 					self.idle_swinging_direction = 0
 
 
-
-
-
 	def update_animation_state(self):
 		for unit in game.friendly_units + game.enemy_units:
 			if unit.moving:
@@ -2448,8 +2454,6 @@ class Unit:
 		for unit in game.friendly_units:
 			if unit.health <= 0:
 				unit.fall_speed += game.GRAVITY
-				game.combat = False
-				unit.fighting = False
 				unit.moving = False
 				unit.unit_rect.x -= unit.fall_speed
 				unit.rotation += 6
@@ -2459,68 +2463,39 @@ class Unit:
 					game.friendly_units.pop(game.friendly_units.index(unit))
 					game.enemy_money += unit.kill_value * 1.5
 					game.enemy_exp += unit_info.unit_exp_value[unit.id]
+
 		for unit in game.enemy_units:
 			if unit.health <= 0:
 				unit.fall_speed += game.GRAVITY
-				game.combat = False
-				unit.fighting = False
 				unit.moving = False
 				unit.unit_rect.x += unit.fall_speed
 				unit.rotation -= 6
 				unit.scale -= 0.02
 
-				
 				if unit.unit_rect.y >= 500:
 					game.enemy_units.pop(game.enemy_units.index(unit))
 					game.friendly_money += unit.kill_value
 					game.friendly_exp += unit_info.unit_exp_value[unit.id]
 
-	def handle_combat(self):
-		for unit in game.friendly_units:
-			for enemy in game.enemy_units:
-				if unit.unit_rect.colliderect(enemy.unit_rect):
-					unit.moving = False
-					enemy.moving = False
-					game.combat = True
-					unit.fighting = True
-					enemy.fighting = True
-				if game.combat == False:
-					unit.moving = True
-					unit.fighting = False
-					enemy.moving = True
-					enemy.fighting = False
 	
-		if game.combat:
-			for unit in game.friendly_units:
-				for friendly in game.friendly_units:
-					if unit.front_rect.colliderect(friendly.unit_rect):
-						unit.moving = False
-
-			for unit in game.enemy_units:
-				for enemy in game.enemy_units:
-					if unit.front_rect.colliderect(enemy.unit_rect):
-						unit.moving = False
-		
-
-	def attack(self):
+	def make_units_stop_on_collision(self):
+		if len(game.friendly_units) > 0 and len(game.enemy_units) > 0:
+			if game.friendly_units[0].unit_rect.colliderect(game.enemy_units[0].unit_rect):
+				game.friendly_units[0].moving = False
+				game.enemy_units[0].moving = False
 		for unit in game.friendly_units:
-			if unit.fighting:
-				unit.attack_timer += 1
-				if unit.attack_timer == unit.attack_timer_goal:
-					unit.attack_timer = 0
-					for enemy in game.enemy_units:
-						if enemy.fighting:
-							enemy.get_hurt(unit.damage)
-							
+			if game.friendly_units.index(unit) != 0:
+				if unit.front_rect.colliderect(game.friendly_units[game.friendly_units.index(unit) - 1].unit_rect):
+					unit.moving = False
+		for unit in game.enemy_units:
+			if game.enemy_units.index(unit) != 0:
+				if unit.front_rect.colliderect(game.enemy_units[game.enemy_units.index(unit) - 1].unit_rect):
+					unit.moving = False
 
-		for enemy in game.enemy_units:
-			if enemy.fighting:
-				enemy.attack_timer += 1
-				if enemy.attack_timer == enemy.attack_timer_goal:
-					enemy.attack_timer = 0
-					for unit in game.friendly_units:
-						if unit.fighting:
-							unit.get_hurt(enemy.damage)
+	def handle_melee_combat(self):
+		pass
+				
+
 
 
 	
@@ -2549,8 +2524,7 @@ class Unit:
 	def update(self):
 		self.move()
 		self.update_animation_state()
-		self.handle_combat()
-		self.attack()
+		self.make_units_stop_on_collision()
 		self.check_health()
 		self.check_if_in_enemy_base()
 
@@ -2652,7 +2626,7 @@ class Blood:
 			blood.x_pos += blood.x_direction
 			blood.y_pos += blood.y_direction
 			blood.fall_vel += game.GRAVITY
-			blood.y_pos += blood.fall_vel	
+			blood.y_pos += blood.fall_vel
 			if blood.y_pos >= game.SCREEN_SIZE[1] - blood.height and blood.stays_on_screen:
 				blood.fall_vel = 0
 				blood.x_direction = 0
