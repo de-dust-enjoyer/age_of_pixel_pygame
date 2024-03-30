@@ -284,8 +284,28 @@ class Game:
 		self.unit_9_sheet_img = pygame.image.load("assets/units/tier3/aow_3_tank.png").convert_alpha()
 		self.unit_9_sheet = SpriteSheet(self.unit_9_sheet_img)
 		#	loading unit weapons
+		#	tier 1
 		self.weapon_1_sheet_img = pygame.image.load("assets/weapons/tier1/aow_1_weapon_1.png").convert_alpha()
 		self.weapon_1_sheet = SpriteSheet(self.weapon_1_sheet_img)
+		# no weapon model yet (therefore using weapon 1 as placeholder)
+		self.weapon_2_sheet_img = pygame.image.load("assets/weapons/tier1/aow_1_weapon_1.png").convert_alpha()
+		self.weapon_2_sheet = SpriteSheet(self.weapon_2_sheet_img)
+		self.weapon_3_sheet_img = pygame.image.load("assets/weapons/tier1/aow_1_weapon_3.png").convert_alpha()
+		self.weapon_3_sheet = SpriteSheet(self.weapon_3_sheet_img)
+		#	tier 2
+		self.weapon_4_sheet_img = pygame.image.load("assets/weapons/tier2/aow_2_weapon_1.png").convert_alpha()
+		self.weapon_4_sheet = SpriteSheet(self.weapon_4_sheet_img)
+		self.weapon_5_sheet_img = pygame.image.load("assets/weapons/tier2/aow_2_weapon_2.png").convert_alpha()
+		self.weapon_5_sheet = SpriteSheet(self.weapon_5_sheet_img)
+		self.weapon_6_sheet_img = pygame.image.load("assets/weapons/tier2/aow_2_weapon_3.png").convert_alpha()
+		self.weapon_6_sheet = SpriteSheet(self.weapon_6_sheet_img)
+		#	tier 3
+		self.weapon_7_sheet_img = pygame.image.load("assets/weapons/tier3/aow_3_weapon_1.png").convert_alpha()
+		self.weapon_7_sheet = SpriteSheet(self.weapon_7_sheet_img)
+		self.weapon_8_sheet_img = pygame.image.load("assets/weapons/tier3/aow_3_weapon_2.png").convert_alpha()
+		self.weapon_8_sheet = SpriteSheet(self.weapon_8_sheet_img)
+		
+	
 
 
 
@@ -333,6 +353,10 @@ class Game:
 		self.projectile_8_sheet = SpriteSheet(self.projectile_8_sheet_img)
 		self.projectile_9_sheet_img = pygame.image.load("assets/projectiles/aow_3_projectile_3.png").convert_alpha()
 		self.projectile_9_sheet = SpriteSheet(self.projectile_9_sheet_img)
+		#	unit projectiles
+		#self.unit_projectile_2 = pygame.image.load("assets/weapons/tier1/aow_1_weapon_projectile_2.png").convert_alpha()
+		self.unit_projectile_5 = pygame.image.load("assets/weapons/tier2/aow_2_weapon_projectile_2.png").convert_alpha()
+		self.unit_projectile_7 = pygame.image.load("assets/weapons/tier3/aow_3_weapon_projectile_1.png").convert_alpha()		
 
 
 
@@ -2116,8 +2140,11 @@ class Unit:
 		self.moving = True
 		self.fighting = False
 		self.has_weapon = unit_info.has_weapon[id]
+		self.rotation = 0
+		self.scale = 1
 		if self.has_weapon:
-			self.weapon_rotation = 90
+			self.weapon_rotation = 0
+			self.idle_swinging_direction = 0
 		self.id = id
 		self.movement_speed = 1
 		self.fall_speed = 0
@@ -2141,10 +2168,15 @@ class Unit:
 			self.frame3_surf = game.unit_1_sheet.get_image(2, (16, 16), (1, 0, 0), 2)
 			self.frame4_surf = game.unit_1_sheet.get_image(3, (16, 16), (1, 0, 0), 2)
 			self.unit_rect = self.frame1_surf.get_rect()
+			self.unit_rect_rotate = self.unit_rect
 
-			self.weapon_surf = game.weapon_1_sheet.get_image(0, (128,128), (1,0,0), 0.8)
+			self.weapon_surf = game.weapon_1_sheet.get_image(0, (128,128), (1,0,0), 0.6)
 			self.weapon_rect = self.weapon_surf.get_rect()
 			self.weapon_rect_rotate = self.weapon_rect
+			self.weapon_offset_x = 3
+			self.weapon_offset_y = 4
+			self.idle_swinging_distance = 30
+			self.idle_swinging_speed = 0.7
 
 		elif self.id == 2:
 			self.frame1_surf = game.unit_2_sheet.get_image(0, (16, 16), (1, 0, 0), 2)
@@ -2152,6 +2184,15 @@ class Unit:
 			self.frame3_surf = game.unit_2_sheet.get_image(2, (16, 16), (1, 0, 0), 2)
 			self.frame4_surf = game.unit_2_sheet.get_image(3, (16, 16), (1, 0, 0), 2)
 			self.unit_rect = self.frame1_surf.get_rect()
+			self.unit_rect_rotate = self.unit_rect
+
+			self.weapon_surf = game.weapon_2_sheet.get_image(0, (128,128), (1,0,0), 0.8)
+			self.weapon_rect = self.weapon_surf.get_rect()
+			self.weapon_rect_rotate = self.weapon_rect
+			self.weapon_offset_x = 3
+			self.weapon_offset_y = 4
+			self.idle_swinging_distance = 30
+			self.idle_swinging_speed = 0.7
 
 		elif self.id == 3:
 			self.frame1_surf = game.unit_3_sheet.get_image(0, (32, 32), (1, 0, 0), 2)
@@ -2159,6 +2200,15 @@ class Unit:
 			self.frame3_surf = game.unit_3_sheet.get_image(0, (32, 32), (1, 0, 0), 2)
 			self.frame4_surf = game.unit_3_sheet.get_image(1, (32, 32), (1, 0, 0), 2)
 			self.unit_rect = self.frame1_surf.get_rect()
+			self.unit_rect_rotate = self.unit_rect
+
+			self.weapon_surf = game.weapon_3_sheet.get_image(0, (128,128), (1,0,0), 0.8)
+			self.weapon_rect = self.weapon_surf.get_rect()
+			self.weapon_rect_rotate = self.weapon_rect
+			self.weapon_offset_x = 3
+			self.weapon_offset_y = 4
+			self.idle_swinging_distance = 30
+			self.idle_swinging_speed = 0.7
 
 		elif self.id == 4:
 			self.frame1_surf = game.unit_4_sheet.get_image(0, (16, 16), (1, 0, 0), 2)
@@ -2166,36 +2216,90 @@ class Unit:
 			self.frame3_surf = game.unit_4_sheet.get_image(2, (16, 16), (1, 0, 0), 2)
 			self.frame4_surf = game.unit_4_sheet.get_image(3, (16, 16), (1, 0, 0), 2)
 			self.unit_rect = self.frame1_surf.get_rect()
+			self.unit_rect_rotate = self.unit_rect
+
+			self.weapon_surf = game.weapon_4_sheet.get_image(0, (128,128), (1,0,0), 0.8)
+			self.weapon_rect = self.weapon_surf.get_rect()
+			self.weapon_rect_rotate = self.weapon_rect
+			self.weapon_offset_x = 3
+			self.weapon_offset_y = 4
+			self.idle_swinging_distance = 30
+			self.idle_swinging_speed = 0.7
+
 		elif self.id == 5:
 			self.frame1_surf = game.unit_5_sheet.get_image(0, (16, 16), (1, 0, 0), 2)
 			self.frame2_surf = game.unit_5_sheet.get_image(1, (16, 16), (1, 0, 0), 2)
 			self.frame3_surf = game.unit_5_sheet.get_image(2, (16, 16), (1, 0, 0), 2)
 			self.frame4_surf = game.unit_5_sheet.get_image(3, (16, 16), (1, 0, 0), 2)
 			self.unit_rect = self.frame1_surf.get_rect()
+			self.unit_rect_rotate = self.unit_rect
+
+			self.weapon_surf = game.weapon_5_sheet.get_image(0, (128,128), (1,0,0), 0.8)
+			self.weapon_rect = self.weapon_surf.get_rect()
+			self.weapon_rect_rotate = self.weapon_rect
+			self.weapon_offset_x = 3
+			self.weapon_offset_y = 4
+			self.idle_swinging_distance = 30
+			self.idle_swinging_speed = 0.7
+
 		elif self.id == 6:
 			self.frame1_surf = game.unit_6_sheet.get_image(0, (32, 32), (1, 0, 0), 2)
 			self.frame2_surf = game.unit_6_sheet.get_image(1, (32, 32), (1, 0, 0), 2)
 			self.frame3_surf = game.unit_6_sheet.get_image(2, (32, 32), (1, 0, 0), 2)
 			self.frame4_surf = game.unit_6_sheet.get_image(3, (32, 32), (1, 0, 0), 2)
 			self.unit_rect = self.frame1_surf.get_rect()
+			self.unit_rect_rotate = self.unit_rect
+
+			self.weapon_surf = game.weapon_6_sheet.get_image(0, (128,128), (1,0,0), 0.8)
+			self.weapon_rect = self.weapon_surf.get_rect()
+			self.weapon_rect_rotate = self.weapon_rect
+			self.weapon_offset_x = 3
+			self.weapon_offset_y = 4
+			self.idle_swinging_distance = 30
+			self.idle_swinging_speed = 0.7
+
 		elif self.id == 7:
 			self.frame1_surf = game.unit_7_sheet.get_image(0, (16, 16), (1, 0, 0), 2)
 			self.frame2_surf = game.unit_7_sheet.get_image(1, (16, 16), (1, 0, 0), 2)
 			self.frame3_surf = game.unit_7_sheet.get_image(2, (16, 16), (1, 0, 0), 2)
 			self.frame4_surf = game.unit_7_sheet.get_image(3, (16, 16), (1, 0, 0), 2)
 			self.unit_rect = self.frame1_surf.get_rect()
+			self.unit_rect_rotate = self.unit_rect
+
+			self.weapon_surf = game.weapon_7_sheet.get_image(0, (128,128), (1,0,0), 0.8)
+			self.weapon_rect = self.weapon_surf.get_rect()
+			self.weapon_rect_rotate = self.weapon_rect
+			self.weapon_offset_x = 3
+			self.weapon_offset_y = 4
+			self.idle_swinging_distance = 30
+			self.idle_swinging_speed = 0.7
+
 		elif self.id == 8:
 			self.frame1_surf = game.unit_8_sheet.get_image(0, (16, 16), (1, 0, 0), 2)
 			self.frame2_surf = game.unit_8_sheet.get_image(1, (16, 16), (1, 0, 0), 2)
 			self.frame3_surf = game.unit_8_sheet.get_image(2, (16, 16), (1, 0, 0), 2)
 			self.frame4_surf = game.unit_8_sheet.get_image(3, (16, 16), (1, 0, 0), 2)
 			self.unit_rect = self.frame1_surf.get_rect()
+			self.unit_rect_rotate = self.unit_rect
+
+			self.weapon_surf = game.weapon_8_sheet.get_image(0, (128,128), (1,0,0), 0.8)
+			self.weapon_rect = self.weapon_surf.get_rect()
+			self.weapon_rect_rotate = self.weapon_rect
+			self.weapon_offset_x = 3
+			self.weapon_offset_y = 4
+			self.idle_swinging_distance = 30
+			self.idle_swinging_speed = 0.7
+
 		elif self.id == 9:
 			self.frame1_surf = game.unit_9_sheet.get_image(0, (32, 32), (1, 0, 0), 3)
 			self.frame2_surf = game.unit_9_sheet.get_image(1, (32, 32), (1, 0, 0), 3)
 			self.frame3_surf = game.unit_9_sheet.get_image(2, (32, 32), (1, 0, 0), 3)
 			self.frame4_surf = game.unit_9_sheet.get_image(3, (32, 32), (1, 0, 0), 3)
 			self.unit_rect = self.frame1_surf.get_rect()
+			self.unit_rect_rotate = self.unit_rect
+
+		self.height = self.unit_rect.height
+		self.width = self.unit_rect.width
 
 		
 			# flip the unit if its from the enemy
@@ -2210,6 +2314,8 @@ class Unit:
 			self.frame4_surf = pygame.transform.flip(self.frame4_surf, True, False)
 			self.frame4_surf.set_colorkey((1,000,000))
 
+			self.weapon_surf = pygame.transform.flip(self.weapon_surf, True, False)
+
 		else:
 			self.x_pos = 32
 
@@ -2219,9 +2325,31 @@ class Unit:
 		if self.friendly:
 			self.front_rect = pygame.Rect(self.x_pos + self.unit_rect.width, game.FLOOR_LEVEL, 6, self.unit_rect.height)
 			self.front_rect.bottom = game.FLOOR_LEVEL
+
 		else:
 			self.front_rect = pygame.Rect(self.x_pos - self.unit_rect.width, game.FLOOR_LEVEL, 6, self.unit_rect.height)
 			self.front_rect.bottom = game.FLOOR_LEVEL
+
+	def rotate_and_scale(self):
+		if self.animation_state == 0:
+			scaled_surf = pygame.transform.scale(self.frame1_surf, (self.width * self.scale, self.height * self.scale))
+			rotated_surf = pygame.transform.rotate(scaled_surf, self.rotation)
+		if self.animation_state == 1:
+			scaled_surf = pygame.transform.scale(self.frame2_surf, (self.width * self.scale, self.height * self.scale))
+			rotated_surf = pygame.transform.rotate(scaled_surf, self.rotation)
+		if self.animation_state == 2:
+			scaled_surf = pygame.transform.scale(self.frame3_surf, (self.width * self.scale, self.height * self.scale))
+			rotated_surf = pygame.transform.rotate(scaled_surf, self.rotation)
+		if self.animation_state == 3:
+			scaled_surf = pygame.transform.scale(self.frame4_surf, (self.width * self.scale, self.height * self.scale))
+			rotated_surf = pygame.transform.rotate(scaled_surf, self.rotation)
+		rotated_surf.set_colorkey((1,0,0))
+		self.unit_rect_rotate = rotated_surf.get_rect(center= self.unit_rect.center)
+
+		return rotated_surf
+
+
+
 
 	def spawn_friendly(self, id):
 		unit = Unit(True, id)
@@ -2254,7 +2382,9 @@ class Unit:
 				unit.unit_rect.x = unit.x_pos + game.camera_offset_x
 				unit.front_rect.x = unit.x_pos + unit.unit_rect.width + game.camera_offset_x
 			unit.unit_rect.y += unit.fall_speed
-			#unit.weapon_rect.center = (unit.unit_rect.center[0] - 3, unit.unit_rect.center[1] + 4) 
+			if unit.has_weapon:
+				unit.weapon_rect.center = (unit.unit_rect.center[0] - unit.weapon_offset_x, unit.unit_rect.center[1] + unit.weapon_offset_y) 
+				unit.weapon_walking_animation()
 
 		for unit in game.enemy_units:
 			if unit.moving:
@@ -2265,12 +2395,38 @@ class Unit:
 				unit.unit_rect.x = unit.x_pos + game.camera_offset_x
 				unit.front_rect.bottomright = (unit.x_pos + game.camera_offset_x, game.FLOOR_LEVEL)
 			unit.unit_rect.y += unit.fall_speed
+			if unit.has_weapon:
+				unit.weapon_rect.center = (unit.unit_rect.center[0] + unit.weapon_offset_x, unit.unit_rect.center[1] + unit.weapon_offset_y) 
+				unit.weapon_walking_animation()
 	
 	def rotate_weapon(self):
 		rotated_surf = pygame.transform.rotate(self.weapon_surf, self.weapon_rotation)
 		rotated_surf.set_colorkey((1,0,0))
 		self.weapon_rect_rotate = rotated_surf.get_rect(center= self.weapon_rect.center)
 		return rotated_surf
+
+	def weapon_walking_animation(self):
+		if self.moving:
+			if self.friendly:
+				if not self.weapon_rotation <= -self.idle_swinging_distance and self.idle_swinging_direction == 0:
+					self.weapon_rotation -= self.idle_swinging_speed
+				elif self.weapon_rotation <= -self.idle_swinging_distance and self.idle_swinging_direction == 0:
+					self.idle_swinging_direction = 1
+				elif not self.weapon_rotation >= 0 and self.idle_swinging_direction == 1:
+					self.weapon_rotation += self.idle_swinging_speed
+				elif self.weapon_rotation >= 0 and self.idle_swinging_direction == 1:
+					self.idle_swinging_direction = 0
+			else:
+				if not self.weapon_rotation >= +self.idle_swinging_distance and self.idle_swinging_direction == 0:
+					self.weapon_rotation += self.idle_swinging_speed
+				elif self.weapon_rotation >= +self.idle_swinging_distance and self.idle_swinging_direction == 0:
+					self.idle_swinging_direction = 1
+				elif not self.weapon_rotation <= 0 and self.idle_swinging_direction == 1:
+					self.weapon_rotation -= self.idle_swinging_speed
+				elif self.weapon_rotation <= 0 and self.idle_swinging_direction == 1:
+					self.idle_swinging_direction = 0
+
+
 
 
 
@@ -2296,7 +2452,9 @@ class Unit:
 				unit.fighting = False
 				unit.moving = False
 				unit.unit_rect.x -= unit.fall_speed
-				
+				unit.rotation += 6
+				unit.scale -= 0.02
+
 				if unit.unit_rect.y >= 500:
 					game.friendly_units.pop(game.friendly_units.index(unit))
 					game.enemy_money += unit.kill_value * 1.5
@@ -2308,6 +2466,9 @@ class Unit:
 				unit.fighting = False
 				unit.moving = False
 				unit.unit_rect.x += unit.fall_speed
+				unit.rotation -= 6
+				unit.scale -= 0.02
+
 				
 				if unit.unit_rect.y >= 500:
 					game.enemy_units.pop(game.enemy_units.index(unit))
@@ -2344,7 +2505,6 @@ class Unit:
 	def attack(self):
 		for unit in game.friendly_units:
 			if unit.fighting:
-				unit.weapon_rotation -= 3
 				unit.attack_timer += 1
 				if unit.attack_timer == unit.attack_timer_goal:
 					unit.attack_timer = 0
@@ -2376,26 +2536,14 @@ class Unit:
 			
 	def draw(self):
 		for unit in game.friendly_units:
-			if unit.animation_state == 0:
-				game.screen.blit(unit.frame1_surf, unit.unit_rect)
-			elif unit.animation_state == 1:
-				game.screen.blit(unit.frame2_surf, unit.unit_rect)
-			elif unit.animation_state == 2:
-				game.screen.blit(unit.frame3_surf, unit.unit_rect)
-			elif unit.animation_state == 3:
-				game.screen.blit(unit.frame4_surf, unit.unit_rect)
-			#game.screen.blit(unit.rotate_weapon(), unit.weapon_rect_rotate)
+			game.screen.blit(unit.rotate_and_scale(), unit.unit_rect_rotate)
+			if unit.has_weapon:
+				game.screen.blit(unit.rotate_weapon(), unit.weapon_rect_rotate)
 
 		for unit in game.enemy_units:
-			if unit.animation_state == 0:
-				game.screen.blit(unit.frame1_surf, unit.unit_rect)
-			elif unit.animation_state == 1:
-				game.screen.blit(unit.frame2_surf, unit.unit_rect)
-			elif unit.animation_state == 2:
-				game.screen.blit(unit.frame3_surf, unit.unit_rect)
-			elif unit.animation_state == 3:
-				game.screen.blit(unit.frame4_surf, unit.unit_rect)
-		
+			game.screen.blit(unit.rotate_and_scale(), unit.unit_rect_rotate)
+			if unit.has_weapon:
+				game.screen.blit(unit.rotate_weapon(), unit.weapon_rect_rotate)
 
 
 	def update(self):
