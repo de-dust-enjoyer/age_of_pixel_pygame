@@ -1,3 +1,5 @@
+import pygame
+
 unit_cost = {
 	# tier 1
 	1: 10,
@@ -89,6 +91,7 @@ is_unit_ranged = {
 	8: False,
 	9: True
 }
+
 
 has_weapon = {
 	#tier 1
