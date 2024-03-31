@@ -193,7 +193,15 @@ class Game:
 		self.turret_sell_button_rect = pygame.Rect(904, 72, 48, 48)
 
 		# importing game assets:
+		#	sounds
 
+		#	music
+		self.aow_theme_music = pygame.mixer.Sound("assets/audio/music/aow_theme_music.mp3")
+		#	playing music
+		self.aow_theme_music.play(loops= 10)
+
+		#	setting the volume for every sound
+		self.aow_theme_music.set_volume(0.3)
 		#	 font
 		self.font_10 = pygame.font.Font("assets/font/pixel_font.otf", 10)
 		self.font_12 = pygame.font.Font("assets/font/pixel_font.otf", 12)
@@ -284,8 +292,7 @@ class Game:
 		#	tier 1
 		self.weapon_1_sheet_img = pygame.image.load("assets/weapons/tier1/aow_1_weapon_1.png").convert_alpha()
 		self.weapon_1_sheet = SpriteSheet(self.weapon_1_sheet_img)
-		# no weapon model yet (therefore using weapon 1 as placeholder)
-		self.weapon_2_sheet_img = pygame.image.load("assets/weapons/tier1/aow_1_weapon_1.png").convert_alpha()
+		self.weapon_2_sheet_img = pygame.image.load("assets/weapons/tier1/aow_1_weapon_2.png").convert_alpha()
 		self.weapon_2_sheet = SpriteSheet(self.weapon_2_sheet_img)
 		self.weapon_3_sheet_img = pygame.image.load("assets/weapons/tier1/aow_1_weapon_3.png").convert_alpha()
 		self.weapon_3_sheet = SpriteSheet(self.weapon_3_sheet_img)
@@ -303,8 +310,6 @@ class Game:
 		self.weapon_8_sheet = SpriteSheet(self.weapon_8_sheet_img)
 		
 	
-
-
 
 		#	loading turret spritesheets
 		#	tier 1
@@ -352,6 +357,7 @@ class Game:
 		self.projectile_9_sheet = SpriteSheet(self.projectile_9_sheet_img)
 		#	unit projectiles
 		#self.unit_projectile_2 = pygame.image.load("assets/weapons/tier1/aow_1_weapon_projectile_2.png").convert_alpha()
+		self.unit_projectile_2 = pygame.image.load("assets/weapons/tier1/aow_1_weapon_projectile_2.png").convert_alpha()
 		self.unit_projectile_5 = pygame.image.load("assets/weapons/tier2/aow_2_weapon_projectile_2.png").convert_alpha()
 		self.unit_projectile_7 = pygame.image.load("assets/weapons/tier3/aow_3_weapon_projectile_1.png").convert_alpha()		
 
@@ -2144,7 +2150,7 @@ class Unit:
 		self.id = id
 		self.movement_speed = 1
 		self.fall_speed = 0
-		self.ranged = unit_info.is_unit_ranged
+		self.ranged = unit_info.is_unit_ranged[self.id]
 		self.cost = unit_info.unit_cost[self.id]
 		self.exp_value = unit_info.unit_cost[self.id]
 		self.kill_value = unit_info.unit_cost[self.id] / 2
@@ -2182,13 +2188,15 @@ class Unit:
 			self.unit_rect = self.frame1_surf.get_rect()
 			self.unit_rect_rotate = self.unit_rect
 
-			self.weapon_surf = game.weapon_2_sheet.get_image(0, (128,128), (1,0,0), 0.6)
+			self.weapon_surf = game.weapon_2_sheet.get_image(0, (128,128), (1,0,0), 0.7)
+			self.weapon_surf2 = game.weapon_2_sheet.get_image(1, (128,128), (1,0,0), 0.7)
 			self.weapon_rect = self.weapon_surf.get_rect()
 			self.weapon_rect_rotate = self.weapon_rect
 			self.weapon_offset_x = 3
 			self.weapon_offset_y = 4
 			self.idle_swinging_distance = 30
 			self.idle_swinging_speed = 0.7
+			self.weapon_animation_state = 0
 
 		elif self.id == 3:
 			self.frame1_surf = game.unit_3_sheet.get_image(0, (32, 32), (1, 0, 0), 2)
@@ -2263,6 +2271,7 @@ class Unit:
 			self.unit_rect_rotate = self.unit_rect
 
 			self.weapon_surf = game.weapon_7_sheet.get_image(0, (128,128), (1,0,0), 0.6)
+			self.weapon_surf2 = game.weapon_7_sheet.get_image(1, (128,128), (1,0,0), 0.6)
 			self.weapon_rect = self.weapon_surf.get_rect()
 			self.weapon_rect_rotate = self.weapon_rect
 			self.weapon_offset_x = 3
@@ -2482,19 +2491,78 @@ class Unit:
 		if len(game.friendly_units) > 0 and len(game.enemy_units) > 0:
 			if game.friendly_units[0].unit_rect.colliderect(game.enemy_units[0].unit_rect):
 				game.friendly_units[0].moving = False
+				if not game.friendly_units[0].ranged:
+					game.friendly_units[0].melee_combat = True
+
 				game.enemy_units[0].moving = False
+				if not game.enemy_units[0].ranged:
+					game.enemy_units[0].melee_combat = True
+
+			else:
+				#	if not coliding with enemy unit make units move again
+				game.friendly_units[0].moving = True
+				game.enemy_units[0].moving = True
+				#	if not colliding and not ranged make units stop fighting
+				if not game.friendly_units[0].ranged:
+					game.friendly_units[0].melee_combat = False
+				if not game.enemy_units[0].ranged:
+					game.enemy_units[0].melee_combat = False
+				#	if unit collides with other unit spop moving
 		for unit in game.friendly_units:
 			if game.friendly_units.index(unit) != 0:
 				if unit.front_rect.colliderect(game.friendly_units[game.friendly_units.index(unit) - 1].unit_rect):
 					unit.moving = False
+				#	if not colliding make unit move again
+				else:
+					unit.moving = True
+				#	if enemy collides with other enemy stop moving
 		for unit in game.enemy_units:
 			if game.enemy_units.index(unit) != 0:
 				if unit.front_rect.colliderect(game.enemy_units[game.enemy_units.index(unit) - 1].unit_rect):
 					unit.moving = False
+				#	if not colling make enemy move again
+				else:
+					unit.moving = True
 
 	def handle_melee_combat(self):
-		pass
-				
+		#	if melee combat state is active: call the attack melee methon
+		if len(game.friendly_units) != 0 and len(game.enemy_units) != 0:
+			if not game.friendly_units[0].ranged:
+				if game.friendly_units[0].melee_combat:
+					game.friendly_units[0].attack_melee()
+	
+			if not game.enemy_units[0].ranged:
+				if game.enemy_units[0].melee_combat:
+					game.enemy_units[0].attack_melee()
+
+
+
+	def attack_melee(self):
+		#	determains the correckt weapon rotaition while attacking and calls the get_hurt method
+		if self.friendly:
+			if self.id == 1 or self.id == 4:
+				self.attack_timer += 1
+				if self.attack_timer >= round(self.attack_timer_goal / 2):
+					self.weapon_rotation += 2
+				if self.attack_timer >= self.attack_timer_goal - 15 and self.weapon_rotation >= 0:
+					self.weapon_rotation -= 15
+				if self.attack_timer >= self.attack_timer_goal:
+					self.attack_timer = 0
+					self.weapon_rotation = 0
+					game.enemy_units[0].get_hurt(self.damage)
+
+		else:
+			if self.id == 1 or self.id == 4:
+				self.attack_timer += 1
+				if self.attack_timer >= round(self.attack_timer_goal / 2):
+					self.weapon_rotation -= 2
+				if self.attack_timer >= self.attack_timer_goal - 15 and self.weapon_rotation <= 0:
+					self.weapon_rotation += 15
+				if self.attack_timer >= self.attack_timer_goal:
+					self.attack_timer = 0
+					self.weapon_rotation = 0
+					game.friendly_units[0].get_hurt(self.damage)
+
 
 
 
@@ -2525,6 +2593,7 @@ class Unit:
 		self.move()
 		self.update_animation_state()
 		self.make_units_stop_on_collision()
+		self.handle_melee_combat()
 		self.check_health()
 		self.check_if_in_enemy_base()
 
