@@ -2163,6 +2163,8 @@ class Unit:
 		self.animation_timer_goal = 60 / unit_info.animation_frames[self.id]
 		self.attack_timer = 0
 		self.attack_timer_goal = 2 * 60
+		if self.ranged:
+			self.units_in_range = []
 
 		# extracts the animation frames from spritesheet using the get_image method
 		if self.id == 1:
@@ -2338,9 +2340,9 @@ class Unit:
 
 
 		if self.ranged and self.friendly:
-			self.range_rect = pygame.Rect(self.unit_rect.topright[0], self.unit_rect.topright[1], self.unit_rect.width, self.unit_rect.height)
+			self.range_rect = pygame.Rect(self.unit_rect.topright[0], self.unit_rect.topright[1], 96, self.unit_rect.height)
 		if self.ranged and not self.friendly:
-			self.range_rect = pygame.Rect(self.unit_rect.topleft[0], self.unit_rect.topleft[1], self.unit_rect.width, self.unit_rect.height)
+			self.range_rect = pygame.Rect(self.unit_rect.topleft[0], self.unit_rect.topleft[1], 96, self.unit_rect.height)
 		elif not self.ranged:
 			self.melee_combat = False
 
@@ -2601,6 +2603,40 @@ class Unit:
 					self.weapon_rotation = 0
 					game.friendly_units[0].get_hurt(self.damage)
 
+	
+
+	def update_range_rect(self):
+		if self.ranged and self.friendly:
+			self.range_rect = pygame.Rect(self.unit_rect.topright[0], self.unit_rect.topright[1], 96, self.unit_rect.height)
+		if self.ranged and not self.friendly:
+			self.range_rect = pygame.Rect(self.unit_rect.topleft[0], self.unit_rect.topleft[1], 96, self.unit_rect.height)
+
+
+
+	def find_unit_in_range(self):
+		for unit in game.friendly_units:
+			unit.update_range_rect()
+			if unit.ranged:
+				for enemy in game.enemy_units:
+					if enemy.unit_rect.colliderect(unit.range_rect) and not enemy in unit.units_in_range:
+						unit.units_in_range.append(enemy)
+					if not enemy.unit_rect.colliderect(unit.range_rect) and enemy in unit.units_in_range:
+						unit.units_in_range.pop(unit.units_in_range.index(enemy))
+						unit.attack_timer = 0
+
+		for enemy in game.enemy_units:
+			enemy.update_range_rect()
+			if enemy.ranged:
+				for unit in game.friendly_units:
+					if unit.unit_rect.colliderect(enemy.range_rect) and not unit in enemy.units_in_range:
+						enemy.units_in_range.append(unit)
+					if not unit.unit_rect.colliderect(enemy.range_rect) and unit in enemy.units_in_range:
+						enemy.units_in_range.pop(enemy.units_in_range.index(enemy))
+						enemy.attack_timer = 0
+
+
+
+
 
 
 
@@ -2621,11 +2657,16 @@ class Unit:
 			game.screen.blit(unit.rotate_and_scale(), unit.unit_rect_rotate)
 			if unit.has_weapon:
 				game.screen.blit(unit.rotate_weapon(), unit.weapon_rect_rotate)
+			if unit.ranged and game.dev_mode:
+				pygame.draw.rect(game.screen, "red", unit.range_rect)
+
 
 		for unit in game.enemy_units:
 			game.screen.blit(unit.rotate_and_scale(), unit.unit_rect_rotate)
 			if unit.has_weapon:
 				game.screen.blit(unit.rotate_weapon(), unit.weapon_rect_rotate)
+			if unit.ranged and game.dev_mode:
+				pygame.draw.rect(game.screen, "red", unit.range_rect)
 
 
 	def update(self):
@@ -2635,6 +2676,7 @@ class Unit:
 		self.handle_melee_combat()
 		self.check_health()
 		self.check_if_in_enemy_base()
+		self.find_unit_in_range()
 
 
 
