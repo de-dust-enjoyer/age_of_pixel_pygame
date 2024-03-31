@@ -198,10 +198,11 @@ class Game:
 		#	music
 		self.aow_theme_music = pygame.mixer.Sound("assets/audio/music/aow_theme_music.mp3")
 		#	playing music
-		self.aow_theme_music.play(loops= 10)
+		self.aow_theme_music.play(loops= 20)
 
 		#	setting the volume for every sound
 		self.aow_theme_music.set_volume(0.3)
+
 		#	 font
 		self.font_10 = pygame.font.Font("assets/font/pixel_font.otf", 10)
 		self.font_12 = pygame.font.Font("assets/font/pixel_font.otf", 12)
@@ -2175,7 +2176,7 @@ class Unit:
 			self.weapon_surf = game.weapon_1_sheet.get_image(0, (128,128), (1,0,0), 0.6)
 			self.weapon_rect = self.weapon_surf.get_rect()
 			self.weapon_rect_rotate = self.weapon_rect
-			self.weapon_offset_x = 3
+			self.weapon_offset_x = 4
 			self.weapon_offset_y = 4
 			self.idle_swinging_distance = 30
 			self.idle_swinging_speed = 0.7
@@ -2188,12 +2189,12 @@ class Unit:
 			self.unit_rect = self.frame1_surf.get_rect()
 			self.unit_rect_rotate = self.unit_rect
 
-			self.weapon_surf = game.weapon_2_sheet.get_image(0, (128,128), (1,0,0), 0.7)
-			self.weapon_surf2 = game.weapon_2_sheet.get_image(1, (128,128), (1,0,0), 0.7)
+			self.weapon_surf = game.weapon_2_sheet.get_image(0, (128,128), (1,0,0), 0.6)
+			self.weapon_surf2 = game.weapon_2_sheet.get_image(1, (128,128), (1,0,0), 0.6)
 			self.weapon_rect = self.weapon_surf.get_rect()
 			self.weapon_rect_rotate = self.weapon_rect
-			self.weapon_offset_x = 3
-			self.weapon_offset_y = 4
+			self.weapon_offset_x = 6
+			self.weapon_offset_y = 3
 			self.idle_swinging_distance = 30
 			self.idle_swinging_speed = 0.7
 			self.weapon_animation_state = 0
@@ -2209,10 +2210,10 @@ class Unit:
 			self.weapon_surf = game.weapon_3_sheet.get_image(0, (128,128), (1,0,0), 0.6)
 			self.weapon_rect = self.weapon_surf.get_rect()
 			self.weapon_rect_rotate = self.weapon_rect
-			self.weapon_offset_x = 3
+			self.weapon_offset_x = 4
 			self.weapon_offset_y = 4
-			self.idle_swinging_distance = 30
-			self.idle_swinging_speed = 0.7
+			self.idle_swinging_distance = 15
+			self.idle_swinging_speed = 0.3
 
 		elif self.id == 4:
 			self.frame1_surf = game.unit_4_sheet.get_image(0, (16, 16), (1, 0, 0), 2)
@@ -2222,12 +2223,12 @@ class Unit:
 			self.unit_rect = self.frame1_surf.get_rect()
 			self.unit_rect_rotate = self.unit_rect
 
-			self.weapon_surf = game.weapon_4_sheet.get_image(0, (128,128), (1,0,0), 0.6)
+			self.weapon_surf = game.weapon_4_sheet.get_image(0, (128,128), (1,0,0), 0.7)
 			self.weapon_rect = self.weapon_surf.get_rect()
 			self.weapon_rect_rotate = self.weapon_rect
-			self.weapon_offset_x = 3
+			self.weapon_offset_x = 4
 			self.weapon_offset_y = 4
-			self.idle_swinging_distance = 30
+			self.idle_swinging_distance = 25
 			self.idle_swinging_speed = 0.7
 
 		elif self.id == 5:
@@ -2241,7 +2242,7 @@ class Unit:
 			self.weapon_surf = game.weapon_5_sheet.get_image(0, (128,128), (1,0,0), 0.6)
 			self.weapon_rect = self.weapon_surf.get_rect()
 			self.weapon_rect_rotate = self.weapon_rect
-			self.weapon_offset_x = 3
+			self.weapon_offset_x = 7
 			self.weapon_offset_y = 4
 			self.idle_swinging_distance = 30
 			self.idle_swinging_speed = 0.7
@@ -2258,9 +2259,9 @@ class Unit:
 			self.weapon_rect = self.weapon_surf.get_rect()
 			self.weapon_rect_rotate = self.weapon_rect
 			self.weapon_offset_x = 3
-			self.weapon_offset_y = 4
-			self.idle_swinging_distance = 30
-			self.idle_swinging_speed = 0.7
+			self.weapon_offset_y = 0
+			self.idle_swinging_distance = 10
+			self.idle_swinging_speed = 0.2
 
 		elif self.id == 7:
 			self.frame1_surf = game.unit_7_sheet.get_image(0, (16, 16), (1, 0, 0), 2)
@@ -2274,10 +2275,10 @@ class Unit:
 			self.weapon_surf2 = game.weapon_7_sheet.get_image(1, (128,128), (1,0,0), 0.6)
 			self.weapon_rect = self.weapon_surf.get_rect()
 			self.weapon_rect_rotate = self.weapon_rect
-			self.weapon_offset_x = 3
-			self.weapon_offset_y = 4
-			self.idle_swinging_distance = 30
-			self.idle_swinging_speed = 0.7
+			self.weapon_offset_x = 7
+			self.weapon_offset_y = 2
+			self.idle_swinging_distance = 14
+			self.idle_swinging_speed = 0.4
 
 		elif self.id == 8:
 			self.frame1_surf = game.unit_8_sheet.get_image(0, (16, 16), (1, 0, 0), 2)
@@ -2287,11 +2288,11 @@ class Unit:
 			self.unit_rect = self.frame1_surf.get_rect()
 			self.unit_rect_rotate = self.unit_rect
 
-			self.weapon_surf = game.weapon_8_sheet.get_image(0, (128,128), (1,0,0), 0.6)
+			self.weapon_surf = game.weapon_8_sheet.get_image(0, (128,128), (1,0,0), 0.7)
 			self.weapon_rect = self.weapon_surf.get_rect()
 			self.weapon_rect_rotate = self.weapon_rect
-			self.weapon_offset_x = 3
-			self.weapon_offset_y = 4
+			self.weapon_offset_x = 7
+			self.weapon_offset_y = 2
 			self.idle_swinging_distance = 30
 			self.idle_swinging_speed = 0.7
 
@@ -2467,6 +2468,8 @@ class Unit:
 				unit.unit_rect.x -= unit.fall_speed
 				unit.rotation += 6
 				unit.scale -= 0.02
+				if unit.has_weapon:
+					unit.weapon_rotation = unit.rotation
 
 				if unit.unit_rect.y >= 500:
 					game.friendly_units.pop(game.friendly_units.index(unit))
@@ -2480,6 +2483,8 @@ class Unit:
 				unit.unit_rect.x += unit.fall_speed
 				unit.rotation -= 6
 				unit.scale -= 0.02
+				if unit.has_weapon:
+					unit.weapon_rotation = unit.rotation
 
 				if unit.unit_rect.y >= 500:
 					game.enemy_units.pop(game.enemy_units.index(unit))
@@ -2550,6 +2555,28 @@ class Unit:
 					self.attack_timer = 0
 					self.weapon_rotation = 0
 					game.enemy_units[0].get_hurt(self.damage)
+			
+			elif self.id == 3:
+				self.attack_timer += 1
+				if self.attack_timer >= round(self.attack_timer_goal / 2):
+					self.weapon_rotation -= 1
+				if self.attack_timer >= self.attack_timer_goal - 15 and self.weapon_rotation <= 0:
+					self.weapon_rotation += 10
+				if self.attack_timer >= self.attack_timer_goal:
+					self.attack_timer = 0
+					self.weapon_rotation = 0
+					game.enemy_units[0].get_hurt(self.damage)
+
+			elif self.id == 8:
+				self.attack_timer += 1
+				if self.attack_timer >= round(self.attack_timer_goal / 2):
+					self.weapon_rotation -= 1
+				if self.attack_timer >= self.attack_timer_goal - 10 and self.weapon_rotation <= 10:
+					self.weapon_rotation += 10
+				if self.attack_timer >= self.attack_timer_goal:
+					self.attack_timer = 0
+					self.weapon_rotation = 0
+					game.enemy_units[0].get_hurt(self.damage)
 
 		else:
 			if self.id == 1 or self.id == 4:
@@ -2562,6 +2589,18 @@ class Unit:
 					self.attack_timer = 0
 					self.weapon_rotation = 0
 					game.friendly_units[0].get_hurt(self.damage)
+			
+			elif self.id == 3:
+				self.attack_timer += 1
+				if self.attack_timer >= round(self.attack_timer_goal / 2):
+					self.weapon_rotation += 1
+				if self.attack_timer >= self.attack_timer_goal - 15 and self.weapon_rotation >= 0:
+					self.weapon_rotation -= 10
+				if self.attack_timer >= self.attack_timer_goal:
+					self.attack_timer = 0
+					self.weapon_rotation = 0
+					game.friendly_units[0].get_hurt(self.damage)
+
 
 
 
