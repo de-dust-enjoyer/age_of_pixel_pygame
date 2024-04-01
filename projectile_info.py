@@ -12,3 +12,9 @@ projectile_vel = {
 	8: 0.02,
 	9: 0.1
 }
+unit_projectile_vel = {
+	2: 3,
+	5: 1.5,
+	7: 5,
+	9: 5
+}
