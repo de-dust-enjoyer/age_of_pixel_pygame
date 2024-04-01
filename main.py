@@ -150,11 +150,11 @@ class Game:
 		self.enemy_module_pos3_t3 = (1850 + self.camera_offset_x, 0)
 
 		# player and enemys money
-		self.friendly_money = 30000000
+		self.friendly_money = 300
 		self.enemy_money = 10
 
 		# player and enemy exp
-		self.friendly_exp = 100000000
+		self.friendly_exp = 0
 		self.enemy_exp = 0
 
 		# treshholds for age upgrade
@@ -2093,7 +2093,7 @@ class Projectile:
 								particle.spawn_explosion(projectile.rect.center, (30,30,30), 1, (255,100,0), 0.3, (255,165,0), 0.7, (4,4), 10)
 
 						except ValueError:
-							print("ValueError")
+							print("ValueError in turret projectile check collision friendly")
 
 		for turret in game.enemy_turrets:
 			for projectile in turret.projectiles:
@@ -2119,7 +2119,7 @@ class Projectile:
 								particle.spawn_explosion(projectile.rect.center, (30,30,30), 1, (255,100,0), 0.3, (255,165,0), 0.7, (4,4), 10)
 
 						except ValueError:
-							print("ValueError")
+							print("ValueError in turret projectile check collision enemy")
 
 	def update(self):
 		projectile.move()
@@ -2258,6 +2258,7 @@ class Unit:
 			self.weapon_offset_y = 4
 			self.idle_swinging_distance = 30
 			self.idle_swinging_speed = 0.7
+			self.weapon_animation_state = 0
 
 		elif self.id == 6:
 			self.frame1_surf = game.unit_6_sheet.get_image(0, (32, 32), (1, 0, 0), 2)
@@ -2291,6 +2292,10 @@ class Unit:
 			self.weapon_offset_y = 2
 			self.idle_swinging_distance = 14
 			self.idle_swinging_speed = 0.4
+			self.weapon_animation_state = 0
+			self.shooting_timer = 0
+			self.shooting_timer_goal = 10
+			self.shooting = False
 
 		elif self.id == 8:
 			self.frame1_surf = game.unit_8_sheet.get_image(0, (16, 16), (1, 0, 0), 2)
@@ -2332,8 +2337,9 @@ class Unit:
 			self.frame4_surf = pygame.transform.flip(self.frame4_surf, True, False)
 			self.frame4_surf.set_colorkey((1,000,000))
 
-			self.weapon_surf = pygame.transform.flip(self.weapon_surf, True, False)
-			self.weapon_surf.set_colorkey((1,0,0))
+			if self.has_weapon:
+				self.weapon_surf = pygame.transform.flip(self.weapon_surf, True, False)
+				self.weapon_surf.set_colorkey((1,0,0))
 
 			if self.id == 2 or self.id == 5 or self.id == 7:
 				self.weapon_surf2 = pygame.transform.flip(self.weapon_surf2, True, False)
@@ -2434,7 +2440,7 @@ class Unit:
 				unit.weapon_walking_animation()
 	
 	def rotate_weapon(self):
-		if self.id != 2 and self.id != 7:
+		if self.id != 2 and self.id != 7 and self.id != 5:
 			rotated_surf = pygame.transform.rotate(self.weapon_surf, self.weapon_rotation)
 			rotated_surf.set_colorkey((1,0,0))
 			self.weapon_rect_rotate = rotated_surf.get_rect(center= self.weapon_rect.center)
@@ -2629,13 +2635,24 @@ class Unit:
 					self.weapon_rotation = 0
 					game.friendly_units[0].get_hurt(self.damage)
 
+			elif self.id == 8:
+				self.attack_timer += 1
+				if self.attack_timer >= round(self.attack_timer_goal / 2):
+					self.weapon_rotation += 1
+				if self.attack_timer >= self.attack_timer_goal - 10 and self.weapon_rotation >= 10:
+					self.weapon_rotation -= 10
+				if self.attack_timer >= self.attack_timer_goal:
+					self.attack_timer = 0
+					self.weapon_rotation = 0
+					game.friendly_units[0].get_hurt(self.damage)
+
 	
 
 	def update_range_rect(self):
 		if self.ranged and self.friendly:
 			self.range_rect = pygame.Rect(self.unit_rect.topright[0], self.unit_rect.topright[1], 96, self.unit_rect.height)
 		if self.ranged and not self.friendly:
-			self.range_rect = pygame.Rect(self.unit_rect.topleft[0], self.unit_rect.topleft[1], 96, self.unit_rect.height)
+			self.range_rect = pygame.Rect(self.unit_rect.topleft[0] - 96, self.unit_rect.topleft[1], 96, self.unit_rect.height)
 
 
 
@@ -2647,8 +2664,11 @@ class Unit:
 					if enemy.unit_rect.colliderect(unit.range_rect) and not enemy in unit.units_in_range:
 						unit.units_in_range.append(enemy)
 					if not enemy.unit_rect.colliderect(unit.range_rect) and enemy in unit.units_in_range:
-						unit.units_in_range.pop(unit.units_in_range.index(enemy))
-						unit.attack_timer = 0
+						try:
+							unit.units_in_range.pop(unit.units_in_range.index(enemy))
+							unit.attack_timer = 0
+						except ValueError:
+							print("ValueError in find unit in range friendly")
 
 		for enemy in game.enemy_units:
 			enemy.update_range_rect()
@@ -2661,7 +2681,7 @@ class Unit:
 							enemy.units_in_range.pop(enemy.units_in_range.index(enemy))
 							enemy.attack_timer = 0
 						except ValueError:
-							print("ValueError")
+							print("ValueError in find unit in range enemy")
 
 	def attack_ranged(self):
 		for unit in game.friendly_units:
@@ -2684,6 +2704,7 @@ class Unit:
 				if len(unit.units_in_range) != 0:
 					unit.attack_timer += 1
 					if unit.attack_timer >= round(unit.attack_timer_goal / 2):
+						unit.weapon_animation_state = 1
 						particle = Particle((50,50,240), (2,2), (unit.unit_rect.topright[0] - unit.weapon_rotation/2, unit.unit_rect.topright[1] +10 -unit.weapon_rotation/3), 0.03, "no_gravity")
 						game.particles.append(particle)
 						if not unit.weapon_rotation >= random.randint(35, 45) and unit.idle_swinging_direction == 0:
@@ -2697,20 +2718,131 @@ class Unit:
 					if unit.attack_timer == unit.attack_timer_goal:
 						unit.attack_timer = 0
 						unit.weapon_rotation = 0
+						unit.weapon_animation_state = 0
 						projectile = UnitProjectile((unit.unit_rect.topright[0] - 4, unit.unit_rect.topright[1] + 10), True, 5)
 						unit.projectiles.append(projectile)
 
-
 			elif unit.id == 7:
 				if len(unit.units_in_range) != 0:
+					unit.weapon_rotation = 0
+					unit.weapon_animation_state = 0
 					unit.attack_timer += 1
+					if unit.attack_timer >= round(unit.attack_timer_goal/4):
+						unit.shooting = False
 					if unit.attack_timer == unit.attack_timer_goal:
+						unit.shooting = True
 						unit.attack_timer = 0
+					if unit.shooting:
+						unit.shooting_timer += 1
+						if unit.shooting_timer == round(unit.shooting_timer_goal/1.5):
+							unit.weapon_animation_state = 0
+						if unit.shooting_timer == unit.shooting_timer_goal:
+							unit.shooting_timer = 0
+							projectile = UnitProjectile((unit.unit_rect.topright[0] + 2, unit.unit_rect.topright[1] + 20), True, 7)
+							unit.projectiles.append(projectile)
+							unit.weapon_animation_state = 1
+							for i in range(5):
+								particle1 = Particle((255,206,0), (2,2), (unit.unit_rect.topright[0], unit.unit_rect.topright[1] + 20), 0.1, "friendly_muzzle")
+								particle2 = Particle((255,154,0), (2,2), (unit.unit_rect.topright[0], unit.unit_rect.topright[1] + 20), 0.1, "friendly_muzzle")
+								particle3 = Particle((255,90,0), (2,2), (unit.unit_rect.topright[0], unit.unit_rect.topright[1] + 20), 0.1, "friendly_muzzle")
+								game.particles.append(particle1)
+								game.particles.append(particle2)
+								game.particles.append(particle3)
+
 			elif unit.id == 9:
 				if len(unit.units_in_range) != 0:
 					unit.attack_timer += 1
 					if unit.attack_timer == unit.attack_timer_goal:
 						unit.attack_timer = 0
+						projectile = UnitProjectile((unit.unit_rect.topright[0] + 2, unit.unit_rect.topright[1] + 58), True, 9)
+						unit.projectiles.append(projectile)
+						for i in range(30):
+							particle1 = Particle((255,206,0), (3,3), (unit.unit_rect.topright[0] - 5, unit.unit_rect.topright[1] + 58), 0.1, "friendly_muzzle")
+							particle2 = Particle((255,154,0), (3,3), (unit.unit_rect.topright[0] - 5, unit.unit_rect.topright[1] + 58), 0.1, "friendly_muzzle")
+							particle3 = Particle((255,90,0) , (3,3), (unit.unit_rect.topright[0] - 5, unit.unit_rect.topright[1] + 58), 0.1, "friendly_muzzle")
+							game.particles.append(particle1)
+							game.particles.append(particle2)
+							game.particles.append(particle3)
+
+		for unit in game.enemy_units:
+			if unit.id == 2:
+				if len(unit.units_in_range) != 0:
+					unit.attack_timer += 1
+					if unit.attack_timer >= round(unit.attack_timer_goal / 4):
+						unit.weapon_animation_state = 0
+						unit.weapon_rotation -= 3
+					if unit.attack_timer >= unit.attack_timer_goal - 20:
+						unit.weapon_rotation += 15
+					if unit.attack_timer == unit.attack_timer_goal:
+						unit.attack_timer = 0
+						unit.weapon_rotation = 0
+						unit.weapon_animation_state = 1
+						projectile = UnitProjectile((unit.unit_rect.topleft[0] + 4, unit.unit_rect.topright[1] + 10), False, 2)
+						unit.projectiles.append(projectile)
+
+			elif unit.id == 5:
+				if len(unit.units_in_range) != 0:
+					unit.attack_timer += 1
+					if unit.attack_timer >= round(unit.attack_timer_goal / 2):
+						unit.weapon_animation_state = 1
+						particle = Particle((50,50,240), (2,2), (unit.unit_rect.topleft[0] - unit.weapon_rotation/2, unit.unit_rect.topright[1] +10 -unit.weapon_rotation/3), 0.03, "no_gravity")
+						game.particles.append(particle)
+						if unit.weapon_rotation > random.randint(-45, -35) and unit.idle_swinging_direction == 0:
+							unit.weapon_rotation -= 4
+						elif unit.weapon_rotation <= random.randint(-45, -35) and unit.idle_swinging_direction == 0:
+							unit.idle_swinging_direction = 1
+						elif unit.weapon_rotation <= -10 and unit.idle_swinging_direction == 1:
+							unit.weapon_rotation += 4
+						elif unit.weapon_rotation >= -10 and unit.idle_swinging_direction == 1:
+							unit.idle_swinging_direction = 0
+					if unit.attack_timer >= unit.attack_timer_goal:
+						unit.attack_timer = 0
+						unit.weapon_rotation = 0
+						unit.weapon_animation_state = 0
+						projectile = UnitProjectile((unit.unit_rect.topleft[0] + 4, unit.unit_rect.topleft[1] + 10), False, 5)
+						unit.projectiles.append(projectile)
+
+			elif unit.id == 7:
+				if len(unit.units_in_range) != 0:
+					unit.weapon_rotation = 0
+					unit.weapon_animation_state = 0
+					unit.attack_timer += 1
+					if unit.attack_timer >= round(unit.attack_timer_goal/4):
+						unit.shooting = False
+					if unit.attack_timer == unit.attack_timer_goal:
+						unit.shooting = True
+						unit.attack_timer = 0
+					if unit.shooting:
+						unit.shooting_timer += 1
+						if unit.shooting_timer == round(unit.shooting_timer_goal/1.5):
+							unit.weapon_animation_state = 0
+						if unit.shooting_timer == unit.shooting_timer_goal:
+							unit.shooting_timer = 0
+							projectile = UnitProjectile((unit.unit_rect.topleft[0] - 2, unit.unit_rect.topleft[1] + 20), False, 7)
+							unit.projectiles.append(projectile)
+							unit.weapon_animation_state = 1
+							for i in range(5):
+								particle1 = Particle((255,206,0), (2,2), (unit.unit_rect.topleft[0], unit.unit_rect.topleft[1] + 20), 0.1, "enemy_muzzle")
+								particle2 = Particle((255,154,0), (2,2), (unit.unit_rect.topleft[0], unit.unit_rect.topleft[1] + 20), 0.1, "enemy_muzzle")
+								particle3 = Particle((255,90,0), (2,2), (unit.unit_rect.topleft[0], unit.unit_rect.topleft[1] + 20), 0.1, "enemy_muzzle")
+								game.particles.append(particle1)
+								game.particles.append(particle2)
+								game.particles.append(particle3)
+
+			elif unit.id == 9:
+				if len(unit.units_in_range) != 0:
+					unit.attack_timer += 1
+					if unit.attack_timer == unit.attack_timer_goal:
+						unit.attack_timer = 0
+						projectile = UnitProjectile((unit.unit_rect.topleft[0] - 2, unit.unit_rect.topleft[1] + 58), False, 9)
+						unit.projectiles.append(projectile)
+						for i in range(30):
+							particle1 = Particle((255,206,0), (3,3), (unit.unit_rect.topleft[0] + 5, unit.unit_rect.topleft[1] + 58), 0.1, "enemy_muzzle")
+							particle2 = Particle((255,154,0), (3,3), (unit.unit_rect.topleft[0] + 5, unit.unit_rect.topleft[1] + 58), 0.1, "enemy_muzzle")
+							particle3 = Particle((255,90,0) , (3,3), (unit.unit_rect.topleft[0] + 5, unit.unit_rect.topleft[1] + 58), 0.1, "enemy_muzzle")
+							game.particles.append(particle1)
+							game.particles.append(particle2)
+							game.particles.append(particle3)
 
 
 
@@ -2771,9 +2903,9 @@ class UnitProjectile:
 		elif self.id == 5:
 			self.surf = game.unit_projectile_5.get_image(0, (8,8), (1,0,0), 1)
 		elif self.id == 7:
-			self.surf = game.unit_projectile_7.get_image(0, (8,8), (1,0,0), 2)
+			self.surf = game.unit_projectile_7.get_image(0, (8,8), (1,0,0), 0.5)
 		elif self.id == 9:
-			self.surf = game.unit_projectile_9.get_image(0, (16,8), (1,0,0), 2)
+			self.surf = game.unit_projectile_9.get_image(0, (16,8), (1,0,0), 1)
 		
 		self.rect = self.surf.get_rect(center= self.starting_pos)
 		self.rect_rotate = self.rect
@@ -2797,6 +2929,8 @@ class UnitProjectile:
 							game.particles.append(particle)
 							particle = Particle((200,200,200), (1,1), projectile.rect.center, 0.05, "no_gravity")
 							game.particles.append(particle)
+						elif projectile.id == 9:
+							projectile.y_pos += 0.5
 					else:
 						projectile.x_pos -= projectile.speed
 						if projectile.id == 2 or projectile.id == 5:
@@ -2806,6 +2940,9 @@ class UnitProjectile:
 							game.particles.append(particle)
 							particle = Particle((200,200,200), (1,1), projectile.rect.center, 0.05, "no_gravity")
 							game.particles.append(particle)
+						elif projectile.id == 9:
+							projectile.y_pos += 0.5
+
 					projectile.rect.center = (projectile.x_pos - x_camera_offset_dif, projectile.y_pos)
 
 	def check_for_collision(self):
@@ -2815,10 +2952,18 @@ class UnitProjectile:
 						for enemy in game.enemy_units:
 							if enemy.unit_rect.colliderect(projectile.rect):
 								enemy.get_hurt(projectile.damage)
+								if projectile.id == 9:
+									for i in range(20):
+										particle1 = Particle((255,206,0), (2,2), projectile.rect.midright, 0.2, "no_gravity")
+										particle2 = Particle((255,154,0), (3,3), projectile.rect.midright, 0.2, "no_gravity")
+										particle3 = Particle((255,90,0) , (2,2), projectile.rect.midright, 0.2, "no_gravity")
+										game.particles.append(particle1)
+										game.particles.append(particle2)
+										game.particles.append(particle3)
 								try:
 									unit.projectiles.pop(unit.projectiles.index(projectile))
 								except ValueError:
-									print("ValueError")
+									print("ValueError in unit projectile 'check for collision friendly'")
 						
 		for unit in game.enemy_units:
 			if unit.ranged:
@@ -2826,10 +2971,18 @@ class UnitProjectile:
 						for friendly in game.friendly_units:
 							if friendly.unit_rect.colliderect(projectile.rect):
 								friendly.get_hurt(projectile.damage)
+								if projectile.id == 9:
+									for i in range(20):
+										particle1 = Particle((255,206,0), (2,2), projectile.rect.midright, 0.2, "no_gravity")
+										particle2 = Particle((255,154,0), (3,3), projectile.rect.midright, 0.2, "no_gravity")
+										particle3 = Particle((255,90,0) , (2,2), projectile.rect.midright, 0.2, "no_gravity")
+										game.particles.append(particle1)
+										game.particles.append(particle2)
+										game.particles.append(particle3)
 								try:
 									unit.projectiles.pop(unit.projectiles.index(projectile))
 								except ValueError:
-									print("ValueError")
+									print("ValueError in unit projectile 'check for collision enemy'")
 
 
 	def rotate(self):
@@ -3000,6 +3153,18 @@ class Particle:
 			self.x_vel = random.randint(-4, 4)
 			self.y_vel = 3
 
+		elif self.type == "friendly_muzzle":
+			self.x_direction = 1
+			self.y_direction = random.choice([-0.6,-0.4,-0.2,0,0.2,0.4,0.6])
+			self.x_vel = random.randint(1, 4)
+			self.y_vel = random.randint(1, 4)
+
+		elif self.type == "enemy_muzzle":
+			self.x_direction = -1
+			self.y_direction = random.choice([-0.6,-0.4,-0.2,0,0.2,0.4,0.6])
+			self.x_vel = random.randint(1, 4)
+			self.y_vel = random.randint(1, 4)
+
 		elif self.type == "none":
 			self.x_direction = random.randint(-1, 1)
 			self.y_direction = random.randint(-1, 1)
@@ -3019,6 +3184,10 @@ class Particle:
 
 		elif self.type == "no_gravity":
 			# particle moves in random direction
+			self.x_pos += self.x_direction * self.x_vel
+			self.y_pos += self.y_direction * self.y_vel
+
+		elif self.type == "friendly_muzzle" or self.type == "enemy_muzzle":
 			self.x_pos += self.x_direction * self.x_vel
 			self.y_pos += self.y_direction * self.y_vel
 
@@ -3075,6 +3244,23 @@ class Particle:
 			particle_no_gravity = Particle(color_2, part_size, pos, color_2_lifetime, "no_gravity")
 			game.particles.append(particle_no_gravity)
 
+	def muzzle_flash(self, pos:tuple, color1:tuple, color2:tuple, color3:tuple, size:tuple, 
+								part_count:int, lifetime:float, friendly:bool):
+		for i in range(part_count):
+			if friendly == True:
+				color1 = Particle(color1, size, pos, lifetime, "friendly_muzzle")
+				color2 = Particle(color2, size, pos, lifetime, "friendly_muzzle")
+				color3 = Particle(color3, size, pos, lifetime, "friendly_muzzle")
+				game.particles.append(color1)
+				game.particles.append(color2)
+				game.particles.append(color3)
+			else:
+				color1 = Particle(color1, size, pos, lifetime, "enemy_muzzle")
+				color2 = Particle(color2, size, pos, lifetime, "enemy_muzzle")
+				color3 = Particle(color3, size, pos, lifetime, "enemy_muzzle")
+				game.particles.append(color1)
+				game.particles.append(color2)
+				game.particles.append(color3)
 
 
 class Meteor():
@@ -3316,7 +3502,7 @@ class Bullet:
 						game.bullets.pop(game.bullets.index(bullet))
 						unit.get_hurt(90)
 				except ValueError:
-					print("ValueError")
+					print("ValueError in A10 special check collision")
 
 	def draw(self):
 		for bullet in game.bullets:
