@@ -55,7 +55,7 @@ unit_damage = {
 	5: 40,
 	6: 90,
 	# tier 3
-	7: 100,
+	7: 20,
 	8: 120,
 	9: 200
 }
@@ -88,4 +88,20 @@ is_unit_ranged = {
 	7: True,
 	8: False,
 	9: True
+}
+
+
+has_weapon = {
+	#tier 1
+	1: True,
+	2: True,
+	3: True,
+	#tier 2
+	4: True,
+	5: True,
+	6: True,
+	# tier 3
+	7: True,
+	8: True,
+	9: False
 }
