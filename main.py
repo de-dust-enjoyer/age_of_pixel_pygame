@@ -358,9 +358,14 @@ class Game:
 		self.projectile_9_sheet = SpriteSheet(self.projectile_9_sheet_img)
 		#	unit projectiles
 		#self.unit_projectile_2 = pygame.image.load("assets/weapons/tier1/aow_1_weapon_projectile_2.png").convert_alpha()
-		self.unit_projectile_2 = pygame.image.load("assets/weapons/tier1/aow_1_weapon_projectile_2.png").convert_alpha()
-		self.unit_projectile_5 = pygame.image.load("assets/weapons/tier2/aow_2_weapon_projectile_2.png").convert_alpha()
-		self.unit_projectile_7 = pygame.image.load("assets/weapons/tier3/aow_3_weapon_projectile_1.png").convert_alpha()		
+		self.unit_projectile_2_img = pygame.image.load("assets/weapons/tier1/aow_1_weapon_projectile_2.png").convert_alpha()
+		self.unit_projectile_2 = SpriteSheet(self.unit_projectile_2_img)
+		self.unit_projectile_5_img = pygame.image.load("assets/weapons/tier2/aow_2_weapon_projectile_2.png").convert_alpha()
+		self.unit_projectile_5 = SpriteSheet(self.unit_projectile_5_img)
+		self.unit_projectile_7_img = pygame.image.load("assets/weapons/tier3/aow_3_weapon_projectile_1.png").convert_alpha()		
+		self.unit_projectile_7 = SpriteSheet(self.unit_projectile_7_img)
+		self.unit_projectile_9_img = pygame.image.load("assets/weapons/tier3/aow_3_weapon_projectile_3.png").convert_alpha()		
+		self.unit_projectile_9 = SpriteSheet(self.unit_projectile_9_img)
 
 
 
@@ -439,6 +444,7 @@ class Game:
 		self.sell_turret_friendly()
 		turret.update()
 		projectile.update()
+		unit_projectile.update()
 		unit.update()
 		self.fix_movement_when_no_enemys_present()
 		self.check_game_over_game_won()
@@ -475,6 +481,7 @@ class Game:
 		# >>>>>
 		self.draw_bases_2()
 		projectile.draw()
+		unit_projectile.draw()
 		turret.draw()
 
 
@@ -1981,6 +1988,7 @@ class Projectile:
 			self.frame2_surf = game.projectile_8_sheet.get_image(1, (32, 7), (1,0,0), 1)
 		elif self.id == 9:
 			self.frame1_surf = game.projectile_9_sheet.get_image(0, (32,16), (1,0,0), 1)
+
 		self.rect = self.frame1_surf.get_rect(center= self.starting_pos)
 		self.rect_rotate = self.rect
 		if not self.friendly:
@@ -2165,6 +2173,7 @@ class Unit:
 		self.attack_timer_goal = 2 * 60
 		if self.ranged:
 			self.units_in_range = []
+			self.projectiles = []
 
 		# extracts the animation frames from spritesheet using the get_image method
 		if self.id == 1:
@@ -2242,6 +2251,7 @@ class Unit:
 			self.unit_rect_rotate = self.unit_rect
 
 			self.weapon_surf = game.weapon_5_sheet.get_image(0, (128,128), (1,0,0), 0.6)
+			self.weapon_surf2 = game.weapon_5_sheet.get_image(1, (128,128), (1,0,0), 0.6)
 			self.weapon_rect = self.weapon_surf.get_rect()
 			self.weapon_rect_rotate = self.weapon_rect
 			self.weapon_offset_x = 7
@@ -2323,6 +2333,11 @@ class Unit:
 			self.frame4_surf.set_colorkey((1,000,000))
 
 			self.weapon_surf = pygame.transform.flip(self.weapon_surf, True, False)
+			self.weapon_surf.set_colorkey((1,0,0))
+
+			if self.id == 2 or self.id == 5 or self.id == 7:
+				self.weapon_surf2 = pygame.transform.flip(self.weapon_surf2, True, False)
+				self.weapon_surf2.set_colorkey((1,0,0))
 
 		else:
 			self.x_pos = 32
@@ -2419,11 +2434,22 @@ class Unit:
 				unit.weapon_walking_animation()
 	
 	def rotate_weapon(self):
-		rotated_surf = pygame.transform.rotate(self.weapon_surf, self.weapon_rotation)
-		rotated_surf.set_colorkey((1,0,0))
-		self.weapon_rect_rotate = rotated_surf.get_rect(center= self.weapon_rect.center)
-		return rotated_surf
-
+		if self.id != 2 and self.id != 7:
+			rotated_surf = pygame.transform.rotate(self.weapon_surf, self.weapon_rotation)
+			rotated_surf.set_colorkey((1,0,0))
+			self.weapon_rect_rotate = rotated_surf.get_rect(center= self.weapon_rect.center)
+			return rotated_surf
+		else:
+			if self.weapon_animation_state == 0:
+				rotated_surf = pygame.transform.rotate(self.weapon_surf, self.weapon_rotation)
+				rotated_surf.set_colorkey((1,0,0))
+				self.weapon_rect_rotate = rotated_surf.get_rect(center= self.weapon_rect.center)
+				return rotated_surf
+			elif self.weapon_animation_state == 1:
+				rotated_surf = pygame.transform.rotate(self.weapon_surf2, self.weapon_rotation)
+				rotated_surf.set_colorkey((1,0,0))
+				self.weapon_rect_rotate = rotated_surf.get_rect(center= self.weapon_rect.center)
+				return rotated_surf
 	
 
 	def weapon_walking_animation(self):
@@ -2631,12 +2657,60 @@ class Unit:
 					if unit.unit_rect.colliderect(enemy.range_rect) and not unit in enemy.units_in_range:
 						enemy.units_in_range.append(unit)
 					if not unit.unit_rect.colliderect(enemy.range_rect) and unit in enemy.units_in_range:
-						enemy.units_in_range.pop(enemy.units_in_range.index(enemy))
-						enemy.attack_timer = 0
+						try:
+							enemy.units_in_range.pop(enemy.units_in_range.index(enemy))
+							enemy.attack_timer = 0
+						except ValueError:
+							print("ValueError")
+
+	def attack_ranged(self):
+		for unit in game.friendly_units:
+			if unit.id == 2:
+				if len(unit.units_in_range) != 0:
+					unit.attack_timer += 1
+					if unit.attack_timer >= round(unit.attack_timer_goal / 4):
+						unit.weapon_animation_state = 0
+						unit.weapon_rotation += 3
+					if unit.attack_timer >= unit.attack_timer_goal - 20:
+						unit.weapon_rotation -= 15
+					if unit.attack_timer == unit.attack_timer_goal:
+						unit.attack_timer = 0
+						unit.weapon_rotation = 0
+						unit.weapon_animation_state = 1
+						projectile = UnitProjectile((unit.unit_rect.topright[0] - 4, unit.unit_rect.topright[1] + 10), True, 2)
+						unit.projectiles.append(projectile)
+
+			elif unit.id == 5:
+				if len(unit.units_in_range) != 0:
+					unit.attack_timer += 1
+					if unit.attack_timer >= round(unit.attack_timer_goal / 2):
+						particle = Particle((50,50,240), (2,2), (unit.unit_rect.topright[0] - unit.weapon_rotation/2, unit.unit_rect.topright[1] +10 -unit.weapon_rotation/3), 0.03, "no_gravity")
+						game.particles.append(particle)
+						if not unit.weapon_rotation >= random.randint(35, 45) and unit.idle_swinging_direction == 0:
+							unit.weapon_rotation += 4
+						elif unit.weapon_rotation >= random.randint(35, 45) and unit.idle_swinging_direction == 0:
+							unit.idle_swinging_direction = 1
+						elif not unit.weapon_rotation <= 10 and unit.idle_swinging_direction == 1:
+							unit.weapon_rotation -= 4
+						elif unit.weapon_rotation <= 10 and unit.idle_swinging_direction == 1:
+							unit.idle_swinging_direction = 0
+					if unit.attack_timer == unit.attack_timer_goal:
+						unit.attack_timer = 0
+						unit.weapon_rotation = 0
+						projectile = UnitProjectile((unit.unit_rect.topright[0] - 4, unit.unit_rect.topright[1] + 10), True, 5)
+						unit.projectiles.append(projectile)
 
 
-
-
+			elif unit.id == 7:
+				if len(unit.units_in_range) != 0:
+					unit.attack_timer += 1
+					if unit.attack_timer == unit.attack_timer_goal:
+						unit.attack_timer = 0
+			elif unit.id == 9:
+				if len(unit.units_in_range) != 0:
+					unit.attack_timer += 1
+					if unit.attack_timer == unit.attack_timer_goal:
+						unit.attack_timer = 0
 
 
 
@@ -2677,7 +2751,104 @@ class Unit:
 		self.check_health()
 		self.check_if_in_enemy_base()
 		self.find_unit_in_range()
+		self.attack_ranged()
 
+
+class UnitProjectile:
+	def __init__(self, starting_pos, friendly, id):
+		self.starting_pos = starting_pos
+		self.x_pos = self.starting_pos[0]
+		self.y_pos = self.starting_pos[1]
+		self.starting_camera_offset = game.camera_offset_x
+		self.friendly = friendly
+		self.id = id
+		self.speed = projectile_info.unit_projectile_vel[self.id]
+		self.damage = unit_info.unit_damage[self.id]
+		self.rotation = 0
+
+		if self.id == 2:
+			self.surf = game.unit_projectile_2.get_image(0, (10,24), (1,0,0), 0.7)
+		elif self.id == 5:
+			self.surf = game.unit_projectile_5.get_image(0, (8,8), (1,0,0), 1)
+		elif self.id == 7:
+			self.surf = game.unit_projectile_7.get_image(0, (8,8), (1,0,0), 2)
+		elif self.id == 9:
+			self.surf = game.unit_projectile_9.get_image(0, (16,8), (1,0,0), 2)
+		
+		self.rect = self.surf.get_rect(center= self.starting_pos)
+		self.rect_rotate = self.rect
+
+		if not self.friendly:
+			self.surf = pygame.transform.flip(self.surf, True, False)
+			self.surf.set_colorkey((1,0,0))
+
+
+	def move(self):
+		for unit in game.friendly_units + game.enemy_units:
+			if unit.ranged:
+				for projectile in unit.projectiles:
+					x_camera_offset_dif = projectile.starting_camera_offset - game.camera_offset_x
+					if projectile.friendly:
+						projectile.x_pos += projectile.speed
+						if projectile.id == 2 or projectile.id == 5:
+							projectile.rotation -= 10
+						if projectile.id == 5:
+							particle = Particle((50,50,255), (3,3), projectile.rect.center, 0.05, "no_gravity")
+							game.particles.append(particle)
+							particle = Particle((200,200,200), (1,1), projectile.rect.center, 0.05, "no_gravity")
+							game.particles.append(particle)
+					else:
+						projectile.x_pos -= projectile.speed
+						if projectile.id == 2 or projectile.id == 5:
+							projectile.rotation += 10
+						if projectile.id == 5:
+							particle = Particle((50,50,255), (3,3), projectile.rect.center, 0.05, "no_gravity")
+							game.particles.append(particle)
+							particle = Particle((200,200,200), (1,1), projectile.rect.center, 0.05, "no_gravity")
+							game.particles.append(particle)
+					projectile.rect.center = (projectile.x_pos - x_camera_offset_dif, projectile.y_pos)
+
+	def check_for_collision(self):
+		for unit in game.friendly_units:
+			if unit.ranged:
+				for projectile in unit.projectiles:
+						for enemy in game.enemy_units:
+							if enemy.unit_rect.colliderect(projectile.rect):
+								enemy.get_hurt(projectile.damage)
+								try:
+									unit.projectiles.pop(unit.projectiles.index(projectile))
+								except ValueError:
+									print("ValueError")
+						
+		for unit in game.enemy_units:
+			if unit.ranged:
+				for projectile in unit.projectiles:
+						for friendly in game.friendly_units:
+							if friendly.unit_rect.colliderect(projectile.rect):
+								friendly.get_hurt(projectile.damage)
+								try:
+									unit.projectiles.pop(unit.projectiles.index(projectile))
+								except ValueError:
+									print("ValueError")
+
+
+	def rotate(self):
+		rotated_surf = pygame.transform.rotate(self.surf, self.rotation)
+		rotated_surf.set_colorkey((1,0,0))
+		self.rect_rotate = rotated_surf.get_rect(center= self.rect.center)
+		return rotated_surf
+
+
+	def draw(self):
+		for unit in game.friendly_units + game.enemy_units:
+			if unit.ranged:
+				for projectile in unit.projectiles:
+					game.screen.blit(projectile.rotate(), projectile.rect)
+	
+
+	def update(self):
+		self.move()
+		self.check_for_collision()
 
 
 
@@ -3171,6 +3342,7 @@ blood_master = Blood((100,100), False, (0,0,0), (1,1))
 particle = Particle((0,0,0), (1,1), (0,0), 1, "none")
 turret = Turret(False, 1, 1)
 projectile = Projectile((0,0), (1,1), 1, 1, True)
+unit_projectile = UnitProjectile((0,0), False, 2)
 # master class to controll units
 unit = Unit(False, 3)
 
