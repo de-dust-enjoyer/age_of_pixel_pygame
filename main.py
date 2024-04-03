@@ -37,7 +37,7 @@ class Game:
 		# time variables to keep track of time
 		self.frames_passed = 0
 		self.seconds_passed = 0
-		self.minutes_passed = 12
+		self.minutes_passed = 0
 		# chooses if window should be fullscreen (work in progress: window scaling does not work propperly)
 		if self.fullscreen:
 			self.screen = pygame.display.set_mode(self.SCREEN_SIZE, pygame.FULLSCREEN)
@@ -2316,6 +2316,7 @@ class Unit:
 			self.weapon_offset_y = 0
 			self.idle_swinging_distance = 10
 			self.idle_swinging_speed = 0.2
+			self.units_in_range = []
 
 		elif self.id == 7:
 			self.frame1_surf = game.unit_7_sheet.get_image(0, (16, 16), (1, 0, 0), 2)
@@ -2942,13 +2943,13 @@ class Unit:
 
 
 
-
 	
 	def get_hurt(self, amount):
-		if not self.buffed:
-			self.health -= amount
-		else:
-			self.health -= round(amount * 0.5)
+		if not self.id == 6:
+			if not self.buffed:
+				self.health -= amount
+			else:
+				self.health -= round(amount * 0.5)
 		if not self.id == 9:
 			blood_master.spawn_cluster(self.unit_rect.center, self.friendly, (200,0,0), (8,8), True, 20)
 		else:
