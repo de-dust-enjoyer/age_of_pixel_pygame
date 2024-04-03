@@ -304,6 +304,9 @@ class Game:
 		self.weapon_5_sheet = SpriteSheet(self.weapon_5_sheet_img)
 		self.weapon_6_sheet_img = pygame.image.load("assets/weapons/tier2/aow_2_weapon_3.png").convert_alpha()
 		self.weapon_6_sheet = SpriteSheet(self.weapon_6_sheet_img)
+		#	buffed crown
+		self.buffed_crown_sheet_img = pygame.image.load("assets/weapons/tier2/aow_2_buffed_crown_3.png").convert_alpha()
+		self.buffed_crown_sheet = SpriteSheet(self.buffed_crown_sheet_img)
 		#	tier 3
 		self.weapon_7_sheet_img = pygame.image.load("assets/weapons/tier3/aow_3_weapon_1.png").convert_alpha()
 		self.weapon_7_sheet = SpriteSheet(self.weapon_7_sheet_img)
@@ -2362,6 +2365,19 @@ class Unit:
 		self.height = self.unit_rect.height
 		self.width = self.unit_rect.width
 
+		if not self.id == 6:
+			self.crown_frame1 = game.buffed_crown_sheet.get_image(0, (13,6), (1,0,0), 2)
+			self.crown_frame2 = game.buffed_crown_sheet.get_image(1, (13,6), (1,0,0), 2)
+			self.crown_frame3 = game.buffed_crown_sheet.get_image(2, (13,6), (1,0,0), 2)
+			self.crown_frame4 = game.buffed_crown_sheet.get_image(3, (13,6), (1,0,0), 2)
+			self.crown_rect = self.crown_frame1.get_rect()
+			self.crown_animation_state = 0
+			self.crown_animation_timer = 0
+			self.crown_animation_timer_goal = 60
+			self.buffed = True
+			self.buff_timer = 0
+			self.buff_timer_goal = 3 * 60
+
 		
 			# flip the unit if its from the enemy
 		if not self.friendly:
@@ -2424,6 +2440,45 @@ class Unit:
 
 		return rotated_surf
 
+	def handle_buff(self):
+		for unit in game.friendly_units:
+			if unit.id != 6:
+				if unit.buffed:
+					unit.buff_timer += 1
+					
+					if unit.buff_timer == unit.buff_timer_goal:
+						unit.buffed = False
+
+	def draw_buff_crown(self):
+		if self.id != 6:
+			if self.buffed:
+				print(self.crown_animation_state)
+				if self.crown_animation_timer == 0:
+					self.crown_animation_state = 0
+				elif self.crown_animation_timer == 15:
+					self.crown_animation_state = 1
+				elif self.crown_animation_timer == 30:
+					self.crown_animation_state = 2
+				elif self.crown_animation_timer == 45:
+					self.crown_animation_state = 3
+				self.crown_animation_timer += 1
+				if self.crown_animation_timer == self.crown_animation_timer_goal:
+					self.crown_animation_timer = 0
+
+				if not self.id == 9 and not self.id == 3:
+					self.crown_rect.center = (self.unit_rect.center[0], self.unit_rect.topleft[1] - 15)
+				elif self.id == 9:
+					self.crown_rect.center = (self.unit_rect.center[0], self.unit_rect.topleft[1] + 30)
+				elif self.id == 3:
+					self.crown_rect.center = (self.unit_rect.center[0], self.unit_rect.topleft[1])
+				if self.crown_animation_state == 0:
+					game.screen.blit(self.crown_frame1, self.crown_rect)
+				elif self.crown_animation_state == 1:
+					game.screen.blit(self.crown_frame2, self.crown_rect)
+				elif self.crown_animation_state == 2:
+					game.screen.blit(self.crown_frame3, self.crown_rect)
+				elif self.crown_animation_state == 3:
+					game.screen.blit(self.crown_frame4, self.crown_rect)
 
 
 
@@ -2891,6 +2946,7 @@ class Unit:
 	def draw(self):
 		for unit in game.friendly_units:
 			game.screen.blit(unit.rotate_and_scale(), unit.unit_rect_rotate)
+			unit.draw_buff_crown()
 			if unit.has_weapon:
 				game.screen.blit(unit.rotate_weapon(), unit.weapon_rect_rotate)
 			if unit.ranged and game.dev_mode:
@@ -2899,6 +2955,7 @@ class Unit:
 
 		for unit in game.enemy_units:
 			game.screen.blit(unit.rotate_and_scale(), unit.unit_rect_rotate)
+			unit.draw_buff_crown()
 			if unit.has_weapon:
 				game.screen.blit(unit.rotate_weapon(), unit.weapon_rect_rotate)
 			if unit.ranged and game.dev_mode:
