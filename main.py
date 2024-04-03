@@ -37,7 +37,7 @@ class Game:
 		# time variables to keep track of time
 		self.frames_passed = 0
 		self.seconds_passed = 0
-		self.minutes_passed = 0
+		self.minutes_passed = 12
 		# chooses if window should be fullscreen (work in progress: window scaling does not work propperly)
 		if self.fullscreen:
 			self.screen = pygame.display.set_mode(self.SCREEN_SIZE, pygame.FULLSCREEN)
@@ -2377,6 +2377,8 @@ class Unit:
 			self.buffed = True
 			self.buff_timer = 0
 			self.buff_timer_goal = 3 * 60
+			self.crown_floating_direction = 0
+			self.crown_y_offset = 0
 
 		
 			# flip the unit if its from the enemy
@@ -2452,7 +2454,6 @@ class Unit:
 	def draw_buff_crown(self):
 		if self.id != 6:
 			if self.buffed:
-				print(self.crown_animation_state)
 				if self.crown_animation_timer == 0:
 					self.crown_animation_state = 0
 				elif self.crown_animation_timer == 15:
@@ -2465,12 +2466,23 @@ class Unit:
 				if self.crown_animation_timer == self.crown_animation_timer_goal:
 					self.crown_animation_timer = 0
 
+
+				if self.crown_y_offset < 2 and self.crown_floating_direction == 0:
+					self.crown_y_offset += 0.1
+				elif self.crown_y_offset >= 2 and self.crown_floating_direction == 0:
+					self.crown_floating_direction = 1
+				elif self.crown_y_offset > -2 and self.crown_floating_direction == 1:
+					self.crown_y_offset -= 0.1
+				elif self.crown_y_offset <= -2 and self.crown_floating_direction == 1:
+					self.crown_floating_direction = 0
+
+
 				if not self.id == 9 and not self.id == 3:
-					self.crown_rect.center = (self.unit_rect.center[0], self.unit_rect.topleft[1] - 15)
+					self.crown_rect.center = (self.unit_rect.center[0], self.unit_rect.topleft[1] - 15 + self.crown_y_offset)
 				elif self.id == 9:
-					self.crown_rect.center = (self.unit_rect.center[0], self.unit_rect.topleft[1] + 30)
+					self.crown_rect.center = (self.unit_rect.center[0], self.unit_rect.topleft[1] + 30 + self.crown_y_offset)
 				elif self.id == 3:
-					self.crown_rect.center = (self.unit_rect.center[0], self.unit_rect.topleft[1])
+					self.crown_rect.center = (self.unit_rect.center[0], self.unit_rect.topleft[1] + self.crown_y_offset)
 				if self.crown_animation_state == 0:
 					game.screen.blit(self.crown_frame1, self.crown_rect)
 				elif self.crown_animation_state == 1:
@@ -2770,7 +2782,6 @@ class Unit:
 	def attack_ranged(self):
 		for unit in game.friendly_units:
 			if unit.id == 2:
-				print(unit.unit_in_range)
 				if unit.unit_in_range:
 					unit.attack_timer += 1
 					if unit.attack_timer >= round(unit.attack_timer_goal / 4):
@@ -2934,7 +2945,10 @@ class Unit:
 
 	
 	def get_hurt(self, amount):
-		self.health -= amount
+		if not self.buffed:
+			self.health -= amount
+		else:
+			self.health -= round(amount * 0.5)
 		if not self.id == 9:
 			blood_master.spawn_cluster(self.unit_rect.center, self.friendly, (200,0,0), (8,8), True, 20)
 		else:
