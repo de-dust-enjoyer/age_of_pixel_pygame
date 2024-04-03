@@ -460,6 +460,7 @@ class Game:
 		self.update_global_time()
 		self.handle_enemy_progression()
 		self.spawn_enemys()
+		self.give_money_when_in_dev_mode()
 
 #>>>>>>>>>>>>>>>>>>>>>>>>RENDERING>LOOP>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -830,12 +831,14 @@ class Game:
 	def turret_menu(self):
 		mouse_pos = pygame.mouse.get_pos()
 		if self.turret_menu_open:
-			if self.turret_sell_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
-				if not self.turret_sell_mode:
-					self.turret_sell_mode = True
-				else:
-					self.turret_sell_mode = False
-				self.clicked = True
+			if not self.clicked:
+				if self.turret_sell_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+					self.clicked = True
+					if not self.turret_sell_mode:
+						self.turret_sell_mode = True
+						self.turret_buy_mode = False
+					else:
+						self.turret_sell_mode = False
 			if self.age == 1:
 				if not self.clicked:
 					if self.turret_1_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
@@ -893,6 +896,8 @@ class Game:
 						self.clicked = True
 				if pygame.mouse.get_pressed()[0] == 0:
 					self.clicked = False
+
+
 
 	def place_turret_at_slot(self):
 		if self.turret_buy_mode and self.turret_id_to_buy != 0:
@@ -1201,6 +1206,28 @@ class Game:
 				turret_3_ui = pygame.transform.scale(turret_3_ui, (48, 48))
 				turret_3_ui.set_colorkey((1,0,0))
 				self.screen.blit(turret_3_ui, self.turret_3_button_rect)
+	
+	def draw_turrets_to_cursor(self):
+		if self.turret_buy_mode and self.turret_id_to_buy != 0:
+			mouse_pos = pygame.mouse.get_pos()
+			if self.turret_id_to_buy == 1:
+				self.screen.blit(self.turret_1_sheet.get_image(0, (32, 32), (1,0,0), 2), mouse_pos)
+			if self.turret_id_to_buy == 2:
+				self.screen.blit(self.turret_2_sheet.get_image(0, (32, 32), (1,0,0), 2), mouse_pos)
+			if self.turret_id_to_buy == 3:
+				self.screen.blit(self.turret_3_sheet.get_image(0, (32, 64), (1,0,0), 1), mouse_pos)
+			if self.turret_id_to_buy == 4:
+				self.screen.blit(self.turret_4_sheet.get_image(0, (48, 64), (1,0,0), 1), mouse_pos)
+			if self.turret_id_to_buy == 5:
+				self.screen.blit(self.turret_5_sheet.get_image(0, (48, 64), (1,0,0), 1), mouse_pos)
+			if self.turret_id_to_buy == 6:
+				self.screen.blit(self.turret_6_sheet.get_image(0, (64, 64), (1,0,0), 1), mouse_pos)
+			if self.turret_id_to_buy == 7:
+				self.screen.blit(self.turret_7_sheet.get_image(0, (64, 64), (1,0,0), 1), mouse_pos)
+			if self.turret_id_to_buy == 8:
+				self.screen.blit(self.turret_8_sheet.get_image(0, (64, 64), (1,0,0), 1), mouse_pos)
+			if self.turret_id_to_buy == 9:
+				self.screen.blit(self.turret_9_sheet.get_image(0, (64, 64), (1,0,0), 1), mouse_pos)
 
 	def age_advancment(self):
 		if self.age == 1 and self.friendly_exp >= self.age2_treshhold:
@@ -1220,11 +1247,14 @@ class Game:
 		mouse_pos = pygame.mouse.get_pos()
 		if self.turret_sell_mode:
 			for turret in self.friendly_turrets:
-				if turret.turret_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1 and not self.clicked:
+				if turret.sell_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1 and not self.clicked:
 					self.clicked = True
 					self.friendly_turrets.pop(self.friendly_turrets.index(turret))
 					self.friendly_money += turret.sell_value
 					self.friendly_slots_free[turret.slot] = True
+					self.turret_sell_mode = False
+
+	
 
 	def buy_unit(self, id):
 		if self.friendly_money >= unit_info.unit_cost[id]:
@@ -1297,7 +1327,7 @@ class Game:
 	def draw_sellable_turrets(self):
 		if self.turret_sell_mode:
 			for turret in self.friendly_turrets:
-				self.draw_transparent_rect(turret.turret_rect.size, (255,0,0), 100, turret.turret_rect.topleft)
+				self.draw_transparent_rect(turret.sell_rect.size, (255,0,0), 100, turret.sell_rect.topleft)
 
 
 	def draw_ui(self):
@@ -1321,6 +1351,7 @@ class Game:
 		self.draw_age_advancement_cost()
 		self.draw_free_turret_slots()
 		self.draw_sellable_turrets()
+		self.draw_turrets_to_cursor()
 
 	def move_camera(self):
 		# moves every object on screen (every static object needs to be moved here)
@@ -1494,7 +1525,10 @@ class Game:
 				self.screen.blit(module, self.enemy_module_pos3_t3)
 
 
-
+	def give_money_when_in_dev_mode(self):
+		if self.dev_mode:
+			self.friendly_money = 9999999999
+			self.friendly_exp = 9999999999
 
 
 
@@ -1560,6 +1594,8 @@ class Turret:
 
 		self.turret_rect = self.frame1_surf.get_rect()
 		self.turret_rect_rotate = self.turret_rect
+		self.sell_rect = pygame.Rect(0, 0, self.turret_rect.width/2, self.turret_rect.height/2)
+		self.sell_rect.center = self.turret_rect.center
 
 		if not self.friendly:
 			self.frame1_surf = pygame.transform.flip(self.frame1_surf, True, False)
@@ -1653,6 +1689,8 @@ class Turret:
 				elif turret.slot == 3:
 					turret.turret_rect.center = (game.friendly_module_pos3_t3[0] + game.base_upgrade_3_rect.width / 2,
 												 game.friendly_module_pos3_t3[1] + game.base_upgrade_3_rect.height / 2)
+			turret.sell_rect.center = turret.turret_rect.center
+
 		for turret in game.enemy_turrets:
 			if game.enemy_age == 1:
 				if turret.slot == 1:
@@ -2172,7 +2210,7 @@ class Unit:
 		self.attack_timer = 0
 		self.attack_timer_goal = 2 * 60
 		if self.ranged:
-			self.units_in_range = []
+			self.unit_in_range = False
 			self.projectiles = []
 
 		# extracts the animation frames from spritesheet using the get_image method
@@ -2659,34 +2697,26 @@ class Unit:
 	def find_unit_in_range(self):
 		for unit in game.friendly_units:
 			unit.update_range_rect()
-			if unit.ranged:
-				for enemy in game.enemy_units:
-					if enemy.unit_rect.colliderect(unit.range_rect) and not enemy in unit.units_in_range:
-						unit.units_in_range.append(enemy)
-					if not enemy.unit_rect.colliderect(unit.range_rect) and enemy in unit.units_in_range:
-						try:
-							unit.units_in_range.pop(unit.units_in_range.index(enemy))
-							unit.attack_timer = 0
-						except ValueError:
-							print("ValueError in find unit in range friendly")
+			if unit.ranged and len(game.enemy_units) > 0:
+				if unit.range_rect.colliderect(game.enemy_units[0].unit_rect):
+					unit.unit_in_range = True
+				if not unit.range_rect.colliderect(game.enemy_units[0].unit_rect):
+					unit.unit_in_range = False
 
 		for enemy in game.enemy_units:
 			enemy.update_range_rect()
-			if enemy.ranged:
-				for unit in game.friendly_units:
-					if unit.unit_rect.colliderect(enemy.range_rect) and not unit in enemy.units_in_range:
-						enemy.units_in_range.append(unit)
-					if not unit.unit_rect.colliderect(enemy.range_rect) and unit in enemy.units_in_range:
-						try:
-							enemy.units_in_range.pop(enemy.units_in_range.index(enemy))
-							enemy.attack_timer = 0
-						except ValueError:
-							print("ValueError in find unit in range enemy")
+			if enemy.ranged and len(game.friendly_units) > 0:
+				if enemy.range_rect.colliderect(game.friendly_units[0].unit_rect):
+					enemy.unit_in_range = True
+				if not enemy.range_rect.colliderect(game.friendly_units[0].unit_rect):
+					enemy.unit_in_range = False
+				
 
 	def attack_ranged(self):
 		for unit in game.friendly_units:
 			if unit.id == 2:
-				if len(unit.units_in_range) != 0:
+				print(unit.unit_in_range)
+				if unit.unit_in_range:
 					unit.attack_timer += 1
 					if unit.attack_timer >= round(unit.attack_timer_goal / 4):
 						unit.weapon_animation_state = 0
@@ -2701,7 +2731,7 @@ class Unit:
 						unit.projectiles.append(projectile)
 
 			elif unit.id == 5:
-				if len(unit.units_in_range) != 0:
+				if unit.unit_in_range:
 					unit.attack_timer += 1
 					if unit.attack_timer >= round(unit.attack_timer_goal / 2):
 						unit.weapon_animation_state = 1
@@ -2723,7 +2753,7 @@ class Unit:
 						unit.projectiles.append(projectile)
 
 			elif unit.id == 7:
-				if len(unit.units_in_range) != 0:
+				if unit.unit_in_range:
 					unit.weapon_rotation = 0
 					unit.weapon_animation_state = 0
 					unit.attack_timer += 1
@@ -2750,7 +2780,7 @@ class Unit:
 								game.particles.append(particle3)
 
 			elif unit.id == 9:
-				if len(unit.units_in_range) != 0:
+				if unit.unit_in_range:
 					unit.attack_timer += 1
 					if unit.attack_timer == unit.attack_timer_goal:
 						unit.attack_timer = 0
@@ -2766,7 +2796,7 @@ class Unit:
 
 		for unit in game.enemy_units:
 			if unit.id == 2:
-				if len(unit.units_in_range) != 0:
+				if unit.unit_in_range:
 					unit.attack_timer += 1
 					if unit.attack_timer >= round(unit.attack_timer_goal / 4):
 						unit.weapon_animation_state = 0
@@ -2781,7 +2811,7 @@ class Unit:
 						unit.projectiles.append(projectile)
 
 			elif unit.id == 5:
-				if len(unit.units_in_range) != 0:
+				if unit.unit_in_range:
 					unit.attack_timer += 1
 					if unit.attack_timer >= round(unit.attack_timer_goal / 2):
 						unit.weapon_animation_state = 1
@@ -2803,7 +2833,7 @@ class Unit:
 						unit.projectiles.append(projectile)
 
 			elif unit.id == 7:
-				if len(unit.units_in_range) != 0:
+				if unit.unit_in_range:
 					unit.weapon_rotation = 0
 					unit.weapon_animation_state = 0
 					unit.attack_timer += 1
@@ -2830,7 +2860,7 @@ class Unit:
 								game.particles.append(particle3)
 
 			elif unit.id == 9:
-				if len(unit.units_in_range) != 0:
+				if unit.unit_in_range:
 					unit.attack_timer += 1
 					if unit.attack_timer == unit.attack_timer_goal:
 						unit.attack_timer = 0
