@@ -505,6 +505,7 @@ class Game:
 			self.render_text(f"SPAWN OPTIONS : {self.spawn_options}", self.font_16, "black", (0,112))
 			self.render_text(f"SPAWN FREQ    : {round(self.enemy_spawn_timer_goal / 60)}", self.font_16, "black", (0,128))
 
+
 		# update the frame
 		pygame.display.flip()
 		
@@ -1530,8 +1531,8 @@ class Game:
 
 	def give_money_when_in_dev_mode(self):
 		if self.dev_mode:
-			self.friendly_money = 9999999999
-			self.friendly_exp = 9999999999
+			self.friendly_money = 99999999
+			self.friendly_exp = 99999999
 
 
 
@@ -2190,6 +2191,7 @@ class Unit:
 	# universal unit class for both enemy and friendly units
 	def __init__(self, friendly:bool, id:int):
 		self.friendly = friendly
+		self.id = id
 		self.moving = True
 		self.has_weapon = unit_info.has_weapon[id]
 		self.rotation = 0
@@ -2197,7 +2199,6 @@ class Unit:
 		if self.has_weapon:
 			self.weapon_rotation = 0
 			self.idle_swinging_direction = 0
-		self.id = id
 		self.movement_speed = 1
 		self.fall_speed = 0
 		self.ranged = unit_info.is_unit_ranged[self.id]
@@ -3038,6 +3039,7 @@ class Unit:
 				game.screen.blit(unit.rotate_weapon(), unit.weapon_rect_rotate)
 			if unit.ranged and game.dev_mode:
 				pygame.draw.rect(game.screen, "red", unit.range_rect)
+			
 
 
 		for unit in game.enemy_units:
@@ -3047,19 +3049,20 @@ class Unit:
 				game.screen.blit(unit.rotate_weapon(), unit.weapon_rect_rotate)
 			if unit.ranged and game.dev_mode:
 				pygame.draw.rect(game.screen, "red", unit.range_rect)
-
+			
 
 	def update(self):
 		self.move()
 		self.update_animation_state()
-		self.make_units_stop_on_collision()
 		self.handle_melee_combat()
+		self.make_units_stop_on_collision()
 		self.check_health()
 		self.check_if_in_enemy_base()
 		self.find_unit_in_range()
 		self.attack_ranged()
 		self.handle_buff()
 		self.buff_units()
+
 
 
 class UnitProjectile:
