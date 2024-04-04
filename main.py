@@ -2484,6 +2484,11 @@ class Unit:
 					self.crown_rect.center = (self.unit_rect.center[0], self.unit_rect.topleft[1] + 30 + self.crown_y_offset)
 				elif self.id == 3:
 					self.crown_rect.center = (self.unit_rect.center[0], self.unit_rect.topleft[1] + self.crown_y_offset)
+				
+
+				game.draw_transparent_rect((self.crown_rect.width, game.FLOOR_LEVEL - self.crown_rect.bottom), (255,215,0), 40, self.crown_rect.bottomleft)
+
+
 				if self.crown_animation_state == 0:
 					game.screen.blit(self.crown_frame1, self.crown_rect)
 				elif self.crown_animation_state == 1:
