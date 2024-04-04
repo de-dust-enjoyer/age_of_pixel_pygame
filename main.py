@@ -2375,7 +2375,7 @@ class Unit:
 			self.crown_animation_state = 0
 			self.crown_animation_timer = 0
 			self.crown_animation_timer_goal = 60
-			self.buffed = True
+			self.buffed = False
 			self.buff_timer = 0
 			self.buff_timer_goal = 3 * 60
 			self.crown_floating_direction = 0
@@ -2450,6 +2450,7 @@ class Unit:
 					unit.buff_timer += 1
 					
 					if unit.buff_timer == unit.buff_timer_goal:
+						unit.buff_timer = 0
 						unit.buffed = False
 
 	def draw_buff_crown(self):
@@ -2498,6 +2499,16 @@ class Unit:
 				elif self.crown_animation_state == 3:
 					game.screen.blit(self.crown_frame4, self.crown_rect)
 
+	def buff_units(self):
+		for unit in game.friendly_units:
+			if unit.id == 6:
+				unit.attack_timer += 1
+				if unit.attack_timer == unit.attack_timer_goal:
+					unit.attack_timer = 0
+					for friendly in game.friendly_units:
+						if not friendly.id == 6:
+							friendly.buffed = True
+							friendly.buff_timer = 0
 
 
 	def spawn_friendly(self, id):
@@ -2991,6 +3002,8 @@ class Unit:
 		self.check_if_in_enemy_base()
 		self.find_unit_in_range()
 		self.attack_ranged()
+		self.handle_buff()
+		self.buff_units()
 
 
 class UnitProjectile:
