@@ -37,7 +37,7 @@ class Game:
 		# time variables to keep track of time
 		self.frames_passed = 0
 		self.seconds_passed = 0
-		self.minutes_passed = 0
+		self.minutes_passed = 7
 		# chooses if window should be fullscreen (work in progress: window scaling does not work propperly)
 		if self.fullscreen:
 			self.screen = pygame.display.set_mode(self.SCREEN_SIZE, pygame.FULLSCREEN)
@@ -2455,7 +2455,7 @@ class Unit:
 
 	def draw_buff_crown(self):
 		if self.id != 6:
-			if self.buffed:
+			if self.buffed and self.health > 0:
 				if self.crown_animation_timer == 0:
 					self.crown_animation_state = 0
 				elif self.crown_animation_timer == 15:
@@ -2487,7 +2487,7 @@ class Unit:
 					self.crown_rect.center = (self.unit_rect.center[0], self.unit_rect.topleft[1] + self.crown_y_offset)
 				
 
-				game.draw_transparent_rect((self.crown_rect.width, game.FLOOR_LEVEL - self.crown_rect.bottom), (255,215,0), 40, self.crown_rect.bottomleft)
+				game.draw_transparent_rect((self.crown_rect.width, game.FLOOR_LEVEL - round(self.crown_rect.bottomleft[1])), (255,215,0), 60 - round(self.buff_timer/3), self.crown_rect.bottomleft)
 
 
 				if self.crown_animation_state == 0:
@@ -2499,18 +2499,54 @@ class Unit:
 				elif self.crown_animation_state == 3:
 					game.screen.blit(self.crown_frame4, self.crown_rect)
 
+
 	def buff_units(self):
 		for unit in game.friendly_units:
 			if unit.id == 6:
 				unit.attack_timer += 1
+				if unit.attack_timer >= round(unit.attack_timer_goal / 2):
+						particle = Particle((255,215,0), (3,3), (unit.unit_rect.topright[0] - 15 - unit.weapon_rotation/2, unit.unit_rect.topright[1] +24 -unit.weapon_rotation/3), 0.03, "no_gravity")
+						game.particles.append(particle)
+						if not unit.weapon_rotation >= 40 and unit.idle_swinging_direction == 0:
+							unit.weapon_rotation += 4
+						elif unit.weapon_rotation >= 40 and unit.idle_swinging_direction == 0:
+							unit.idle_swinging_direction = 1
+						elif not unit.weapon_rotation <= 10 and unit.idle_swinging_direction == 1:
+							unit.weapon_rotation -= 4
+						elif unit.weapon_rotation <= 10 and unit.idle_swinging_direction == 1:
+							unit.idle_swinging_direction = 0
+
 				if unit.attack_timer == unit.attack_timer_goal:
 					unit.attack_timer = 0
 					for friendly in game.friendly_units:
 						if not friendly.id == 6:
 							friendly.buffed = True
 							friendly.buff_timer = 0
+		
+		for unit in game.enemy_units:
+			if unit.id == 6:
+				unit.attack_timer += 1
+				if unit.attack_timer >= round(unit.attack_timer_goal / 2):
+						if unit.attack_timer >= round(unit.attack_timer_goal / 2):
+							particle = Particle((255,215,0), (3,3), (unit.unit_rect.topleft[0] + 15 - unit.weapon_rotation/2, unit.unit_rect.topright[1] +10 -unit.weapon_rotation/3), 0.03, "no_gravity")
+							game.particles.append(particle)
+							if unit.weapon_rotation > -40 and unit.idle_swinging_direction == 0:
+								unit.weapon_rotation -= 4
+							elif unit.weapon_rotation <= -40 and unit.idle_swinging_direction == 0:
+								unit.idle_swinging_direction = 1
+							elif unit.weapon_rotation <= -10 and unit.idle_swinging_direction == 1:
+								unit.weapon_rotation += 4
+							elif unit.weapon_rotation >= -10 and unit.idle_swinging_direction == 1:
+								unit.idle_swinging_direction = 0
+	
+				if unit.attack_timer == unit.attack_timer_goal:
+					unit.attack_timer = 0
+					for enemy in game.enemy_units:
+						if not enemy.id == 6:
+							enemy.buffed = True
+							enemy.buff_timer = 0
 
-
+	
 	def spawn_friendly(self, id):
 		unit = Unit(True, id)
 		game.friendly_units_queue.append(unit)
@@ -2582,7 +2618,7 @@ class Unit:
 
 	def weapon_walking_animation(self):
 		if self.moving:
-			if self.friendly:
+			if self.friendly and not self.id == 6:
 				if not self.weapon_rotation <= -self.idle_swinging_distance and self.idle_swinging_direction == 0:
 					self.weapon_rotation -= self.idle_swinging_speed
 				elif self.weapon_rotation <= -self.idle_swinging_distance and self.idle_swinging_direction == 0:
@@ -2591,7 +2627,7 @@ class Unit:
 					self.weapon_rotation += self.idle_swinging_speed
 				elif self.weapon_rotation >= 0 and self.idle_swinging_direction == 1:
 					self.idle_swinging_direction = 0
-			else:
+			elif not self.friendly and not self.id == 6:
 				if not self.weapon_rotation >= +self.idle_swinging_distance and self.idle_swinging_direction == 0:
 					self.weapon_rotation += self.idle_swinging_speed
 				elif self.weapon_rotation >= +self.idle_swinging_distance and self.idle_swinging_direction == 0:
@@ -2710,7 +2746,10 @@ class Unit:
 				if self.attack_timer >= self.attack_timer_goal:
 					self.attack_timer = 0
 					self.weapon_rotation = 0
-					game.enemy_units[0].get_hurt(self.damage)
+					if not self.buffed:
+						game.enemy_units[0].get_hurt(self.damage)
+					else:
+						game.enemy_units[0].get_hurt(round(self.damage * 1.25))
 			
 			elif self.id == 3:
 				self.attack_timer += 1
@@ -2721,7 +2760,10 @@ class Unit:
 				if self.attack_timer >= self.attack_timer_goal:
 					self.attack_timer = 0
 					self.weapon_rotation = 0
-					game.enemy_units[0].get_hurt(self.damage)
+					if not self.buffed:
+						game.enemy_units[0].get_hurt(self.damage)
+					else:
+						game.enemy_units[0].get_hurt(round(self.damage * 1.25))
 
 			elif self.id == 8:
 				self.attack_timer += 1
@@ -2732,7 +2774,10 @@ class Unit:
 				if self.attack_timer >= self.attack_timer_goal:
 					self.attack_timer = 0
 					self.weapon_rotation = 0
-					game.enemy_units[0].get_hurt(self.damage)
+					if not self.buffed:
+						game.enemy_units[0].get_hurt(self.damage)
+					else:
+						game.enemy_units[0].get_hurt(round(self.damage * 1.25))
 
 		else:
 			if self.id == 1 or self.id == 4:
@@ -2744,7 +2789,10 @@ class Unit:
 				if self.attack_timer >= self.attack_timer_goal:
 					self.attack_timer = 0
 					self.weapon_rotation = 0
-					game.friendly_units[0].get_hurt(self.damage)
+					if not self.buffed:
+						game.friendly_units[0].get_hurt(self.damage)
+					else:
+						game.friendly_units[0].get_hurt(round(self.damage * 1.25))
 			
 			elif self.id == 3:
 				self.attack_timer += 1
@@ -2755,7 +2803,10 @@ class Unit:
 				if self.attack_timer >= self.attack_timer_goal:
 					self.attack_timer = 0
 					self.weapon_rotation = 0
-					game.friendly_units[0].get_hurt(self.damage)
+					if not self.buffed:
+						game.friendly_units[0].get_hurt(self.damage)
+					else:
+						game.friendly_units[0].get_hurt(round(self.damage * 1.25))
 
 			elif self.id == 8:
 				self.attack_timer += 1
@@ -2766,7 +2817,10 @@ class Unit:
 				if self.attack_timer >= self.attack_timer_goal:
 					self.attack_timer = 0
 					self.weapon_rotation = 0
-					game.friendly_units[0].get_hurt(self.damage)
+					if not self.buffed:
+						game.friendly_units[0].get_hurt(self.damage)
+					else:
+						game.friendly_units[0].get_hurt(round(self.damage * 1.25))
 
 	
 
@@ -2965,7 +3019,9 @@ class Unit:
 			if not self.buffed:
 				self.health -= amount
 			else:
-				self.health -= round(amount * 0.5)
+				self.health -= round(amount * 0.75)
+		else:
+			self.health -= amount
 		if not self.id == 9:
 			blood_master.spawn_cluster(self.unit_rect.center, self.friendly, (200,0,0), (8,8), True, 20)
 		else:
@@ -3071,7 +3127,11 @@ class UnitProjectile:
 				for projectile in unit.projectiles:
 						for enemy in game.enemy_units:
 							if enemy.unit_rect.colliderect(projectile.rect):
-								enemy.get_hurt(projectile.damage)
+								if not unit.buffed:
+									enemy.get_hurt(projectile.damage)
+								else:
+									enemy.get_hurt(round(projectile.damage * 1.25))
+
 								if projectile.id == 9:
 									for i in range(20):
 										particle1 = Particle((255,206,0), (2,2), projectile.rect.midright, 0.2, "no_gravity")
@@ -3090,7 +3150,10 @@ class UnitProjectile:
 				for projectile in unit.projectiles:
 						for friendly in game.friendly_units:
 							if friendly.unit_rect.colliderect(projectile.rect):
-								friendly.get_hurt(projectile.damage)
+								if not unit.buffed:
+									friendly.get_hurt(projectile.damage)
+								else:
+									friendly.get_hurt(round(projectile.damage * 1.25))
 								if projectile.id == 9:
 									for i in range(20):
 										particle1 = Particle((255,206,0), (2,2), projectile.rect.midright, 0.2, "no_gravity")
