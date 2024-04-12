@@ -37,7 +37,7 @@ class Game:
 		# time variables to keep track of time
 		self.frames_passed = 0
 		self.seconds_passed = 0
-		self.minutes_passed = 7
+		self.minutes_passed = 0
 		# chooses if window should be fullscreen (work in progress: window scaling does not work propperly)
 		if self.fullscreen:
 			self.screen = pygame.display.set_mode(self.SCREEN_SIZE, pygame.FULLSCREEN)
