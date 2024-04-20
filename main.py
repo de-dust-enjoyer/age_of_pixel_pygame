@@ -149,6 +149,10 @@ class Game:
 		self.enemy_module_pos2_t3 = (1850 + self.camera_offset_x, 0)
 		self.enemy_module_pos3_t3 = (1850 + self.camera_offset_x, 0)
 
+		#	base collision rect to controll spawns
+		self.base_rect_friendly = pygame.Rect(0 + self.camera_offset_x, self.FLOOR_LEVEL - 100, 200, 100)
+		self.base_rect_enemy = pygame.Rect(1920 - 200 + self.camera_offset_x, self.FLOOR_LEVEL - 100, 200, 100)
+
 		# player and enemys money
 		self.friendly_money = 300
 		self.enemy_money = 10
@@ -499,11 +503,13 @@ class Game:
 		# render ui at last pos to keep it in foreground!!
 		self.draw_ui()
 		if self.dev_mode:
-			self.render_text(f"FPS^          : {round(self.clock.get_fps())}", self.font_16, "black", (0,64))
+			self.render_text(f"FPS           : {round(self.clock.get_fps())}", self.font_16, "black", (0,64))
 			self.render_text(f"MINUTES PASSED: {self.minutes_passed}", self.font_16, "black", (0,80))
 			self.render_text(f"ENEMY AGE     : {self.enemy_age}", self.font_16, "black", (0,96))
 			self.render_text(f"SPAWN OPTIONS : {self.spawn_options}", self.font_16, "black", (0,112))
 			self.render_text(f"SPAWN FREQ    : {round(self.enemy_spawn_timer_goal / 60)}", self.font_16, "black", (0,128))
+			self.draw_transparent_rect(self.base_rect_friendly.size, (0,200,0), 50, self.base_rect_friendly.topleft)
+			self.draw_transparent_rect(self.base_rect_enemy.size, (200,0,0), 50, self.base_rect_enemy.topleft)
 
 
 		# update the frame
@@ -1387,6 +1393,12 @@ class Game:
 		self.enemy_module_pos2_t3 = (1872 + self.camera_offset_x, 270-64)
 		self.enemy_module_pos3_t3 = (1872 + self.camera_offset_x, 270-128)
 
+		self.base_rect_friendly.x = 0 + self.camera_offset_x
+		self.base_rect_enemy.x = 1920 - 200 + self.camera_offset_x
+
+		
+
+
 
 
 
@@ -2204,7 +2216,7 @@ class Unit:
 		self.ranged = unit_info.is_unit_ranged[self.id]
 		self.cost = unit_info.unit_cost[self.id]
 		self.exp_value = unit_info.unit_cost[self.id]
-		self.kill_value = unit_info.unit_cost[self.id] / 2
+		self.kill_value = unit_info.unit_cost[self.id]
 		self.health = unit_info.unit_health[self.id]
 		self.damage = unit_info.unit_damage[self.id]
 		self.animation_frames = unit_info.animation_frames[self.id]
@@ -3621,11 +3633,10 @@ class A10:
 	
 	def shoot(self):
 		for plane in game.planes:
-			if plane.x_pos  >= 200 + game.camera_offset_x:
-				plane.shoottimer += 1
-				if plane.shoottimer == plane.shoottimer_goal:
-					plane.shoottimer = 0
-					bullet.spawn(plane.rect.center)
+			plane.shoottimer += 1
+			if plane.shoottimer == plane.shoottimer_goal:
+				plane.shoottimer = 0
+				bullet.spawn(plane.rect.center)
 
 	def move(self):
 		for plane in game.planes:
