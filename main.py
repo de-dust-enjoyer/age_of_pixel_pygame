@@ -112,10 +112,7 @@ class Game:
 		# current enemy age
 		self.enemy_age = 1
 
-		# player and enemy base health
-		self.friendly_base_health = 500
-		self.enemy_base_health = 500
-
+		
 		# player and enemy base upgrade state
 		self.friendly_base_upgrade_state = 0
 		self.enemy_base_upgrade_state = 0
@@ -148,10 +145,6 @@ class Game:
 		self.enemy_module_pos1_t3 = (1850 + self.camera_offset_x, 0)
 		self.enemy_module_pos2_t3 = (1850 + self.camera_offset_x, 0)
 		self.enemy_module_pos3_t3 = (1850 + self.camera_offset_x, 0)
-
-		#	base collision rect to controll spawns
-		self.base_rect_friendly = pygame.Rect(0 + self.camera_offset_x, self.FLOOR_LEVEL - 100, 200, 100)
-		self.base_rect_enemy = pygame.Rect(1920 - 200 + self.camera_offset_x, self.FLOOR_LEVEL - 100, 200, 100)
 
 		# player and enemys money
 		self.friendly_money = 300
@@ -508,8 +501,8 @@ class Game:
 			self.render_text(f"ENEMY AGE     : {self.enemy_age}", self.font_16, "black", (0,96))
 			self.render_text(f"SPAWN OPTIONS : {self.spawn_options}", self.font_16, "black", (0,112))
 			self.render_text(f"SPAWN FREQ    : {round(self.enemy_spawn_timer_goal / 60)}", self.font_16, "black", (0,128))
-			self.draw_transparent_rect(self.base_rect_friendly.size, (0,200,0), 50, self.base_rect_friendly.topleft)
-			self.draw_transparent_rect(self.base_rect_enemy.size, (200,0,0), 50, self.base_rect_enemy.topleft)
+			self.draw_transparent_rect(friendly_base.base_rect.size, (0,200,0), 50, friendly_base.base_rect.topleft)
+			self.draw_transparent_rect(enemy_base.base_rect.size, (200,0,0), 50, enemy_base.base_rect.topleft)
 
 
 		# update the frame
@@ -700,8 +693,6 @@ class Game:
 				if turret.id == 4 or turret.id == 5 or turret.id == 6:
 					self.enemy_slots_free[turret.slot] = True
 					self.enemy_turrets.pop(self.enemy_turrets.index(turret))
-
-
 
 
 	def draw_transparent_rect(self, size:tuple, color:tuple, alpha:int, pos:tuple):
@@ -1112,9 +1103,9 @@ class Game:
 				
 	
 	def check_game_over_game_won(self):
-		if self.friendly_base_health <= 0:
+		if friendly_base.health <= 0:
 			self.game_over = True
-		elif self.enemy_base_health <= 0:
+		elif enemy_base.health <= 0:
 			self.game_won = True
 
 
@@ -1393,8 +1384,8 @@ class Game:
 		self.enemy_module_pos2_t3 = (1872 + self.camera_offset_x, 270-64)
 		self.enemy_module_pos3_t3 = (1872 + self.camera_offset_x, 270-128)
 
-		self.base_rect_friendly.x = 0 + self.camera_offset_x
-		self.base_rect_enemy.x = 1920 - 200 + self.camera_offset_x
+		friendly_base.base_rect.x = 0 + self.camera_offset_x
+		enemy_base.base_rect.x = 1920 - 200 + self.camera_offset_x
 
 		
 
@@ -1545,6 +1536,18 @@ class Game:
 		if self.dev_mode:
 			self.friendly_money = 99999999
 			self.friendly_exp = 99999999
+
+
+class Base:
+	def __init__(self, friendly):
+		self.friendly = friendly
+		if self.friendly:
+			self.base_rect = pygame.Rect(0 + game.camera_offset_x, game.FLOOR_LEVEL - 100, 200, 100)
+			self.health = 500
+
+		else:
+			self.base_rect = pygame.Rect(1920 - 200 + game.camera_offset_x, game.FLOOR_LEVEL - 100, 200, 100)
+			self.health = 500
 
 
 
@@ -2739,15 +2742,15 @@ class Unit:
 		if len(game.friendly_units) != 0 and len(game.enemy_units) != 0:
 			if not game.friendly_units[0].ranged:
 				if game.friendly_units[0].melee_combat:
-					game.friendly_units[0].attack_melee()
+					game.friendly_units[0].attack_melee(game.enemy_units[0])
 	
 			if not game.enemy_units[0].ranged:
 				if game.enemy_units[0].melee_combat:
-					game.enemy_units[0].attack_melee()
+					game.enemy_units[0].attack_melee(game.friendly_units[0])
 
 
 
-	def attack_melee(self):
+	def attack_melee(self, target):
 		#	determains the correckt weapon rotaition while attacking and calls the get_hurt method
 		if self.friendly:
 			if self.id == 1 or self.id == 4:
@@ -2760,9 +2763,9 @@ class Unit:
 					self.attack_timer = 0
 					self.weapon_rotation = 0
 					if not self.buffed:
-						game.enemy_units[0].get_hurt(self.damage)
+						target.get_hurt(self.damage)
 					else:
-						game.enemy_units[0].get_hurt(round(self.damage * 1.25))
+						target.get_hurt(round(self.damage * 1.25))
 			
 			elif self.id == 3:
 				self.attack_timer += 1
@@ -2774,9 +2777,9 @@ class Unit:
 					self.attack_timer = 0
 					self.weapon_rotation = 0
 					if not self.buffed:
-						game.enemy_units[0].get_hurt(self.damage)
+						target.get_hurt(self.damage)
 					else:
-						game.enemy_units[0].get_hurt(round(self.damage * 1.25))
+						target.get_hurt(round(self.damage * 1.25))
 
 			elif self.id == 8:
 				self.attack_timer += 1
@@ -2788,9 +2791,9 @@ class Unit:
 					self.attack_timer = 0
 					self.weapon_rotation = 0
 					if not self.buffed:
-						game.enemy_units[0].get_hurt(self.damage)
+						target.get_hurt(self.damage)
 					else:
-						game.enemy_units[0].get_hurt(round(self.damage * 1.25))
+						target.get_hurt(round(self.damage * 1.25))
 
 		else:
 			if self.id == 1 or self.id == 4:
@@ -2803,9 +2806,9 @@ class Unit:
 					self.attack_timer = 0
 					self.weapon_rotation = 0
 					if not self.buffed:
-						game.friendly_units[0].get_hurt(self.damage)
+						target.get_hurt(self.damage)
 					else:
-						game.friendly_units[0].get_hurt(round(self.damage * 1.25))
+						target.get_hurt(round(self.damage * 1.25))
 			
 			elif self.id == 3:
 				self.attack_timer += 1
@@ -2817,9 +2820,9 @@ class Unit:
 					self.attack_timer = 0
 					self.weapon_rotation = 0
 					if not self.buffed:
-						game.friendly_units[0].get_hurt(self.damage)
+						target.get_hurt(self.damage)
 					else:
-						game.friendly_units[0].get_hurt(round(self.damage * 1.25))
+						target.get_hurt(round(self.damage * 1.25))
 
 			elif self.id == 8:
 				self.attack_timer += 1
@@ -2831,9 +2834,16 @@ class Unit:
 					self.attack_timer = 0
 					self.weapon_rotation = 0
 					if not self.buffed:
-						game.friendly_units[0].get_hurt(self.damage)
+						target.get_hurt(self.damage)
 					else:
-						game.friendly_units[0].get_hurt(round(self.damage * 1.25))
+						target.get_hurt(round(self.damage * 1.25))
+
+	def attack_enemy_base(self):
+		if not game.friendly_units[0].ranged:
+			if not game.friendly_units[0].melee_combat and game.friendly_units[0].unit_rect.colliderect(enemy_base_rect):
+				pass
+
+
 
 	
 
@@ -3726,6 +3736,8 @@ particle = Particle((0,0,0), (1,1), (0,0), 1, "none")
 turret = Turret(False, 1, 1)
 projectile = Projectile((0,0), (1,1), 1, 1, True)
 unit_projectile = UnitProjectile((0,0), False, 2)
+friendly_base = Base(True)
+enemy_base = Base(False)
 # master class to controll units
 unit = Unit(False, 3)
 
