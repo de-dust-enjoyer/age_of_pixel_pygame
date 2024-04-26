@@ -446,7 +446,6 @@ class Game:
 		projectile.update()
 		unit_projectile.update()
 		unit.update()
-		self.fix_movement_when_no_enemys_present()
 		self.check_game_over_game_won()
 		self.handle_buttons()
 		self.handle_special_cooldown()
@@ -924,12 +923,12 @@ class Game:
 		healthbar_width = 7
 		healthbar_height = 100
 
-		friendly_health_rect = pygame.Rect(10 + self.camera_offset_x, game.FLOOR_LEVEL, healthbar_width, game.friendly_base_health /5)
+		friendly_health_rect = pygame.Rect(10 + self.camera_offset_x, game.FLOOR_LEVEL, healthbar_width, friendly_base.health /5)
 		friendly_health_rect.bottom = game.FLOOR_LEVEL
 		pygame.draw.rect(self.screen, (200,0,0), pygame.Rect(10 + self.camera_offset_x, game.FLOOR_LEVEL - 100, healthbar_width, healthbar_height))
 		pygame.draw.rect(self.screen, (0,200,0), friendly_health_rect)
 
-		enemy_health_rect = pygame.Rect(1900 + self.camera_offset_x, game.FLOOR_LEVEL, healthbar_width, game.enemy_base_health /5)
+		enemy_health_rect = pygame.Rect(1900 + self.camera_offset_x, game.FLOOR_LEVEL, healthbar_width, enemy_base.health /5)
 		enemy_health_rect.bottom = game.FLOOR_LEVEL
 		pygame.draw.rect(self.screen, (200,0,0), pygame.Rect(1900 + self.camera_offset_x, game.FLOOR_LEVEL - 100, healthbar_width, healthbar_height))
 		pygame.draw.rect(self.screen, (0,200,0), enemy_health_rect)
@@ -1400,18 +1399,7 @@ class Game:
 			if self.camera_offset_x >= -1912 + self.SCREEN_SIZE[0]:
 				self.camera_offset_x -= self.camera_move_speed
 
-	def fix_movement_when_no_enemys_present(self):
-		if len(self.friendly_units) == 0:
-			self.combat = False
-			for enemy in self.enemy_units:
-				enemy.moving = True
-				enemy.fighting = False
-		elif len(self.enemy_units) == 0:
-			self.combat = False
-			for friendly in self.friendly_units:
-				friendly.moving = True
-				friendly.fighting = False
-
+	
 	
 	# two functions becouse units need to be rendered inbetween the two laiers of bases
 	def draw_bases_1(self):
@@ -1543,11 +1531,17 @@ class Base:
 		self.friendly = friendly
 		if self.friendly:
 			self.base_rect = pygame.Rect(0 + game.camera_offset_x, game.FLOOR_LEVEL - 100, 200, 100)
+			self.base_spawn_rect = pygame.Rect(0 + game.camera_offset_x, game.FLOOR_LEVEL - 100, 100, 100)
 			self.health = 500
 
 		else:
 			self.base_rect = pygame.Rect(1920 - 200 + game.camera_offset_x, game.FLOOR_LEVEL - 100, 200, 100)
+			self.base_spawn_rect = pygame.Rect(1920 - 100 + game.camera_offset_x, game.FLOOR_LEVEL - 100, 100, 100)
 			self.health = 500
+
+	def get_hurt(self, amount):
+		self.health -= amount
+
 
 
 
@@ -2577,11 +2571,11 @@ class Unit:
 		for unit in game.friendly_units:
 			if unit.unit_rect.bottomright[0] >= 1900 + game.camera_offset_x:
 				game.friendly_units.pop(game.friendly_units.index(unit))
-				game.enemy_base_health -= unit.damage
+				enemy_base.health -= unit.damage
 		for enemy in game.enemy_units:
 			if enemy.unit_rect.bottomleft[0] <= 20 + game.camera_offset_x:
 				game.enemy_units.pop(game.enemy_units.index(enemy))
-				game.friendly_base_health -= enemy.damage
+				friendly_base.health -= enemy.damage
 
 
 	def move(self):
@@ -2748,6 +2742,17 @@ class Unit:
 				if game.enemy_units[0].melee_combat:
 					game.enemy_units[0].attack_melee(game.friendly_units[0])
 
+	def attack_base(self):
+		if len(game.friendly_units) != 0:
+			if game.friendly_units[0].unit_rect.colliderect(enemy_base.base_rect) and not game.friendly_units[0].melee_combat:
+				game.friendly_units[0].moving = False
+				game.friendly_units[0].attack_melee(enemy_base)
+		if len(game.enemy_units) != 0:
+			if game.enemy_units[0].unit_rect.colliderect(friendly_base.base_rect) and not game.enemy_units[0].melee_combat:
+				game.enemy_units[0].moving = False
+				game.enemy_units[0].attack_melee(friendly_base)
+
+
 
 
 	def attack_melee(self, target):
@@ -2838,14 +2843,7 @@ class Unit:
 					else:
 						target.get_hurt(round(self.damage * 1.25))
 
-	def attack_enemy_base(self):
-		if not game.friendly_units[0].ranged:
-			if not game.friendly_units[0].melee_combat and game.friendly_units[0].unit_rect.colliderect(enemy_base_rect):
-				pass
 
-
-
-	
 
 	def update_range_rect(self):
 		if self.ranged and self.friendly:
@@ -3074,16 +3072,29 @@ class Unit:
 			
 
 	def update(self):
+		if len(game.enemy_units) != 0:
+			print(f"moving state bevore move(): {game.enemy_units[0].moving}")
 		self.move()
+		if len(game.enemy_units) != 0:
+			print(f"moving state after move(): {game.enemy_units[0].moving}")
 		self.update_animation_state()
 		self.handle_melee_combat()
+		if len(game.enemy_units) != 0:
+			print(f"moving state after handle_melee_combat(): {game.enemy_units[0].moving}")
 		self.make_units_stop_on_collision()
+		if len(game.enemy_units) != 0:
+			print(f"moving state after make_units_stop_on_collision(): {game.enemy_units[0].moving}")
+		self.attack_base()
+		if len(game.enemy_units) != 0:
+			print(f"moving state after attack_base(): {game.enemy_units[0].moving}")
 		self.check_health()
-		self.check_if_in_enemy_base()
+		#self.check_if_in_enemy_base()
 		self.find_unit_in_range()
 		self.attack_ranged()
 		self.handle_buff()
 		self.buff_units()
+		if len(game.enemy_units) != 0:
+			print(f"moving state after buff_units(): {game.enemy_units[0].moving}")
 
 
 
