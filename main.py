@@ -67,6 +67,14 @@ class Game:
 		self.training_timer = 0
 		self.training_timer_goal = 5 * 60
 
+		# list containing units on hold
+		self.friendly_unit_buffer = []
+		self.enemy_unit_buffer = []
+
+		# variables determening if unit is free to spawn
+		self.friendly_spawn_allowed = True
+		self.enemy_spawn_allowed = True
+
 		# lists containing units on the battlefield in the correct order!!!
 		self.friendly_units = []
 		self.enemy_units = []
