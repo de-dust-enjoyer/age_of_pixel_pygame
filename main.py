@@ -42,8 +42,9 @@ class Game:
 		if self.fullscreen:
 			self.screen = pygame.display.set_mode(self.SCREEN_SIZE, pygame.FULLSCREEN)
 		else:
-			self.screen = pygame.display.set_mode(self.SCREEN_SIZE)
+			self.screen = pygame.display.set_mode(self.SCREEN_SIZE, pygame.RESIZABLE)
 		pygame.display.set_caption(self.WINDOWTITLE)
+		pygame.display.set_icon(pygame.image.load("assets/icon/aow_icon.png"))
 
 		# changing menu variables
 		self.unit_menu_open = False
@@ -119,15 +120,15 @@ class Game:
 		self.special_available = False
 
 		# current player age
-		self.age = 3
+		self.age = 1
 
 		# current enemy age
-		self.enemy_age = 3
+		self.enemy_age = 1
 
 		
 		# player and enemy base upgrade state
 		self.friendly_base_upgrade_state = 0
-		self.enemy_base_upgrade_state = 3
+		self.enemy_base_upgrade_state = 0
 
 		# base upgrade cost
 		self.upgrade_cost = 300
@@ -202,6 +203,7 @@ class Game:
 		self.turret_sell_button_rect = pygame.Rect(904, 72, 48, 48)
 
 		# importing game assets:
+
 		#	sounds
 
 		#	music
@@ -385,28 +387,25 @@ class Game:
 
 	def get_input(self):
 		mouse_pos = pygame.mouse.get_pos()
+		if not self.pan_right and not self.pan_left:	
+			if self.screen_pan_rect_left.collidepoint(mouse_pos):
+				if self.camera_offset_x <= -8:
+					self.camera_offset_x += self.camera_move_speed
+	
+	
+			if self.screen_pan_rect_right.collidepoint(mouse_pos):
+				if self.camera_offset_x >= -1912 + self.SCREEN_SIZE[0]:
+					self.camera_offset_x -= self.camera_move_speed
+
 		for event in pygame.event.get():
 			# quits pygame if game window is closed
 			if event.type == pygame.QUIT:
 				pygame.quit()
 				sys.exit()
-			
 
-			if self.screen_pan_rect_left.collidepoint(mouse_pos):
-				self.pan_left = True
-
-			elif self.screen_pan_rect_right.collidepoint(mouse_pos):
-				self.pan_right = True
-
-			if not self.screen_pan_rect_right.collidepoint(mouse_pos) and not self.screen_pan_rect_left.collidepoint(mouse_pos):
-				self.pan_right = False
-				self.pan_left = False
 
 			# sets key_pressed variables to True if key is pressed
 			
-
-			
-
 			if event.type == pygame.KEYDOWN:
 				if event.key == pygame.K_ESCAPE:
 					if not self.paused:
@@ -420,9 +419,9 @@ class Game:
 					else:
 						self.dev_mode = False
 
-				elif event.key == pygame.K_d or event.key == pygame.K_RIGHT:
+				elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
 					self.pan_right = True
-				elif event.key == pygame.K_a or event.key == pygame.K_LEFT:
+				elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
 					self.pan_left = True
 
 
@@ -433,6 +432,7 @@ class Game:
 				elif event.key == pygame.K_a or event.key == pygame.K_LEFT:
 					self.pan_left = False
 
+		
 #>>>>>>>>>>>>>>>>>>>>>>>>>>GAME>LOGIC>LOOP>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 	def calc_game_state(self):
