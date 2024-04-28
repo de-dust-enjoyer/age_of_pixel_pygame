@@ -49,6 +49,10 @@ class Game:
 		self.unit_menu_open = False
 		self.turret_menu_open = False
 		self.clicked = False
+
+		# rects to pan cam when mouse is at the edge of the screen
+		self.screen_pan_rect_left = pygame.Rect(0, 128, 150, self.SCREEN_SIZE[1] - 128)
+		self.screen_pan_rect_right = pygame.Rect(self.SCREEN_SIZE[0] - 150, 128, 150, self.SCREEN_SIZE[1] - 128)
 		
 		# camera setup
 		self.camera_offset_x = 0
@@ -115,15 +119,15 @@ class Game:
 		self.special_available = False
 
 		# current player age
-		self.age = 1
+		self.age = 3
 
 		# current enemy age
-		self.enemy_age = 1
+		self.enemy_age = 3
 
 		
 		# player and enemy base upgrade state
 		self.friendly_base_upgrade_state = 0
-		self.enemy_base_upgrade_state = 0
+		self.enemy_base_upgrade_state = 3
 
 		# base upgrade cost
 		self.upgrade_cost = 300
@@ -134,9 +138,9 @@ class Game:
 		self.friendly_module_pos2_t1 = (50 + self.camera_offset_x, 275-64)
 		self.friendly_module_pos3_t1 = (50 + self.camera_offset_x, 275-128)
 		# tier 1 enemy
-		self.enemy_module_pos1_t1 = (1850 + self.camera_offset_x, 0)
-		self.enemy_module_pos2_t1 = (1850 + self.camera_offset_x, 0)
-		self.enemy_module_pos3_t1 = (1850 + self.camera_offset_x, 0)
+		self.enemy_module_pos1_t1 = (1870 + self.camera_offset_x, 0)
+		self.enemy_module_pos2_t1 = (1870 + self.camera_offset_x, 0)
+		self.enemy_module_pos3_t1 = (1870 + self.camera_offset_x, 0)
 		# tier 2 friendly
 		self.friendly_module_pos1_t2 = (129 + self.camera_offset_x, 235)
 		self.friendly_module_pos2_t2 = (129 + self.camera_offset_x, 235-64)
@@ -380,13 +384,28 @@ class Game:
 #>>>>>>>>>>>>>>>>>>>>>>>>>>INPUT>LOOP>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 	def get_input(self):
+		mouse_pos = pygame.mouse.get_pos()
 		for event in pygame.event.get():
 			# quits pygame if game window is closed
 			if event.type == pygame.QUIT:
 				pygame.quit()
 				sys.exit()
+			
+
+			if self.screen_pan_rect_left.collidepoint(mouse_pos):
+				self.pan_left = True
+
+			elif self.screen_pan_rect_right.collidepoint(mouse_pos):
+				self.pan_right = True
+
+			if not self.screen_pan_rect_right.collidepoint(mouse_pos) and not self.screen_pan_rect_left.collidepoint(mouse_pos):
+				self.pan_right = False
+				self.pan_left = False
+
 			# sets key_pressed variables to True if key is pressed
-	
+			
+
+			
 
 			if event.type == pygame.KEYDOWN:
 				if event.key == pygame.K_ESCAPE:
@@ -486,8 +505,10 @@ class Game:
 			self.render_text(f"SPAWN FREQ    : {round(self.enemy_spawn_timer_goal / 60)}", self.font_16, "black", (0,128))
 			self.draw_transparent_rect(friendly_base.base_rect.size, (0,200,0), 50, friendly_base.base_rect.topleft)
 			self.draw_transparent_rect(enemy_base.base_rect.size, (200,0,0), 50, enemy_base.base_rect.topleft)
-			self.draw_transparent_rect(friendly_base.base_spawn_rect.size, (0,200,0), 50, friendly_base.base_spawn_rect.topleft)
-			self.draw_transparent_rect(enemy_base.base_spawn_rect.size, (200,0,0), 50, enemy_base.base_spawn_rect.topleft)
+			self.draw_transparent_rect(friendly_base.base_spawn_rect.size, (200,0,0), 50, friendly_base.base_spawn_rect.topleft)
+			self.draw_transparent_rect(enemy_base.base_spawn_rect.size, (0,200,0), 50, enemy_base.base_spawn_rect.topleft)
+			self.draw_transparent_rect(self.screen_pan_rect_left.size, (255,255,255), 20, self.screen_pan_rect_left.topleft)
+			self.draw_transparent_rect(self.screen_pan_rect_right.size, (255,255,255), 20, self.screen_pan_rect_right.topleft)
 
 
 		# update the frame
@@ -508,7 +529,7 @@ class Game:
 				# do all the game logic:
 				self.calc_game_state()
 				# render the current frame:
-				self.render_new_frame()
+				self.render_new_frame() 
 			
 
 			# freeze game if player won/lost or if game is paused
@@ -1342,32 +1363,32 @@ class Game:
 	def move_camera(self):
 		# moves every object on screen (every static object needs to be moved here)
 		self.background_pos = (0 + self.camera_offset_x, -540)
-		self.friendly_base_rect.bottomleft = (0 + self.camera_offset_x, self.FLOOR_LEVEL)
-		self.enemy_base_rect.bottomright = (1920 + self.camera_offset_x, self.FLOOR_LEVEL)
+		self.friendly_base_rect.bottomleft = (-50 + self.camera_offset_x, self.FLOOR_LEVEL)
+		self.enemy_base_rect.bottomright = (1970 + self.camera_offset_x, self.FLOOR_LEVEL)
 		# tier 1 friendly
-		self.friendly_module_pos1_t1 = (50 + self.camera_offset_x, 275)
-		self.friendly_module_pos2_t1 = (50 + self.camera_offset_x, 275-64)
-		self.friendly_module_pos3_t1 = (50 + self.camera_offset_x, 275-128)
+		self.friendly_module_pos1_t1 = (70 + self.camera_offset_x, 278)
+		self.friendly_module_pos2_t1 = (70 + self.camera_offset_x, 278-64)
+		self.friendly_module_pos3_t1 = (70 + self.camera_offset_x, 278-128)
 		# tier 1 enemy
-		self.enemy_module_pos1_t1 = (1850 + self.camera_offset_x, 275)
-		self.enemy_module_pos2_t1 = (1850 + self.camera_offset_x, 275-64)
-		self.enemy_module_pos3_t1 = (1850 + self.camera_offset_x, 275-128)
+		self.enemy_module_pos1_t1 = (1850 - 16 + self.camera_offset_x, 278)
+		self.enemy_module_pos2_t1 = (1850 - 16 + self.camera_offset_x, 278-64)
+		self.enemy_module_pos3_t1 = (1850 - 16 + self.camera_offset_x, 278-128)
 		# tier 2 friendly
-		self.friendly_module_pos1_t2 = (129 + self.camera_offset_x, 235)
-		self.friendly_module_pos2_t2 = (129 + self.camera_offset_x, 235-64)
-		self.friendly_module_pos3_t2 = (129 + self.camera_offset_x, 235-128)
+		self.friendly_module_pos1_t2 = (79 + self.camera_offset_x, 234)
+		self.friendly_module_pos2_t2 = (79 + self.camera_offset_x, 234-64)
+		self.friendly_module_pos3_t2 = (79 + self.camera_offset_x, 234-128)
 		# tier 2 enemy
-		self.enemy_module_pos1_t2 = (1823 + self.camera_offset_x, 235)
-		self.enemy_module_pos2_t2 = (1823 + self.camera_offset_x, 235-64)
-		self.enemy_module_pos3_t2 = (1823 + self.camera_offset_x, 235-128)
+		self.enemy_module_pos1_t2 = (1841 - 32 + self.camera_offset_x, 234)
+		self.enemy_module_pos2_t2 = (1841 - 32 + self.camera_offset_x, 234-64)
+		self.enemy_module_pos3_t2 = (1841 - 32 + self.camera_offset_x, 234-128)
 		# tier 3 friendly
-		self.friendly_module_pos1_t3 = (80 + self.camera_offset_x, 270)
-		self.friendly_module_pos2_t3 = (80 + self.camera_offset_x, 270-64)
-		self.friendly_module_pos3_t3 = (80 + self.camera_offset_x, 270-128)
+		self.friendly_module_pos1_t3 = (30 + self.camera_offset_x, 270)
+		self.friendly_module_pos2_t3 = (30 + self.camera_offset_x, 270-64)
+		self.friendly_module_pos3_t3 = (30 + self.camera_offset_x, 270-128)
 		# tier 3 enemy
-		self.enemy_module_pos1_t3 = (1872 + self.camera_offset_x, 270)
-		self.enemy_module_pos2_t3 = (1872 + self.camera_offset_x, 270-64)
-		self.enemy_module_pos3_t3 = (1872 + self.camera_offset_x, 270-128)
+		self.enemy_module_pos1_t3 = (1890 - 32 + self.camera_offset_x, 270)
+		self.enemy_module_pos2_t3 = (1890 - 32 + self.camera_offset_x, 270-64)
+		self.enemy_module_pos3_t3 = (1890 - 32 + self.camera_offset_x, 270-128)
 
 		friendly_base.base_rect.x = 0 + self.camera_offset_x
 		enemy_base.base_rect.x = 1920 - 150 + self.camera_offset_x
@@ -1386,36 +1407,36 @@ class Game:
 
 	
 	
-	# two functions becouse units need to be rendered inbetween the two laiers of bases
+	# two functions becouse units need to be rendered inbetween the two layers of bases
 	def draw_bases_1(self):
 		if self.age == 1:
 			self.screen.blit(self.friendly_base1_t1, self.friendly_base_rect)
 		elif self.age == 2:
-			self.screen.blit(self.friendly_base1_t2, (self.friendly_base_rect.x, self.friendly_base_rect.y - 63))
+			self.screen.blit(self.friendly_base1_t2, self.friendly_base_rect)
 		elif self.age == 3:
-			self.screen.blit(self.friendly_base1_t3, (self.friendly_base_rect.x, self.friendly_base_rect.y - 63))
+			self.screen.blit(self.friendly_base1_t3, self.friendly_base_rect)
 
 		if self.enemy_age == 1:
 			self.screen.blit(self.enemy_base1_t1, self.enemy_base_rect)
 		elif self.enemy_age == 2:
-			self.screen.blit(self.enemy_base1_t2, (self.enemy_base_rect.x, self.enemy_base_rect.y - 63))
+			self.screen.blit(self.enemy_base1_t2, self.enemy_base_rect)
 		elif self.enemy_age == 3:
-			self.screen.blit(self.enemy_base1_t3, (self.enemy_base_rect.x, self.enemy_base_rect.y - 63))
+			self.screen.blit(self.enemy_base1_t3, self.enemy_base_rect)
 
 	def draw_bases_2(self):
 		if self.age == 1:
 			self.screen.blit(self.friendly_base2_t1, self.friendly_base_rect)
 		elif self.age == 2:
-			self.screen.blit(self.friendly_base2_t2, (self.friendly_base_rect.x, self.friendly_base_rect.y - 63))
+			self.screen.blit(self.friendly_base2_t2, self.friendly_base_rect)
 		elif self.age == 3:
-			self.screen.blit(self.friendly_base2_t3, (self.friendly_base_rect.x, self.friendly_base_rect.y - 63))
+			self.screen.blit(self.friendly_base2_t3, self.friendly_base_rect)
 
 		if self.enemy_age == 1:
 			self.screen.blit(self.enemy_base2_t1, self.enemy_base_rect)
 		elif self.enemy_age == 2:
-			self.screen.blit(self.enemy_base2_t2, (self.enemy_base_rect.x, self.enemy_base_rect.y - 63))
+			self.screen.blit(self.enemy_base2_t2, self.enemy_base_rect)
 		elif self.enemy_age == 3:
-			self.screen.blit(self.enemy_base2_t3, (self.enemy_base_rect.x, self.enemy_base_rect.y - 63))
+			self.screen.blit(self.enemy_base2_t3, self.enemy_base_rect)
 
 	def draw_upgrade_modules(self):
 
