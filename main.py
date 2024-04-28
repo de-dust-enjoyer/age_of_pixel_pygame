@@ -386,20 +386,7 @@ class Game:
 				pygame.quit()
 				sys.exit()
 			# sets key_pressed variables to True if key is pressed
-			if event.type == pygame.MOUSEBUTTONDOWN:
-				if event.button == 4:
-					if self.camera_offset_x >= -1912 + self.SCREEN_SIZE[0]:
-						self.camera_offset_x -= self.scroll_speed
-					else:
-						self.camera_offset_x = -1900 + self.SCREEN_SIZE[0]
-				elif event.button == 5:
-					if self.camera_offset_x <= -8:
-						self.camera_offset_x += self.scroll_speed
-			if event.type == pygame.MOUSEBUTTONUP:
-				if event.button == 4:
-					self.pan_right = False
-				elif event.button == 5:
-					self.pan_left = False
+	
 
 			if event.type == pygame.KEYDOWN:
 				if event.key == pygame.K_ESCAPE:
@@ -418,18 +405,7 @@ class Game:
 					self.pan_right = True
 				elif event.key == pygame.K_a or event.key == pygame.K_LEFT:
 					self.pan_left = True
-				elif event.key == pygame.K_1:
-					self.buy_unit(1)
-				elif event.key == pygame.K_2:
-					self.buy_unit(2)
-				elif event.key == pygame.K_3:
-					self.buy_unit(3)
-				elif event.key == pygame.K_4:
-					self.enemy_buy_unit(1)
-				elif event.key == pygame.K_5:
-					self.enemy_buy_unit(2)
-				elif event.key == pygame.K_6:
-					self.enemy_buy_unit(3)
+
 
 			# sets key_pressed variables back to false if key is realeased
 			if event.type == pygame.KEYUP:
@@ -510,6 +486,8 @@ class Game:
 			self.render_text(f"SPAWN FREQ    : {round(self.enemy_spawn_timer_goal / 60)}", self.font_16, "black", (0,128))
 			self.draw_transparent_rect(friendly_base.base_rect.size, (0,200,0), 50, friendly_base.base_rect.topleft)
 			self.draw_transparent_rect(enemy_base.base_rect.size, (200,0,0), 50, enemy_base.base_rect.topleft)
+			self.draw_transparent_rect(friendly_base.base_spawn_rect.size, (0,200,0), 50, friendly_base.base_spawn_rect.topleft)
+			self.draw_transparent_rect(enemy_base.base_spawn_rect.size, (200,0,0), 50, enemy_base.base_spawn_rect.topleft)
 
 
 		# update the frame
@@ -1283,7 +1261,7 @@ class Game:
 			self.training_timer += 1
 			if self.training_timer == self.training_timer_goal:
 				self.training_timer = 0
-				self.friendly_units.append(self.training[0])
+				self.friendly_unit_buffer.append(self.training[0])
 				self.training.pop(0)
 
 	def handle_friendly_spawns(self):
@@ -1392,11 +1370,10 @@ class Game:
 		self.enemy_module_pos3_t3 = (1872 + self.camera_offset_x, 270-128)
 
 		friendly_base.base_rect.x = 0 + self.camera_offset_x
-		enemy_base.base_rect.x = 1920 - 200 + self.camera_offset_x
+		enemy_base.base_rect.x = 1920 - 150 + self.camera_offset_x
 
-		
-
-
+		friendly_base.base_spawn_rect.x = 0 + self.camera_offset_x
+		enemy_base.base_spawn_rect.x = 1920 - 100 + self.camera_offset_x
 
 
 
@@ -1538,12 +1515,12 @@ class Base:
 	def __init__(self, friendly):
 		self.friendly = friendly
 		if self.friendly:
-			self.base_rect = pygame.Rect(0 + game.camera_offset_x, game.FLOOR_LEVEL - 100, 200, 100)
+			self.base_rect = pygame.Rect(0 + game.camera_offset_x, game.FLOOR_LEVEL - 100, 150, 100)
 			self.base_spawn_rect = pygame.Rect(0 + game.camera_offset_x, game.FLOOR_LEVEL - 100, 100, 100)
 			self.health = 500
 
 		else:
-			self.base_rect = pygame.Rect(1920 - 200 + game.camera_offset_x, game.FLOOR_LEVEL - 100, 200, 100)
+			self.base_rect = pygame.Rect(1920 - 150 + game.camera_offset_x, game.FLOOR_LEVEL - 100, 150, 100)
 			self.base_spawn_rect = pygame.Rect(1920 - 100 + game.camera_offset_x, game.FLOOR_LEVEL - 100, 100, 100)
 			self.health = 500
 
@@ -2572,8 +2549,35 @@ class Unit:
 
 	def spawn_enemy(self, id):
 		unit = Unit(False, id)
-		game.enemy_units.append(unit)
-		game.enemy_exp += unit_info.unit_exp_value[id]/2
+		game.enemy_unit_buffer.append(unit)
+
+	def spawn_friendly_from_buffer(self):
+		if not len(game.friendly_units) == 0:
+				if not game.friendly_units[-1].unit_rect.colliderect(friendly_base.base_spawn_rect) and not len(game.friendly_unit_buffer) == 0:
+					game.friendly_units.append(game.friendly_unit_buffer[0])
+					game.friendly_exp += unit_info.unit_exp_value[game.friendly_unit_buffer[0].id]/2
+					game.friendly_unit_buffer.pop(0)
+		elif not len(game.friendly_unit_buffer) == 0 and len(game.friendly_units) == 0:
+			game.friendly_units.append(game.friendly_unit_buffer[0])
+			game.friendly_exp += unit_info.unit_exp_value[game.friendly_unit_buffer[0].id]/2
+			game.friendly_unit_buffer.pop(0)
+		
+		
+
+	def spawn_enemy_from_buffer(self):
+		if not len(game.enemy_units) == 0:
+				if not game.enemy_units[-1].unit_rect.colliderect(enemy_base.base_spawn_rect) and not len(game.enemy_unit_buffer) == 0:
+					game.enemy_units.append(game.enemy_unit_buffer[0])
+					game.enemy_exp += unit_info.unit_exp_value[game.enemy_unit_buffer[0].id]/2
+					game.enemy_unit_buffer.pop(0)
+		elif not len(game.enemy_unit_buffer) == 0 and len(game.enemy_units) == 0:
+			game.enemy_units.append(game.enemy_unit_buffer[0])
+			game.enemy_exp += unit_info.unit_exp_value[game.enemy_unit_buffer[0].id]/2
+			game.enemy_unit_buffer.pop(0)
+
+
+
+
 
 	def check_if_in_enemy_base(self):
 		for unit in game.friendly_units:
@@ -3080,29 +3084,18 @@ class Unit:
 			
 
 	def update(self):
-		if len(game.enemy_units) != 0:
-			print(f"moving state bevore move(): {game.enemy_units[0].moving}")
+		self.spawn_friendly_from_buffer()
+		self.spawn_enemy_from_buffer()
 		self.move()
-		if len(game.enemy_units) != 0:
-			print(f"moving state after move(): {game.enemy_units[0].moving}")
 		self.update_animation_state()
 		self.handle_melee_combat()
-		if len(game.enemy_units) != 0:
-			print(f"moving state after handle_melee_combat(): {game.enemy_units[0].moving}")
 		self.make_units_stop_on_collision()
-		if len(game.enemy_units) != 0:
-			print(f"moving state after make_units_stop_on_collision(): {game.enemy_units[0].moving}")
 		self.attack_base()
-		if len(game.enemy_units) != 0:
-			print(f"moving state after attack_base(): {game.enemy_units[0].moving}")
 		self.check_health()
-		#self.check_if_in_enemy_base()
 		self.find_unit_in_range()
 		self.attack_ranged()
 		self.handle_buff()
 		self.buff_units()
-		if len(game.enemy_units) != 0:
-			print(f"moving state after buff_units(): {game.enemy_units[0].moving}")
 
 
 
