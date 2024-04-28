@@ -1361,6 +1361,12 @@ class Game:
 		self.draw_turrets_to_cursor()
 
 	def move_camera(self):
+		if self.pan_left:
+			if self.camera_offset_x <= -8:
+				self.camera_offset_x += self.camera_move_speed
+		elif self.pan_right:
+			if self.camera_offset_x >= -1912 + self.SCREEN_SIZE[0]:
+				self.camera_offset_x -= self.camera_move_speed
 		# moves every object on screen (every static object needs to be moved here)
 		self.background_pos = (0 + self.camera_offset_x, -540)
 		self.friendly_base_rect.bottomleft = (-50 + self.camera_offset_x, self.FLOOR_LEVEL)
@@ -1398,12 +1404,6 @@ class Game:
 
 
 
-		if self.pan_left:
-			if self.camera_offset_x <= -8:
-				self.camera_offset_x += self.camera_move_speed
-		elif self.pan_right:
-			if self.camera_offset_x >= -1912 + self.SCREEN_SIZE[0]:
-				self.camera_offset_x -= self.camera_move_speed
 
 	
 	
