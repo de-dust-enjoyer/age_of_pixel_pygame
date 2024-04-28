@@ -17,7 +17,6 @@ class Game:
 		# constants:
 		self.WINDOWTITLE = "AGE OF PIXEL"
 		self.FLOOR_LEVEL = 460
-		self.SCREEN_SIZE = (960, 540)
 		self.GRAVITY = 0.4
 
 		# dev mode
@@ -25,10 +24,16 @@ class Game:
 		
 		# normal variables:
 		self.running = True
-		self.fullscreen = False
+		self.fullscreen = True
 		self.paused = False
 		self.game_won = False
 		self.game_over = False
+
+		self.scaling_offset_x = 0
+		self.scaling_offset_y = 0
+
+		self.scaling_factor_x = 0
+		self.scaling_factor_y = 0
 		
 		# clock object to keep constant framerate
 		self.clock = pygame.time.Clock()
@@ -40,11 +45,17 @@ class Game:
 		self.minutes_passed = 0
 		# chooses if window should be fullscreen (work in progress: window scaling does not work propperly)
 		if self.fullscreen:
-			self.screen = pygame.display.set_mode(self.SCREEN_SIZE, pygame.FULLSCREEN)
+			self.SCREEN_SIZE = (1920, 1020)
 		else:
-			self.screen = pygame.display.set_mode(self.SCREEN_SIZE, pygame.RESIZABLE)
+			self.SCREEN_SIZE = (960, 540)
+		self.display = pygame.display.set_mode(self.SCREEN_SIZE, pygame.RESIZABLE)
+		self.SCREEN_SIZE = (960, 540)
+
+	
 		pygame.display.set_caption(self.WINDOWTITLE)
 		pygame.display.set_icon(pygame.image.load("assets/icon/aow_icon.png"))
+
+		self.screen = pygame.Surface(self.SCREEN_SIZE, pygame.SRCALPHA)
 
 		# changing menu variables
 		self.unit_menu_open = False
@@ -187,20 +198,36 @@ class Game:
 		self.particles = []
 
 		# specifying button location and size
-		self.unit_select_button_rect = pygame.Rect(648, 8, 48, 48)
-		self.turret_select_button_rect = pygame.Rect(712, 8, 48, 48)
-		self.turret_upgrade_button_rect = pygame.Rect(776, 8, 48, 48)
-		self.special_attack_button_rect = pygame.Rect(840, 8, 48, 48)
-		self.age_advance_button_rect = pygame.Rect(904, 8, 48, 48)
-
-		self.unit_1_button_rect = pygame.Rect(648, 72, 48, 48)
-		self.unit_2_button_rect = pygame.Rect(712, 72, 48, 48)
-		self.unit_3_button_rect = pygame.Rect(776, 72, 48, 48)
-
-		self.turret_1_button_rect = pygame.Rect(712, 72, 48, 48)
-		self.turret_2_button_rect = pygame.Rect(776, 72, 48, 48)
-		self.turret_3_button_rect = pygame.Rect(840, 72, 48, 48)
-		self.turret_sell_button_rect = pygame.Rect(904, 72, 48, 48)
+		if not self.fullscreen:
+			self.unit_select_button_rect = pygame.Rect(648, 8, 48, 48)
+			self.turret_select_button_rect = pygame.Rect(712, 8, 48, 48)
+			self.turret_upgrade_button_rect = pygame.Rect(776, 8, 48, 48)
+			self.special_attack_button_rect = pygame.Rect(840, 8, 48, 48)
+			self.age_advance_button_rect = pygame.Rect(904, 8, 48, 48)
+	
+			self.unit_1_button_rect = pygame.Rect(648, 72, 48, 48)
+			self.unit_2_button_rect = pygame.Rect(712, 72, 48, 48)
+			self.unit_3_button_rect = pygame.Rect(776, 72, 48, 48)
+	
+			self.turret_1_button_rect = pygame.Rect(712, 72, 48, 48)
+			self.turret_2_button_rect = pygame.Rect(776, 72, 48, 48)
+			self.turret_3_button_rect = pygame.Rect(840, 72, 48, 48)
+			self.turret_sell_button_rect = pygame.Rect(904, 72, 48, 48)
+		else:
+			self.unit_select_button_rect = pygame.Rect(648 * 2, 8 * 2, 48 * 2, 48 * 2)
+			self.turret_select_button_rect = pygame.Rect(712 * 2, 8 * 2, 48 * 2, 48 * 2)
+			self.turret_upgrade_button_rect = pygame.Rect(776 * 2, 8 * 2, 48 * 2, 48 * 2)
+			self.special_attack_button_rect = pygame.Rect(840 * 2, 8 * 2, 48 * 2, 48 * 2)
+			self.age_advance_button_rect = pygame.Rect(904 * 2, 8 * 2, 48 * 2, 48 * 2)
+	
+			self.unit_1_button_rect = pygame.Rect(648, 72, 48, 48)
+			self.unit_2_button_rect = pygame.Rect(712, 72, 48, 48)
+			self.unit_3_button_rect = pygame.Rect(776, 72, 48, 48)
+	
+			self.turret_1_button_rect = pygame.Rect(712, 72, 48, 48)
+			self.turret_2_button_rect = pygame.Rect(776, 72, 48, 48)
+			self.turret_3_button_rect = pygame.Rect(840, 72, 48, 48)
+			self.turret_sell_button_rect = pygame.Rect(904, 72, 48, 48)
 
 		# importing game assets:
 
@@ -403,6 +430,9 @@ class Game:
 				pygame.quit()
 				sys.exit()
 
+			if event.type == pygame.VIDEORESIZE:
+				self.display = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
+
 
 			# sets key_pressed variables to True if key is pressed
 			
@@ -437,6 +467,7 @@ class Game:
 
 	def calc_game_state(self):
 		#calculates unit positions and moves camera
+		self.get_scaling_factors()
 		self.move_camera()
 		self.handle_menu_selection()
 		self.handle_friendly_spawns()
@@ -467,7 +498,7 @@ class Game:
 #>>>>>>>>>>>>>>>>>>>>>>>>RENDERING>LOOP>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 	def render_new_frame(self):
-		self.screen.fill((000,000,000))
+		self.display.fill((000,000,000))
 		# render game objects
 		self.screen.blit(self.background, self.background_pos)
 		# render bases
@@ -510,7 +541,7 @@ class Game:
 			self.draw_transparent_rect(self.screen_pan_rect_left.size, (255,255,255), 20, self.screen_pan_rect_left.topleft)
 			self.draw_transparent_rect(self.screen_pan_rect_right.size, (255,255,255), 20, self.screen_pan_rect_right.topleft)
 
-
+		self.display.blit(self.resize_screen(), (0,0))
 		# update the frame
 		pygame.display.flip()
 		
@@ -675,6 +706,22 @@ class Game:
 			self.spawn_options = [9,9,9]
 			self.enemy_spawn_timer_goal = 3 * 60
 			self.buy_turret_enemy()
+
+	def resize_screen(self):
+		screen = self.screen
+		scaled_screen = pygame.transform.scale(screen, pygame.display.get_surface().get_size())
+		return scaled_screen
+
+	def get_scaling_factors(self):
+		self.scaling_offset_x = pygame.display.get_surface().get_size()[0] - self.SCREEN_SIZE[0]
+		self.scaling_offset_y = pygame.display.get_surface().get_size()[1] - self.SCREEN_SIZE[1]
+		self.scaling_factor_x = pygame.display.get_surface().get_size()[0] / self.SCREEN_SIZE[0]
+		self.scaling_factor_y = pygame.display.get_surface().get_size()[1] / self.SCREEN_SIZE[1]
+		print(self.scaling_offset_x)
+		print(self.scaling_offset_y)
+		print(self.scaling_factor_x)
+		print(self.scaling_factor_y)
+
 
 	def spawn_enemys(self):
 		self.enemy_spawn_timer += 1
