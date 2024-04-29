@@ -24,13 +24,9 @@ class Game:
 		
 		# normal variables:
 		self.running = True
-		self.fullscreen = False
 		self.paused = False
 		self.game_won = False
 		self.game_over = False
-
-		self.scaling_offset_x = 0
-		self.scaling_offset_y = 0
 
 		self.scaling_factor_x = 1
 		self.scaling_factor_y = 1
@@ -46,10 +42,7 @@ class Game:
 		self.seconds_passed = 0
 		self.minutes_passed = 0
 		# chooses if window should be fullscreen (work in progress: window scaling does not work propperly)
-		if self.fullscreen:
-			self.SCREEN_SIZE = (1920, 1020)
-		else:
-			self.SCREEN_SIZE = (960, 540)
+		self.SCREEN_SIZE = (960, 540)
 		self.display = pygame.display.set_mode(self.SCREEN_SIZE, pygame.RESIZABLE)
 		self.SCREEN_SIZE = (960, 540)
 
@@ -701,8 +694,6 @@ class Game:
 		return scaled_screen
 
 	def get_scaling_factors(self):
-		self.scaling_offset_x = pygame.display.get_surface().get_size()[0] - self.SCREEN_SIZE[0]
-		self.scaling_offset_y = pygame.display.get_surface().get_size()[1] - self.SCREEN_SIZE[1]
 		self.scaling_factor_x = pygame.display.get_surface().get_size()[0] / self.SCREEN_SIZE[0]
 		self.scaling_factor_y = pygame.display.get_surface().get_size()[1] / self.SCREEN_SIZE[1]
 
