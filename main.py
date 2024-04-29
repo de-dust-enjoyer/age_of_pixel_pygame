@@ -3241,6 +3241,48 @@ class UnitProjectile:
 									print("ValueError in unit projectile 'check for collision enemy'")
 
 
+	def check_for_base_collision(self):
+		for unit in game.friendly_units:
+			if unit.ranged:
+				for projectile in unit.projectiles:
+					if enemy_base.base_spawn_rect.colliderect(projectile.rect):
+						enemy_base.get_hurt(projectile.damage)
+
+						if projectile.id == 9:
+							for i in range(20):
+								particle1 = Particle((255,206,0), (2,2), projectile.rect.midright, 0.2, "no_gravity")
+								particle2 = Particle((255,154,0), (3,3), projectile.rect.midright, 0.2, "no_gravity")
+								particle3 = Particle((255,90,0) , (2,2), projectile.rect.midright, 0.2, "no_gravity")
+								game.particles.append(particle1)
+								game.particles.append(particle2)
+								game.particles.append(particle3)
+
+						try:
+							unit.projectiles.pop(unit.projectiles.index(projectile))
+						except ValueError:
+							print("ValueError in unit projectile 'check for collision friendly' (targeting base)")
+
+		for unit in game.enemy_units:
+			if unit.ranged:
+				for projectile in unit.projectiles:
+					if friendly_base.base_spawn_rect.colliderect(projectile.rect):
+						friendly_base.get_hurt(projectile.damage)
+
+						if projectile.id == 9:
+							for i in range(20):
+								particle1 = Particle((255,206,0), (2,2), projectile.rect.midright, 0.2, "no_gravity")
+								particle2 = Particle((255,154,0), (3,3), projectile.rect.midright, 0.2, "no_gravity")
+								particle3 = Particle((255,90,0) , (2,2), projectile.rect.midright, 0.2, "no_gravity")
+								game.particles.append(particle1)
+								game.particles.append(particle2)
+								game.particles.append(particle3)
+
+						try:
+							unit.projectiles.pop(unit.projectiles.index(projectile))
+						except ValueError:
+							print("ValueError in unit projectile 'check for collision enemy' (targeting base)")
+
+
 	def rotate(self):
 		rotated_surf = pygame.transform.rotate(self.surf, self.rotation)
 		rotated_surf.set_colorkey((1,0,0))
@@ -3258,7 +3300,7 @@ class UnitProjectile:
 	def update(self):
 		self.move()
 		self.check_for_collision()
-
+		self.check_for_base_collision()
 
 
 
