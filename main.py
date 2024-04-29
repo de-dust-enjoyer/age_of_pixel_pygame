@@ -2788,13 +2788,17 @@ class Unit:
 
 	def attack_base(self):
 		if len(game.friendly_units) != 0:
-			if game.friendly_units[0].unit_rect.colliderect(enemy_base.base_rect) and not game.friendly_units[0].melee_combat:
+			if game.friendly_units[0].unit_rect.colliderect(enemy_base.base_rect):
 				game.friendly_units[0].moving = False
-				game.friendly_units[0].attack_melee(enemy_base)
+				if not game.friendly_units[0].ranged:
+					if not game.friendly_units[0].melee_combat:	
+						game.friendly_units[0].attack_melee(enemy_base)
 		if len(game.enemy_units) != 0:
-			if game.enemy_units[0].unit_rect.colliderect(friendly_base.base_rect) and not game.enemy_units[0].melee_combat:
+			if game.enemy_units[0].unit_rect.colliderect(friendly_base.base_rect):
 				game.enemy_units[0].moving = False
-				game.enemy_units[0].attack_melee(friendly_base)
+				if not game.enemy_units[0].ranged:
+					if not game.enemy_units[0].melee_combat:
+						game.enemy_units[0].attack_melee(friendly_base)
 
 
 
@@ -2901,17 +2905,17 @@ class Unit:
 		for unit in game.friendly_units:
 			unit.update_range_rect()
 			if unit.ranged and len(game.enemy_units) > 0:
-				if unit.range_rect.colliderect(game.enemy_units[0].unit_rect):
+				if unit.range_rect.colliderect(game.enemy_units[0].unit_rect) or unit.range_rect.colliderect(enemy_base.base_rect):
 					unit.unit_in_range = True
-				if not unit.range_rect.colliderect(game.enemy_units[0].unit_rect):
+				if not unit.range_rect.colliderect(game.enemy_units[0].unit_rect) and not unit.range_rect.colliderect(enemy_base.base_rect):
 					unit.unit_in_range = False
 
 		for enemy in game.enemy_units:
 			enemy.update_range_rect()
 			if enemy.ranged and len(game.friendly_units) > 0:
-				if enemy.range_rect.colliderect(game.friendly_units[0].unit_rect):
+				if enemy.range_rect.colliderect(game.friendly_units[0].unit_rect) or enemy.range_rect.colliderect(friendly_base.base_rect):
 					enemy.unit_in_range = True
-				if not enemy.range_rect.colliderect(game.friendly_units[0].unit_rect):
+				if not enemy.range_rect.colliderect(game.friendly_units[0].unit_rect) and not enemy.range_rect.colliderect(friendly_base.base_rect):
 					enemy.unit_in_range = False
 				
 
