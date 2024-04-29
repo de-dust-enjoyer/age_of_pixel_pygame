@@ -1558,7 +1558,22 @@ class Base:
 
 	def get_hurt(self, amount):
 		self.health -= amount
-
+		for i in range(15):
+			if self.friendly:
+				if game.age == 1:
+					pass
+				elif game.age == 2:
+					pass
+				elif game.age == 3:
+					pass
+			else:
+				if game.enemy_age == 1:
+					pass
+				elif game.enemy_age == 2:
+					pass
+				elif game.enemy_age == 3:
+					pass
+	
 
 
 
