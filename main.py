@@ -24,7 +24,7 @@ class Game:
 		
 		# normal variables:
 		self.running = True
-		self.fullscreen = True
+		self.fullscreen = False
 		self.paused = False
 		self.game_won = False
 		self.game_over = False
@@ -32,8 +32,10 @@ class Game:
 		self.scaling_offset_x = 0
 		self.scaling_offset_y = 0
 
-		self.scaling_factor_x = 0
-		self.scaling_factor_y = 0
+		self.scaling_factor_x = 1
+		self.scaling_factor_y = 1
+
+		self.mouse_pos = (pygame.mouse.get_pos()[0] / self.scaling_factor_x, pygame.mouse.get_pos()[1] / self.scaling_factor_y)
 		
 		# clock object to keep constant framerate
 		self.clock = pygame.time.Clock()
@@ -198,36 +200,22 @@ class Game:
 		self.particles = []
 
 		# specifying button location and size
-		if not self.fullscreen:
-			self.unit_select_button_rect = pygame.Rect(648, 8, 48, 48)
-			self.turret_select_button_rect = pygame.Rect(712, 8, 48, 48)
-			self.turret_upgrade_button_rect = pygame.Rect(776, 8, 48, 48)
-			self.special_attack_button_rect = pygame.Rect(840, 8, 48, 48)
-			self.age_advance_button_rect = pygame.Rect(904, 8, 48, 48)
+
+		self.unit_select_button_rect = pygame.Rect(648, 8, 48, 48)
+		self.turret_select_button_rect = pygame.Rect(712, 8, 48, 48)
+		self.turret_upgrade_button_rect = pygame.Rect(776, 8, 48, 48)
+		self.special_attack_button_rect = pygame.Rect(840, 8, 48, 48)
+		self.age_advance_button_rect = pygame.Rect(904, 8, 48, 48)
+
+		self.unit_1_button_rect = pygame.Rect(648, 72, 48, 48)
+		self.unit_2_button_rect = pygame.Rect(712, 72, 48, 48)
+		self.unit_3_button_rect = pygame.Rect(776, 72, 48, 48)
+
+		self.turret_1_button_rect = pygame.Rect(712, 72, 48, 48)
+		self.turret_2_button_rect = pygame.Rect(776, 72, 48, 48)
+		self.turret_3_button_rect = pygame.Rect(840, 72, 48, 48)
+		self.turret_sell_button_rect = pygame.Rect(904, 72, 48, 48)
 	
-			self.unit_1_button_rect = pygame.Rect(648, 72, 48, 48)
-			self.unit_2_button_rect = pygame.Rect(712, 72, 48, 48)
-			self.unit_3_button_rect = pygame.Rect(776, 72, 48, 48)
-	
-			self.turret_1_button_rect = pygame.Rect(712, 72, 48, 48)
-			self.turret_2_button_rect = pygame.Rect(776, 72, 48, 48)
-			self.turret_3_button_rect = pygame.Rect(840, 72, 48, 48)
-			self.turret_sell_button_rect = pygame.Rect(904, 72, 48, 48)
-		else:
-			self.unit_select_button_rect = pygame.Rect(648 * 2, 8 * 2, 48 * 2, 48 * 2)
-			self.turret_select_button_rect = pygame.Rect(712 * 2, 8 * 2, 48 * 2, 48 * 2)
-			self.turret_upgrade_button_rect = pygame.Rect(776 * 2, 8 * 2, 48 * 2, 48 * 2)
-			self.special_attack_button_rect = pygame.Rect(840 * 2, 8 * 2, 48 * 2, 48 * 2)
-			self.age_advance_button_rect = pygame.Rect(904 * 2, 8 * 2, 48 * 2, 48 * 2)
-	
-			self.unit_1_button_rect = pygame.Rect(648, 72, 48, 48)
-			self.unit_2_button_rect = pygame.Rect(712, 72, 48, 48)
-			self.unit_3_button_rect = pygame.Rect(776, 72, 48, 48)
-	
-			self.turret_1_button_rect = pygame.Rect(712, 72, 48, 48)
-			self.turret_2_button_rect = pygame.Rect(776, 72, 48, 48)
-			self.turret_3_button_rect = pygame.Rect(840, 72, 48, 48)
-			self.turret_sell_button_rect = pygame.Rect(904, 72, 48, 48)
 
 		# importing game assets:
 
@@ -413,14 +401,14 @@ class Game:
 #>>>>>>>>>>>>>>>>>>>>>>>>>>INPUT>LOOP>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 	def get_input(self):
-		mouse_pos = pygame.mouse.get_pos()
+		self.mouse_pos = (pygame.mouse.get_pos()[0] / self.scaling_factor_x, pygame.mouse.get_pos()[1] / self.scaling_factor_y)
 		if not self.pan_right and not self.pan_left:	
-			if self.screen_pan_rect_left.collidepoint(mouse_pos):
+			if self.screen_pan_rect_left.collidepoint(self.mouse_pos):
 				if self.camera_offset_x <= -8:
 					self.camera_offset_x += self.camera_move_speed
 	
 	
-			if self.screen_pan_rect_right.collidepoint(mouse_pos):
+			if self.screen_pan_rect_right.collidepoint(self.mouse_pos):
 				if self.camera_offset_x >= -1912 + self.SCREEN_SIZE[0]:
 					self.camera_offset_x -= self.camera_move_speed
 
@@ -717,10 +705,7 @@ class Game:
 		self.scaling_offset_y = pygame.display.get_surface().get_size()[1] - self.SCREEN_SIZE[1]
 		self.scaling_factor_x = pygame.display.get_surface().get_size()[0] / self.SCREEN_SIZE[0]
 		self.scaling_factor_y = pygame.display.get_surface().get_size()[1] / self.SCREEN_SIZE[1]
-		print(self.scaling_offset_x)
-		print(self.scaling_offset_y)
-		print(self.scaling_factor_x)
-		print(self.scaling_factor_y)
+
 
 
 	def spawn_enemys(self):
@@ -774,9 +759,8 @@ class Game:
 
 
 	def handle_buttons(self):
-		mouse_pos = pygame.mouse.get_pos()
 		if not self.clicked:
-			if self.turret_upgrade_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+			if self.turret_upgrade_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
 				self.unit_menu_open = False
 				self.turret_menu_open = False
 				self.turret_buy_mode = False
@@ -788,7 +772,7 @@ class Game:
 						self.friendly_slots_free[self.friendly_base_upgrade_state] = True
 						self.upgrade_cost *= 4
 				self.clicked = True
-			elif self.special_attack_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+			elif self.special_attack_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
 				self.turret_buy_mode = False
 				self.turret_sell_mode = False
 				if self.age == 1:
@@ -804,7 +788,7 @@ class Game:
 						plane.spawn()
 						self.special_available = False
 				self.clicked = True
-			elif self.age_advance_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+			elif self.age_advance_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
 				self.turret_buy_mode = False
 				self.turret_sell_mode = False
 				self.unit_menu_open = False
@@ -816,9 +800,8 @@ class Game:
 
 
 	def handle_menu_selection(self):
-		mouse_pos = pygame.mouse.get_pos()
 		if not self.clicked:
-			if self.unit_select_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+			if self.unit_select_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
 				self.turret_buy_mode = False
 				self.turret_sell_mode = False
 				if self.unit_menu_open == False:
@@ -827,7 +810,7 @@ class Game:
 					self.unit_menu_open = False
 				self.turret_menu_open = False
 				self.clicked = True
-			if self.turret_select_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+			if self.turret_select_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
 				self.turret_buy_mode = False
 				self.turret_sell_mode = False
 				if self.turret_menu_open == False:
@@ -840,53 +823,51 @@ class Game:
 			self.clicked = False
 
 	def unit_menu(self):
-		mouse_pos = pygame.mouse.get_pos()
 		if self.unit_menu_open:
 			if self.age == 1:
 				if not self.clicked:
-					if self.unit_1_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+					if self.unit_1_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
 						self.buy_unit(1)
 						self.clicked = True
-					elif self.unit_2_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+					elif self.unit_2_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
 						self.buy_unit(2)
 						self.clicked = True
-					elif self.unit_3_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+					elif self.unit_3_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
 						self.buy_unit(3)
 						self.clicked = True
 				if pygame.mouse.get_pressed()[0] == 0:
 					self.clicked = False
 			if self.age == 2:
 				if not self.clicked:
-					if self.unit_1_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+					if self.unit_1_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
 						self.buy_unit(4)
 						self.clicked = True
-					elif self.unit_2_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+					elif self.unit_2_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
 						self.buy_unit(5)
 						self.clicked = True
-					elif self.unit_3_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+					elif self.unit_3_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
 						self.buy_unit(6)
 						self.clicked = True
 				if pygame.mouse.get_pressed()[0] == 0:
 					self.clicked = False
 			if self.age == 3:
 				if not self.clicked:
-					if self.unit_1_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+					if self.unit_1_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
 						self.buy_unit(7)
 						self.clicked = True
-					elif self.unit_2_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+					elif self.unit_2_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
 						self.buy_unit(8)
 						self.clicked = True
-					elif self.unit_3_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+					elif self.unit_3_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
 						self.buy_unit(9)
 						self.clicked = True
 				if pygame.mouse.get_pressed()[0] == 0:
 					self.clicked = False
 
 	def turret_menu(self):
-		mouse_pos = pygame.mouse.get_pos()
 		if self.turret_menu_open:
 			if not self.clicked:
-				if self.turret_sell_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+				if self.turret_sell_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
 					self.clicked = True
 					if not self.turret_sell_mode:
 						self.turret_sell_mode = True
@@ -895,17 +876,17 @@ class Game:
 						self.turret_sell_mode = False
 			if self.age == 1:
 				if not self.clicked:
-					if self.turret_1_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+					if self.turret_1_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
 						self.turret_buy_mode = True
 						self.turret_sell_mode = False
 						self.turret_id_to_buy = 1
 						self.clicked = True
-					elif self.turret_2_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+					elif self.turret_2_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
 						self.turret_buy_mode = True
 						self.turret_sell_mode = False
 						self.turret_id_to_buy = 2
 						self.clicked = True
-					elif self.turret_3_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+					elif self.turret_3_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
 						self.turret_buy_mode = True
 						self.turret_sell_mode = False
 						self.turret_id_to_buy = 3
@@ -914,17 +895,17 @@ class Game:
 					self.clicked = False
 			if self.age == 2:
 				if not self.clicked:
-					if self.turret_1_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+					if self.turret_1_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
 						self.turret_buy_mode = True
 						self.turret_sell_mode = False
 						self.turret_id_to_buy = 4
 						self.clicked = True
-					elif self.turret_2_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+					elif self.turret_2_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
 						self.turret_buy_mode = True
 						self.turret_sell_mode = False
 						self.turret_id_to_buy = 5
 						self.clicked = True
-					elif self.turret_3_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+					elif self.turret_3_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
 						self.turret_buy_mode = True
 						self.turret_sell_mode = False
 						self.turret_id_to_buy = 6
@@ -933,17 +914,17 @@ class Game:
 					self.clicked = False
 			if self.age == 3:
 				if not self.clicked:
-					if self.turret_1_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+					if self.turret_1_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
 						self.turret_buy_mode = True
 						self.turret_sell_mode = False
 						self.turret_id_to_buy = 7
 						self.clicked = True
-					elif self.turret_2_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+					elif self.turret_2_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
 						self.turret_buy_mode = True
 						self.turret_sell_mode = False
 						self.turret_id_to_buy = 8
 						self.clicked = True
-					elif self.turret_3_button_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+					elif self.turret_3_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
 						self.turret_buy_mode = True
 						self.turret_sell_mode = False
 						self.turret_id_to_buy = 9
@@ -955,18 +936,17 @@ class Game:
 
 	def place_turret_at_slot(self):
 		if self.turret_buy_mode and self.turret_id_to_buy != 0:
-			mouse_pos = pygame.mouse.get_pos()
 			if pygame.mouse.get_pressed()[0] == 1 and not self.clicked:
 				self.clicked = True
-				if self.friendly_slots_free[1] and self.base_upgrade_1_rect.collidepoint(mouse_pos):
+				if self.friendly_slots_free[1] and self.base_upgrade_1_rect.collidepoint(self.mouse_pos):
 					self.buy_turret_friendly(self.turret_id_to_buy, 1)
 					self.turret_id_to_buy = 0
 					self.turret_buy_mode = False
-				elif self.friendly_slots_free[2] and self.base_upgrade_2_rect.collidepoint(mouse_pos):
+				elif self.friendly_slots_free[2] and self.base_upgrade_2_rect.collidepoint(self.mouse_pos):
 					self.buy_turret_friendly(self.turret_id_to_buy, 2)
 					self.turret_id_to_buy = 0
 					self.turret_buy_mode = False
-				elif self.friendly_slots_free[3] and self.base_upgrade_3_rect.collidepoint(mouse_pos):
+				elif self.friendly_slots_free[3] and self.base_upgrade_3_rect.collidepoint(self.mouse_pos):
 					self.buy_turret_friendly(self.turret_id_to_buy, 3)
 					self.turret_id_to_buy = 0
 					self.turret_buy_mode = False
@@ -989,9 +969,8 @@ class Game:
 
 	def draw_unit_healthbars(self):
 		# draws unit health bar on mouse hover
-		mouse_pos = pygame.mouse.get_pos()
 		for unit in self.friendly_units + self.enemy_units:
-			if unit.unit_rect.collidepoint(mouse_pos):
+			if unit.unit_rect.collidepoint(self.mouse_pos):
 				max_health = unit_info.unit_health[unit.id]
 				health_percent = 100/max_health * unit.health
 				health_pixel = unit.unit_rect.width/100 * health_percent
@@ -1003,60 +982,59 @@ class Game:
 
 	def draw_unit_prices(self):
 		# draws the price of the unit on mouse hover with color red when not affordable
-		mouse_pos = pygame.mouse.get_pos()
 		if self.unit_menu_open:
 			if self.age == 1:
-				if self.unit_1_button_rect.collidepoint(mouse_pos):
+				if self.unit_1_button_rect.collidepoint(self.mouse_pos):
 					if self.friendly_money >= unit_info.unit_cost[1]:
 						color = (0,0,0)
 					else:
 						color = (200,0,0)
 					text = self.render_text(str(unit_info.unit_cost[1]), self.font_20, color, (self.unit_1_button_rect.x, 130))
-				if self.unit_2_button_rect.collidepoint(mouse_pos):
+				if self.unit_2_button_rect.collidepoint(self.mouse_pos):
 					if self.friendly_money >= unit_info.unit_cost[2]:
 						color = (0,0,0)
 					else:
 						color = (200,0,0)
 					text = self.render_text(str(unit_info.unit_cost[2]), self.font_20, color, (self.unit_2_button_rect.x, 130))
-				if self.unit_3_button_rect.collidepoint(mouse_pos):
+				if self.unit_3_button_rect.collidepoint(self.mouse_pos):
 					if self.friendly_money >= unit_info.unit_cost[3]:
 						color = (0,0,0)
 					else:
 						color = (200,0,0)
 					text = self.render_text(str(unit_info.unit_cost[3]), self.font_20, color, (self.unit_3_button_rect.x, 130))
 			elif self.age == 2:
-				if self.unit_1_button_rect.collidepoint(mouse_pos):
+				if self.unit_1_button_rect.collidepoint(self.mouse_pos):
 					if self.friendly_money >= unit_info.unit_cost[4]:
 						color = (0,0,0)
 					else:
 						color = (200,0,0)
 					text = self.render_text(str(unit_info.unit_cost[4]), self.font_20, color, (self.unit_1_button_rect.x, 130))
-				if self.unit_2_button_rect.collidepoint(mouse_pos):
+				if self.unit_2_button_rect.collidepoint(self.mouse_pos):
 					if self.friendly_money >= unit_info.unit_cost[5]:
 						color = (0,0,0)
 					else:
 						color = (200,0,0)
 					text = self.render_text(str(unit_info.unit_cost[5]), self.font_20, color, (self.unit_2_button_rect.x, 130))
-				if self.unit_3_button_rect.collidepoint(mouse_pos):
+				if self.unit_3_button_rect.collidepoint(self.mouse_pos):
 					if self.friendly_money >= unit_info.unit_cost[6]:
 						color = (0,0,0)
 					else:
 						color = (200,0,0)
 					text = self.render_text(str(unit_info.unit_cost[6]), self.font_20, color, (self.unit_3_button_rect.x, 130))
 			elif self.age == 3:
-				if self.unit_1_button_rect.collidepoint(mouse_pos):
+				if self.unit_1_button_rect.collidepoint(self.mouse_pos):
 					if self.friendly_money >= unit_info.unit_cost[7]:
 						color = (0,0,0)
 					else:
 						color = (200,0,0)
 					text = self.render_text(str(unit_info.unit_cost[7]), self.font_20, color, (self.unit_1_button_rect.x, 130))
-				if self.unit_2_button_rect.collidepoint(mouse_pos):
+				if self.unit_2_button_rect.collidepoint(self.mouse_pos):
 					if self.friendly_money >= unit_info.unit_cost[8]:
 						color = (0,0,0)
 					else:
 						color = (200,0,0)
 					text = self.render_text(str(unit_info.unit_cost[8]), self.font_20, color, (self.unit_2_button_rect.x, 130))
-				if self.unit_3_button_rect.collidepoint(mouse_pos):
+				if self.unit_3_button_rect.collidepoint(self.mouse_pos):
 					if self.friendly_money >= unit_info.unit_cost[9]:
 						color = (0,0,0)
 					else:
@@ -1066,62 +1044,61 @@ class Game:
 
 	def draw_turret_prices(self):
 		# draws the price of the turret on mouse hover with color red when not affordable
-		mouse_pos = pygame.mouse.get_pos()
 		if self.turret_menu_open:
-			if self.turret_sell_button_rect.collidepoint(mouse_pos):
+			if self.turret_sell_button_rect.collidepoint(self.mouse_pos):
 				text = self.render_text("sell for 1/2 the buy price", self.font_12, (0,0,0), (self.turret_1_button_rect.x - 10, 130))
 			if self.age == 1:
-				if self.turret_1_button_rect.collidepoint(mouse_pos):
+				if self.turret_1_button_rect.collidepoint(self.mouse_pos):
 					if self.friendly_money >= turret_info.turret_cost[1]:
 						color = (0,0,0)
 					else:
 						color = (200,0,0)
 					text = self.render_text(str(turret_info.turret_cost[1]), self.font_20, color, (self.turret_1_button_rect.x, 130))
-				elif self.turret_2_button_rect.collidepoint(mouse_pos):
+				elif self.turret_2_button_rect.collidepoint(self.mouse_pos):
 					if self.friendly_money >= turret_info.turret_cost[2]:
 						color = (0,0,0)
 					else:
 						color = (200,0,0)
 					text = self.render_text(str(turret_info.turret_cost[2]), self.font_20, color, (self.turret_2_button_rect.x, 130))
-				elif self.turret_3_button_rect.collidepoint(mouse_pos):
+				elif self.turret_3_button_rect.collidepoint(self.mouse_pos):
 					if self.friendly_money >= turret_info.turret_cost[3]:
 						color = (0,0,0)
 					else:
 						color = (200,0,0)
 					text = self.render_text(str(turret_info.turret_cost[3]), self.font_20, color, (self.turret_3_button_rect.x, 130))
 			elif self.age == 2:
-				if self.turret_1_button_rect.collidepoint(mouse_pos):
+				if self.turret_1_button_rect.collidepoint(self.mouse_pos):
 					if self.friendly_money >= turret_info.turret_cost[4]:
 						color = (0,0,0)
 					else:
 						color = (200,0,0)
 					text = self.render_text(str(turret_info.turret_cost[4]), self.font_20, color, (self.turret_1_button_rect.x, 130))
-				elif self.turret_2_button_rect.collidepoint(mouse_pos):
+				elif self.turret_2_button_rect.collidepoint(self.mouse_pos):
 					if self.friendly_money >= turret_info.turret_cost[5]:
 						color = (0,0,0)
 					else:
 						color = (200,0,0)
 					text = self.render_text(str(turret_info.turret_cost[5]), self.font_20, color, (self.turret_2_button_rect.x, 130))
-				elif self.turret_3_button_rect.collidepoint(mouse_pos):
+				elif self.turret_3_button_rect.collidepoint(self.mouse_pos):
 					if self.friendly_money >= turret_info.turret_cost[6]:
 						color = (0,0,0)
 					else:
 						color = (200,0,0)
 					text = self.render_text(str(turret_info.turret_cost[6]), self.font_20, color, (self.turret_3_button_rect.x, 130))
 			elif self.age == 3:
-				if self.turret_1_button_rect.collidepoint(mouse_pos):
+				if self.turret_1_button_rect.collidepoint(self.mouse_pos):
 					if self.friendly_money >= turret_info.turret_cost[7]:
 						color = (0,0,0)
 					else:
 						color = (200,0,0)
 					text = self.render_text(str(turret_info.turret_cost[7]), self.font_20, color, (self.turret_1_button_rect.x, 130))
-				elif self.turret_2_button_rect.collidepoint(mouse_pos):
+				elif self.turret_2_button_rect.collidepoint(self.mouse_pos):
 					if self.friendly_money >= turret_info.turret_cost[8]:
 						color = (0,0,0)
 					else:
 						color = (200,0,0)
 					text = self.render_text(str(turret_info.turret_cost[8]), self.font_20, color, (self.turret_2_button_rect.x, 130))
-				elif self.turret_3_button_rect.collidepoint(mouse_pos):
+				elif self.turret_3_button_rect.collidepoint(self.mouse_pos):
 					if self.friendly_money >= turret_info.turret_cost[9]:
 						color = (0,0,0)
 					else:
@@ -1129,29 +1106,27 @@ class Game:
 					text = self.render_text(str(turret_info.turret_cost[9]), self.font_20, color, (self.turret_3_button_rect.x, 130))
 	
 	def draw_base_upgrade_cost(self):
-		mouse_pos = pygame.mouse.get_pos()
 		if self.friendly_money >= self.upgrade_cost:
 			color = (0,0,0)
 		else:
 			color = (200,0,0)
-		if self.unit_menu_open == False and self.turret_menu_open == False and self.friendly_base_upgrade_state != 3 and self.turret_upgrade_button_rect.collidepoint(mouse_pos):
+		if self.unit_menu_open == False and self.turret_menu_open == False and self.friendly_base_upgrade_state != 3 and self.turret_upgrade_button_rect.collidepoint(self.mouse_pos):
 			self.render_text(str(self.upgrade_cost), self.font_20, color, (self.turret_upgrade_button_rect.x, 64))
 
 	def draw_age_advancement_cost(self):
-		mouse_pos = pygame.mouse.get_pos()
 		if self.age == 1:
 			if self.friendly_exp >= self.age2_treshhold:
 				color = (0,0,0)
 			else:
 				color = (200,0,0)
-			if self.unit_menu_open == False and self.turret_menu_open == False and self.age_advance_button_rect.collidepoint(mouse_pos):
+			if self.unit_menu_open == False and self.turret_menu_open == False and self.age_advance_button_rect.collidepoint(self.mouse_pos):
 				self.render_text(f"{round(self.age2_treshhold/1000)}k", self.font_20, color, (self.age_advance_button_rect.x, 64))
 		elif self.age == 2:
 			if self.friendly_exp >= self.age3_treshhold:
 				color = (0,0,0)
 			else:
 				color = (200,0,0)
-			if self.unit_menu_open == False and self.turret_menu_open == False and self.age_advance_button_rect.collidepoint(mouse_pos):
+			if self.unit_menu_open == False and self.turret_menu_open == False and self.age_advance_button_rect.collidepoint(self.mouse_pos):
 				self.render_text(f"{round(self.age3_treshhold/1000)}k", self.font_20, color, (self.age_advance_button_rect.x, 64))
 				
 	
@@ -1263,25 +1238,24 @@ class Game:
 	
 	def draw_turrets_to_cursor(self):
 		if self.turret_buy_mode and self.turret_id_to_buy != 0:
-			mouse_pos = pygame.mouse.get_pos()
 			if self.turret_id_to_buy == 1:
-				self.screen.blit(self.turret_1_sheet.get_image(0, (32, 32), (1,0,0), 2), mouse_pos)
+				self.screen.blit(self.turret_1_sheet.get_image(0, (32, 32), (1,0,0), 2), self.mouse_pos)
 			if self.turret_id_to_buy == 2:
-				self.screen.blit(self.turret_2_sheet.get_image(0, (32, 32), (1,0,0), 2), mouse_pos)
+				self.screen.blit(self.turret_2_sheet.get_image(0, (32, 32), (1,0,0), 2), self.mouse_pos)
 			if self.turret_id_to_buy == 3:
-				self.screen.blit(self.turret_3_sheet.get_image(0, (32, 64), (1,0,0), 1), mouse_pos)
+				self.screen.blit(self.turret_3_sheet.get_image(0, (32, 64), (1,0,0), 1), self.mouse_pos)
 			if self.turret_id_to_buy == 4:
-				self.screen.blit(self.turret_4_sheet.get_image(0, (48, 64), (1,0,0), 1), mouse_pos)
+				self.screen.blit(self.turret_4_sheet.get_image(0, (48, 64), (1,0,0), 1), self.mouse_pos)
 			if self.turret_id_to_buy == 5:
-				self.screen.blit(self.turret_5_sheet.get_image(0, (48, 64), (1,0,0), 1), mouse_pos)
+				self.screen.blit(self.turret_5_sheet.get_image(0, (48, 64), (1,0,0), 1), self.mouse_pos)
 			if self.turret_id_to_buy == 6:
-				self.screen.blit(self.turret_6_sheet.get_image(0, (64, 64), (1,0,0), 1), mouse_pos)
+				self.screen.blit(self.turret_6_sheet.get_image(0, (64, 64), (1,0,0), 1), self.mouse_pos)
 			if self.turret_id_to_buy == 7:
-				self.screen.blit(self.turret_7_sheet.get_image(0, (64, 64), (1,0,0), 1), mouse_pos)
+				self.screen.blit(self.turret_7_sheet.get_image(0, (64, 64), (1,0,0), 1), self.mouse_pos)
 			if self.turret_id_to_buy == 8:
-				self.screen.blit(self.turret_8_sheet.get_image(0, (64, 64), (1,0,0), 1), mouse_pos)
+				self.screen.blit(self.turret_8_sheet.get_image(0, (64, 64), (1,0,0), 1), self.mouse_pos)
 			if self.turret_id_to_buy == 9:
-				self.screen.blit(self.turret_9_sheet.get_image(0, (64, 64), (1,0,0), 1), mouse_pos)
+				self.screen.blit(self.turret_9_sheet.get_image(0, (64, 64), (1,0,0), 1), self.mouse_pos)
 
 	def age_advancment(self):
 		if self.age == 1 and self.friendly_exp >= self.age2_treshhold:
@@ -1298,10 +1272,9 @@ class Game:
 			self.friendly_slots_free[slot] = False
 
 	def sell_turret_friendly(self):
-		mouse_pos = pygame.mouse.get_pos()
 		if self.turret_sell_mode:
 			for turret in self.friendly_turrets:
-				if turret.sell_rect.collidepoint(mouse_pos) and pygame.mouse.get_pressed()[0] == 1 and not self.clicked:
+				if turret.sell_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1 and not self.clicked:
 					self.clicked = True
 					self.friendly_turrets.pop(self.friendly_turrets.index(turret))
 					self.friendly_money += turret.sell_value
