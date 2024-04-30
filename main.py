@@ -231,6 +231,13 @@ class Game:
 		self.font_18 = pygame.font.Font("assets/font/pixel_font.otf", 18)
 		self.font_20 = pygame.font.Font("assets/font/pixel_font.otf", 20)
 		self.font_50 = pygame.font.Font("assets/font/pixel_font.otf", 50)
+		self.font_60 = pygame.font.Font("assets/font/pixel_font.otf", 60)
+		self.font_70 = pygame.font.Font("assets/font/pixel_font.otf", 70)
+		self.font_80 = pygame.font.Font("assets/font/pixel_font.otf", 80)
+		self.font_90 = pygame.font.Font("assets/font/pixel_font.otf", 90)
+		self.font_100 = pygame.font.Font("assets/font/pixel_font.otf", 100)
+		self.font_150 = pygame.font.Font("assets/font/pixel_font.otf", 150)
+		self.font_200 = pygame.font.Font("assets/font/pixel_font.otf", 200)
 		#	 background
 		self.background = pygame.image.load("assets/background/Age_Of_War_background.png").convert_alpha()
 		self.background_pos = (0 + self.camera_offset_x, -540)
@@ -565,7 +572,6 @@ class Game:
 		self.calc_game_state_pause()
 		# draw pause menu:
 		self.render_new_frame_pause()
-
 		self.clock.tick(60)
 
 	def game_won_loop(self):
@@ -574,7 +580,6 @@ class Game:
 		self.calc_game_state_game_won()
 		# draw game won screen:
 		self.render_new_frame_game_won()
-
 		self.clock.tick(60)
 
 	def game_over_loop(self):
@@ -583,7 +588,6 @@ class Game:
 		self.calc_game_state_game_over()
 		# draw game over screen:
 		self.render_new_frame_game_over()
-
 		self.clock.tick(60)
 
 	def main_menu_loop(self):
@@ -592,7 +596,6 @@ class Game:
 		self.calc_game_state_main_menu()
 		# draw main menu:
 		self.render_new_frame_main_menu()
-
 		self.clock.tick(60)
 	
 
@@ -600,6 +603,16 @@ class Game:
 		pass
 
 	def render_new_frame_pause(self):
+		self.screen.blit(self.background, self.background_pos)
+		self.draw_upgrade_modules()
+		self.draw_bases_1()
+		unit.draw()
+		self.draw_bases_2()
+		projectile.draw()
+		unit_projectile.draw()
+		turret.draw()
+		self.render_text("paused", self.font_80, (0,0,0), (self.SCREEN_SIZE[0] / 2 - 190, self.SCREEN_SIZE[1] / 2  - 200))
+		self.draw_transparent_rect(self.SCREEN_SIZE, (0,0,0), 40, (0,0))
 		self.display.blit(self.resize_screen(), (0,0))
 		pygame.display.flip()
 
