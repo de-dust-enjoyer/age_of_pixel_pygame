@@ -561,32 +561,70 @@ class Game:
 
 	def pause_loop(self):
 		self.get_input()
+		# pause logic:
+		self.calc_game_state_pause()
+		# draw pause menu:
+		self.render_new_frame_pause()
 
-		self.display.blit(self.resize_screen(), (0,0))
-		pygame.display.flip()
 		self.clock.tick(60)
 
 	def game_won_loop(self):
 		self.get_input()
+		# game_won logic:
+		self.calc_game_state_game_won()
+		# draw game won screen:
+		self.render_new_frame_game_won()
 
-		self.display.blit(self.resize_screen(), (0,0))
-		pygame.display.flip()
 		self.clock.tick(60)
 
 	def game_over_loop(self):
 		self.get_input()
+		# game_over logic:
+		self.calc_game_state_game_over()
+		# draw game over screen:
+		self.render_new_frame_game_over()
 
-		self.display.blit(self.resize_screen(), (0,0))
-		pygame.display.flip()
 		self.clock.tick(60)
 
 	def main_menu_loop(self):
 		self.get_input()
-		
-		self.display.blit(self.resize_screen(), (0,0))
-		pygame.display.flip()
+		# main menu logic:
+		self.calc_game_state_main_menu()
+		# draw main menu:
+		self.render_new_frame_main_menu()
+
 		self.clock.tick(60)
 	
+
+	def calc_game_state_pause(self):
+		pass
+
+	def render_new_frame_pause(self):
+		self.display.blit(self.resize_screen(), (0,0))
+		pygame.display.flip()
+
+	def calc_game_state_game_won(self):
+		pass
+
+	def render_new_frame_game_won(self):
+		self.display.blit(self.resize_screen(), (0,0))
+		pygame.display.flip()
+
+	def calc_game_state_game_over(self):
+		pass
+
+	def render_new_frame_game_over(self):
+		self.display.blit(self.resize_screen(), (0,0))
+		pygame.display.flip()
+
+	def calc_game_state_main_menu(self):
+		pass
+
+	def render_new_frame_main_menu(self):
+		self.display.blit(self.resize_screen(), (0,0))
+		pygame.display.flip()
+
+
 
 	def reset_everything(self):
 		pass
