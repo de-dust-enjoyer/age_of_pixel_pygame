@@ -600,7 +600,7 @@ class Game:
 	
 
 	def calc_game_state_pause(self):
-		pass
+		self.get_scaling_factors()
 
 	def render_new_frame_pause(self):
 		self.screen.blit(self.background, self.background_pos)
@@ -617,21 +617,21 @@ class Game:
 		pygame.display.flip()
 
 	def calc_game_state_game_won(self):
-		pass
+		self.get_scaling_factors()
 
 	def render_new_frame_game_won(self):
 		self.display.blit(self.resize_screen(), (0,0))
 		pygame.display.flip()
 
 	def calc_game_state_game_over(self):
-		pass
+		self.get_scaling_factors()
 
 	def render_new_frame_game_over(self):
 		self.display.blit(self.resize_screen(), (0,0))
 		pygame.display.flip()
 
 	def calc_game_state_main_menu(self):
-		pass
+		self.get_scaling_factors()
 
 	def render_new_frame_main_menu(self):
 		self.display.blit(self.resize_screen(), (0,0))
