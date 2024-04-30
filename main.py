@@ -27,6 +27,7 @@ class Game:
 		self.paused = False
 		self.game_won = False
 		self.game_over = False
+		self.main_menu = False
 
 		self.scaling_factor_x = 1
 		self.scaling_factor_y = 1
@@ -546,20 +547,50 @@ class Game:
 
 			# freeze game if player won/lost or if game is paused
 			elif self.paused:
-				self.get_input()
-				self.render_text("paused", self.font_50, (0,0,0), (920/2 - 100,540/2 - 50))
-				pygame.display.flip()
+				self.pause_loop()
 			elif self.game_won:
-				self.get_input()
-				self.render_text("GAME WON", self.font_50, (0,200,0), (920/2 - 140,540/2 - 50))
-				pygame.display.flip()
+				self.game_won_loop()
 			elif self.game_over:
-				self.get_input()
-				self.render_text("GAME OVER", self.font_50, (200,0,0), (920/2 - 150,540/2 - 50))
-				pygame.display.flip()
+				self.game_won_loop()
+			elif self.main_menu:
+				self.main_menu_loop()
 
 
 #>>>>>>>>>>>>>>>>>>>>>>MAIN>LOOP>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>	
+
+
+	def pause_loop(self):
+		self.get_input()
+
+
+		pygame.display.flip()
+		self.clock.tick(60)
+
+	def game_won_loop(self):
+		self.get_input()
+
+
+		pygame.display.flip()
+		self.clock.tick(60)
+
+	def game_over_loop(self):
+		self.get_input()
+
+
+		pygame.display.flip()
+		self.clock.tick(60)
+
+	def main_menu_loop(self):
+		self.get_input()
+		
+
+		pygame.display.flip()
+		self.clock.tick(60)
+	
+
+	def reset_everything(self):
+		pass
+
 
 
 
