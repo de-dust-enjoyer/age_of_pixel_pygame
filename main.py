@@ -562,28 +562,28 @@ class Game:
 	def pause_loop(self):
 		self.get_input()
 
-
+		self.display.blit(self.resize_screen(), (0,0))
 		pygame.display.flip()
 		self.clock.tick(60)
 
 	def game_won_loop(self):
 		self.get_input()
 
-
+		self.display.blit(self.resize_screen(), (0,0))
 		pygame.display.flip()
 		self.clock.tick(60)
 
 	def game_over_loop(self):
 		self.get_input()
 
-
+		self.display.blit(self.resize_screen(), (0,0))
 		pygame.display.flip()
 		self.clock.tick(60)
 
 	def main_menu_loop(self):
 		self.get_input()
 		
-
+		self.display.blit(self.resize_screen(), (0,0))
 		pygame.display.flip()
 		self.clock.tick(60)
 	
