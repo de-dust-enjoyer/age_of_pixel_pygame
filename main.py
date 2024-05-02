@@ -8,8 +8,6 @@ from math import atan, degrees
 import unit_info, turret_info, projectile_info
 from spritesheet import SpriteSheet
 
-# this is a test comment
-
 # initialize pygame module
 pygame.init()
 
