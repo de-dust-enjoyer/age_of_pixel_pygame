@@ -1648,13 +1648,13 @@ class Base:
 					particle2 = Particle((167,165,167), (3,3), (self.base_rect.bottomright[0] - 20 + random.randint(-15, 15), self.base_rect.bottomright[1] - 30 + random.randint(-10, 10)), 0.3, "friendly_muzzle", 50)
 					particle3 = Particle((131,110,100), (5,5), (self.base_rect.bottomright[0] - 20 + random.randint(-15, 15), self.base_rect.bottomright[1] - 30 + random.randint(-10, 10)), 1, "gravity")
 				elif game.age == 2:
-					particle = Particle((132,126,135), (3,3), (self.base_rect.bottomright[0] - 20 + random.randint(-15, 15), self.base_rect.bottomright[1] - 30 + random.randint(-10, 10)), 1, "gravity")
-					particle2 = Particle((167,165,167), (3,3), (self.base_rect.bottomright[0] - 20 + random.randint(-15, 15), self.base_rect.bottomright[1] - 30 + random.randint(-10, 10)), 0.3, "friendly_muzzle", 50)
-					particle3 = Particle((131,110,100), (5,5), (self.base_rect.bottomright[0] - 20 + random.randint(-15, 15), self.base_rect.bottomright[1] - 30 + random.randint(-10, 10)), 1, "gravity")
+					particle = Particle((102,57,49), (3,3), (self.base_rect.bottomright[0] - 20 + random.randint(-15, 15), self.base_rect.bottomright[1] - 30 + random.randint(-10, 10)), 1, "gravity")
+					particle2 = Particle((115,111,118), (3,3), (self.base_rect.bottomright[0] - 20 + random.randint(-15, 15), self.base_rect.bottomright[1] - 30 + random.randint(-10, 10)), 0.3, "friendly_muzzle", 50)
+					particle3 = Particle((126,124,128), (5,5), (self.base_rect.bottomright[0] - 20 + random.randint(-15, 15), self.base_rect.bottomright[1] - 30 + random.randint(-10, 10)), 1, "gravity")
 				elif game.age == 3:
-					particle = Particle((132,126,135), (3,3), (self.base_rect.bottomright[0] - 20 + random.randint(-15, 15), self.base_rect.bottomright[1] - 30 + random.randint(-10, 10)), 1, "gravity")
-					particle2 = Particle((167,165,167), (3,3), (self.base_rect.bottomright[0] - 20 + random.randint(-15, 15), self.base_rect.bottomright[1] - 30 + random.randint(-10, 10)), 0.3, "friendly_muzzle", 50)
-					particle3 = Particle((131,110,100), (5,5), (self.base_rect.bottomright[0] - 20 + random.randint(-15, 15), self.base_rect.bottomright[1] - 30 + random.randint(-10, 10)), 1, "gravity")
+					particle = Particle((55,78,32), (3,3), (self.base_rect.bottomright[0] - 20 + random.randint(-15, 15), self.base_rect.bottomright[1] - 30 + random.randint(-10, 10)), 1, "gravity")
+					particle2 = Particle((110,157,66), (3,3), (self.base_rect.bottomright[0] - 20 + random.randint(-15, 15), self.base_rect.bottomright[1] - 30 + random.randint(-10, 10)), 0.3, "friendly_muzzle", 50)
+					particle3 = Particle((92,128,59), (5,5), (self.base_rect.bottomright[0] - 20 + random.randint(-15, 15), self.base_rect.bottomright[1] - 30 + random.randint(-10, 10)), 1, "gravity")
 				
 			else:
 				if game.enemy_age == 1:
@@ -1662,13 +1662,13 @@ class Base:
 					particle2 = Particle((167,165,167), (3,3), (self.base_rect.bottomleft[0] + 20 + random.randint(-15, 15), self.base_rect.bottomleft[1] - 30 + random.randint(-10, 10)), 0.3, "enemy_muzzle", 50)
 					particle3 = Particle((131,110,100), (5,5), (self.base_rect.bottomleft[0] + 20 + random.randint(-15, 15), self.base_rect.bottomleft[1] - 30 + random.randint(-10, 10)), 1, "gravity")
 				elif game.enemy_age == 2:
-					particle = Particle((132,126,135), (3,3), (self.base_rect.bottomleft[0] + 20 + random.randint(-15, 15), self.base_rect.bottomleft[1] - 30 + random.randint(-10, 10)), 1, "gravity")
-					particle2 = Particle((167,165,167), (3,3), (self.base_rect.bottomleft[0] + 20 + random.randint(-15, 15), self.base_rect.bottomleft[1] - 30 + random.randint(-10, 10)), 0.3, "enemy_muzzle", 50)
-					particle3 = Particle((131,110,100), (5,5), (self.base_rect.bottomleft[0] + 20 + random.randint(-15, 15), self.base_rect.bottomleft[1] - 30 + random.randint(-10, 10)), 1, "gravity")
+					particle = Particle((102,57,49), (3,3), (self.base_rect.bottomleft[0] + 20 + random.randint(-15, 15), self.base_rect.bottomleft[1] - 30 + random.randint(-10, 10)), 1, "gravity")
+					particle2 = Particle((115,111,118), (3,3), (self.base_rect.bottomleft[0] + 20 + random.randint(-15, 15), self.base_rect.bottomleft[1] - 30 + random.randint(-10, 10)), 0.3, "enemy_muzzle", 50)
+					particle3 = Particle((126,124,128), (5,5), (self.base_rect.bottomleft[0] + 20 + random.randint(-15, 15), self.base_rect.bottomleft[1] - 30 + random.randint(-10, 10)), 1, "gravity")
 				elif game.enemy_age == 3:
-					particle = Particle((132,126,135), (3,3), (self.base_rect.bottomleft[0] + 20 + random.randint(-15, 15), self.base_rect.bottomleft[1] - 30 + random.randint(-10, 10)), 1, "gravity")
-					particle2 = Particle((167,165,167), (3,3), (self.base_rect.bottomleft[0] + 20 + random.randint(-15, 15), self.base_rect.bottomleft[1] - 30 + random.randint(-10, 10)), 0.3, "enemy_muzzle", 50)
-					particle3 = Particle((131,110,100), (5,5), (self.base_rect.bottomleft[0] + 20 + random.randint(-15, 15), self.base_rect.bottomleft[1] - 30 + random.randint(-10, 10)), 1, "gravity")
+					particle = Particle((55,78,32), (3,3), (self.base_rect.bottomleft[0] + 20 + random.randint(-15, 15), self.base_rect.bottomleft[1] - 30 + random.randint(-10, 10)), 1, "gravity")
+					particle2 = Particle((110,157,66), (3,3), (self.base_rect.bottomleft[0] + 20 + random.randint(-15, 15), self.base_rect.bottomleft[1] - 30 + random.randint(-10, 10)), 0.3, "enemy_muzzle", 50)
+					particle3 = Particle((92,128,59), (5,5), (self.base_rect.bottomleft[0] + 20 + random.randint(-15, 15), self.base_rect.bottomleft[1] - 30 + random.randint(-10, 10)), 1, "gravity")
 			game.particles.append(particle)
 			game.particles.append(particle2)
 			game.particles.append(particle3)
