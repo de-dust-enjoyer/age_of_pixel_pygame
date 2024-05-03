@@ -2339,7 +2339,7 @@ class Unit:
 		if self.has_weapon:
 			self.weapon_rotation = 0
 			self.idle_swinging_direction = 0
-		self.movement_speed = 4
+		self.movement_speed = 1
 		self.fall_speed = 0
 		self.ranged = unit_info.is_unit_ranged[self.id]
 		self.cost = unit_info.unit_cost[self.id]
