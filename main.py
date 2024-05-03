@@ -19,6 +19,7 @@ class Game:
 		self.FLOOR_LEVEL = 460
 		self.GRAVITY = 0.4
 
+
 		# dev mode
 		self.dev_mode = False
 		
@@ -1640,21 +1641,37 @@ class Base:
 
 	def get_hurt(self, amount):
 		self.health -= amount
-		for i in range(15):
+		for i in range(5):
 			if self.friendly:
 				if game.age == 1:
-					pass
+					particle = Particle((132,126,135), (3,3), (self.base_rect.bottomright[0] - 20 + random.randint(-15, 15), self.base_rect.bottomright[1] - 30 + random.randint(-10, 10)), 1, "gravity")
+					particle2 = Particle((167,165,167), (3,3), (self.base_rect.bottomright[0] - 20 + random.randint(-15, 15), self.base_rect.bottomright[1] - 30 + random.randint(-10, 10)), 0.3, "friendly_muzzle", 50)
+					particle3 = Particle((131,110,100), (5,5), (self.base_rect.bottomright[0] - 20 + random.randint(-15, 15), self.base_rect.bottomright[1] - 30 + random.randint(-10, 10)), 1, "gravity")
 				elif game.age == 2:
-					pass
+					particle = Particle((132,126,135), (3,3), (self.base_rect.bottomright[0] - 20 + random.randint(-15, 15), self.base_rect.bottomright[1] - 30 + random.randint(-10, 10)), 1, "gravity")
+					particle2 = Particle((167,165,167), (3,3), (self.base_rect.bottomright[0] - 20 + random.randint(-15, 15), self.base_rect.bottomright[1] - 30 + random.randint(-10, 10)), 0.3, "friendly_muzzle", 50)
+					particle3 = Particle((131,110,100), (5,5), (self.base_rect.bottomright[0] - 20 + random.randint(-15, 15), self.base_rect.bottomright[1] - 30 + random.randint(-10, 10)), 1, "gravity")
 				elif game.age == 3:
-					pass
+					particle = Particle((132,126,135), (3,3), (self.base_rect.bottomright[0] - 20 + random.randint(-15, 15), self.base_rect.bottomright[1] - 30 + random.randint(-10, 10)), 1, "gravity")
+					particle2 = Particle((167,165,167), (3,3), (self.base_rect.bottomright[0] - 20 + random.randint(-15, 15), self.base_rect.bottomright[1] - 30 + random.randint(-10, 10)), 0.3, "friendly_muzzle", 50)
+					particle3 = Particle((131,110,100), (5,5), (self.base_rect.bottomright[0] - 20 + random.randint(-15, 15), self.base_rect.bottomright[1] - 30 + random.randint(-10, 10)), 1, "gravity")
+				
 			else:
 				if game.enemy_age == 1:
-					pass
+					particle = Particle((132,126,135), (3,3), (self.base_rect.bottomleft[0] + 20 + random.randint(-15, 15), self.base_rect.bottomleft[1] - 30 + random.randint(-10, 10)), 1, "gravity")
+					particle2 = Particle((167,165,167), (3,3), (self.base_rect.bottomleft[0] + 20 + random.randint(-15, 15), self.base_rect.bottomleft[1] - 30 + random.randint(-10, 10)), 0.3, "enemy_muzzle", 50)
+					particle3 = Particle((131,110,100), (5,5), (self.base_rect.bottomleft[0] + 20 + random.randint(-15, 15), self.base_rect.bottomleft[1] - 30 + random.randint(-10, 10)), 1, "gravity")
 				elif game.enemy_age == 2:
-					pass
+					particle = Particle((132,126,135), (3,3), (self.base_rect.bottomleft[0] + 20 + random.randint(-15, 15), self.base_rect.bottomleft[1] - 30 + random.randint(-10, 10)), 1, "gravity")
+					particle2 = Particle((167,165,167), (3,3), (self.base_rect.bottomleft[0] + 20 + random.randint(-15, 15), self.base_rect.bottomleft[1] - 30 + random.randint(-10, 10)), 0.3, "enemy_muzzle", 50)
+					particle3 = Particle((131,110,100), (5,5), (self.base_rect.bottomleft[0] + 20 + random.randint(-15, 15), self.base_rect.bottomleft[1] - 30 + random.randint(-10, 10)), 1, "gravity")
 				elif game.enemy_age == 3:
-					pass
+					particle = Particle((132,126,135), (3,3), (self.base_rect.bottomleft[0] + 20 + random.randint(-15, 15), self.base_rect.bottomleft[1] - 30 + random.randint(-10, 10)), 1, "gravity")
+					particle2 = Particle((167,165,167), (3,3), (self.base_rect.bottomleft[0] + 20 + random.randint(-15, 15), self.base_rect.bottomleft[1] - 30 + random.randint(-10, 10)), 0.3, "enemy_muzzle", 50)
+					particle3 = Particle((131,110,100), (5,5), (self.base_rect.bottomleft[0] + 20 + random.randint(-15, 15), self.base_rect.bottomleft[1] - 30 + random.randint(-10, 10)), 1, "gravity")
+			game.particles.append(particle)
+			game.particles.append(particle2)
+			game.particles.append(particle3)
 	
 
 
@@ -2322,7 +2339,7 @@ class Unit:
 		if self.has_weapon:
 			self.weapon_rotation = 0
 			self.idle_swinging_direction = 0
-		self.movement_speed = 1
+		self.movement_speed = 4
 		self.fall_speed = 0
 		self.ranged = unit_info.is_unit_ranged[self.id]
 		self.cost = unit_info.unit_cost[self.id]
@@ -3539,8 +3556,8 @@ class Particle:
 
 		elif self.type == "gravity":
 			self.x_direction = random.randint(-1, 1)
-			self.x_vel = random.randint(0, 4)
-			self.y_vel = -4
+			self.x_vel = random.choice([-0.6,-0.4,-0.2,0,0.2,0.4,0.6])
+			self.y_vel = random.randint(-4, 0)
 
 		elif self.type == "smoke":
 			self.x_direction = random.randint(-1, 1)
