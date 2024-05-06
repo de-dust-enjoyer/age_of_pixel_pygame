@@ -210,6 +210,11 @@ class Game:
 		self.turret_2_button_rect = pygame.Rect(776, 72, 48, 48)
 		self.turret_3_button_rect = pygame.Rect(840, 72, 48, 48)
 		self.turret_sell_button_rect = pygame.Rect(904, 72, 48, 48)
+
+
+		self.pause_button_continue_rect = pygame.Rect(352, 192, 256, 64)
+		self.pause_button_restart_rect = pygame.Rect(352, 288, 256, 64)
+		self.pause_button_quit_rect = pygame.Rect(352, 352, 256, 64)
 	
 
 		# importing game assets:
@@ -284,6 +289,8 @@ class Game:
 
 		self.ui_units = pygame.image.load("assets/ui/aow_ui_units.png").convert_alpha()
 		self.ui_turrets = pygame.image.load("assets/ui/aow_ui_turrets.png").convert_alpha()
+
+		self.ui_pause_menu = pygame.image.load("assets/ui/aow_ui_pause_menu.png").convert_alpha()
 		#   load special attack spritesheets
 		#	tier 1
 		self.tier1_special_sheet_img = pygame.image.load("assets/special_attack/tier1/aow_special_meteor.png").convert_alpha()
@@ -602,6 +609,7 @@ class Game:
 
 	def calc_game_state_pause(self):
 		self.get_scaling_factors()
+		self.handle_buttons_pause()
 
 	def render_new_frame_pause(self):
 		self.screen.blit(self.background, self.background_pos)
@@ -612,8 +620,13 @@ class Game:
 		projectile.draw()
 		unit_projectile.draw()
 		turret.draw()
-		self.render_text("paused", self.font_80, (0,0,0), (self.SCREEN_SIZE[0] / 2 - 190, self.SCREEN_SIZE[1] / 2  - 200))
 		self.draw_transparent_rect(self.SCREEN_SIZE, (0,0,0), 40, (0,0))
+		
+		self.render_text("paused", self.font_80, (0,0,0), (self.SCREEN_SIZE[0] / 2 - 190, self.SCREEN_SIZE[1] / 2  - 200))
+		self.screen.blit(self.ui_pause_menu, (0,0))
+
+
+
 		self.display.blit(self.resize_screen(), (0,0))
 		pygame.display.flip()
 
@@ -638,6 +651,9 @@ class Game:
 		self.display.blit(self.resize_screen(), (0,0))
 		pygame.display.flip()
 
+
+	def handle_buttons_pause(self):
+		pass
 
 
 	def reset_everything(self):
