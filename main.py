@@ -139,7 +139,7 @@ class Game:
 		self.enemy_base_upgrade_state = 0
 
 		# base upgrade cost
-		self.upgrade_cost = 300
+		self.upgrade_cost = 200
 	
 		# declaring pos where base upgrade modules should be placed
 		# tier 1 friendly
@@ -214,7 +214,7 @@ class Game:
 
 		self.pause_button_continue_rect = pygame.Rect(352, 192, 256, 64)
 		self.pause_button_restart_rect = pygame.Rect(352, 288, 256, 64)
-		self.pause_button_quit_rect = pygame.Rect(352, 352, 256, 64)
+		self.pause_button_quit_rect = pygame.Rect(352, 384, 256, 64)
 	
 
 		# importing game assets:
@@ -236,6 +236,11 @@ class Game:
 		self.font_16 = pygame.font.Font("assets/font/pixel_font.otf", 16)
 		self.font_18 = pygame.font.Font("assets/font/pixel_font.otf", 18)
 		self.font_20 = pygame.font.Font("assets/font/pixel_font.otf", 20)
+		self.font_25 = pygame.font.Font("assets/font/pixel_font.otf", 25)
+		self.font_30 = pygame.font.Font("assets/font/pixel_font.otf", 30)
+		self.font_35 = pygame.font.Font("assets/font/pixel_font.otf", 35)
+		self.font_40 = pygame.font.Font("assets/font/pixel_font.otf", 40)
+		self.font_45 = pygame.font.Font("assets/font/pixel_font.otf", 45)
 		self.font_50 = pygame.font.Font("assets/font/pixel_font.otf", 50)
 		self.font_60 = pygame.font.Font("assets/font/pixel_font.otf", 60)
 		self.font_70 = pygame.font.Font("assets/font/pixel_font.otf", 70)
@@ -609,7 +614,19 @@ class Game:
 
 	def calc_game_state_pause(self):
 		self.get_scaling_factors()
-		self.handle_buttons_pause()
+		if not self.clicked:
+			if self.pause_button_continue_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+				self.clicked = True
+				self.paused = False
+
+			elif self.pause_button_restart_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+				self.clicked = True
+				self.reset_everything()
+				self.aow_theme_music.play(loops= 20)
+
+			elif self.pause_button_quit_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+				pygame.quit()
+				sys.exit(0)
 
 	def render_new_frame_pause(self):
 		self.screen.blit(self.background, self.background_pos)
@@ -624,8 +641,20 @@ class Game:
 		
 		self.render_text("paused", self.font_80, (0,0,0), (self.SCREEN_SIZE[0] / 2 - 190, self.SCREEN_SIZE[1] / 2  - 200))
 		self.screen.blit(self.ui_pause_menu, (0,0))
+		if not self.pause_button_continue_rect.collidepoint(self.mouse_pos):
+			self.render_text("continue", self.font_35, (0,0,0), (self.pause_button_continue_rect.x + 10, self.pause_button_continue_rect.y + 10))
+		else:
+			self.render_text("continue", self.font_35, (80,80,80), (self.pause_button_continue_rect.x + 10, self.pause_button_continue_rect.y + 10))
 
+		if not self.pause_button_restart_rect.collidepoint(self.mouse_pos):
+			self.render_text("restart", self.font_35, (0,0,0), (self.pause_button_restart_rect.x + 10, self.pause_button_restart_rect.y + 10))
+		else:
+			self.render_text("restart", self.font_35, (80,80,80), (self.pause_button_restart_rect.x + 10, self.pause_button_restart_rect.y + 10))
 
+		if not self.pause_button_quit_rect.collidepoint(self.mouse_pos):
+			self.render_text("quit", self.font_35, (0,0,0), (self.pause_button_quit_rect.x + 10, self.pause_button_quit_rect.y + 10))
+		else:
+			self.render_text("quit", self.font_35, (80,80,80), (self.pause_button_quit_rect.x + 10, self.pause_button_quit_rect.y + 10))
 
 		self.display.blit(self.resize_screen(), (0,0))
 		pygame.display.flip()
@@ -652,15 +681,73 @@ class Game:
 		pygame.display.flip()
 
 
-	def handle_buttons_pause(self):
-		pass
-
 
 	def reset_everything(self):
-		pass
-
-
-
+		pygame.mixer.stop()
+		self.dev_mode = False
+		self.running = True
+		self.paused = False
+		self.game_won = False
+		self.game_over = False
+		self.main_menu = False # needs to be True
+		self.frames_passed = 0
+		self.seconds_passed = 0
+		self.minutes_passed = 0
+		self.unit_menu_open = False
+		self.turret_menu_open = False
+		self.clicked = False
+		self.camera_offset_x = 0
+		self.pan_right = False
+		self.pan_left = False
+		self.friendly_units_queue = []
+		self.training = []
+		self.training_timer = 0
+		self.friendly_unit_buffer = []
+		self.enemy_unit_buffer = []
+		self.friendly_spawn_allowed = True
+		self.enemy_spawn_allowed = True
+		self.friendly_units = []
+		self.enemy_units = []
+		self.friendly_turrets = []
+		self.enemy_turrets = []
+		self.friendly_slots_free = {
+			1: False,
+			2: False,
+			3: False
+		}
+		self.enemy_slots_free = {
+			1: False,
+			2: False,
+			3: False
+		}
+		self.turret_buy_mode = False
+		self.turret_sell_mode = False
+		self.turret_id_to_buy = 0
+		self.enemy_spawn_timer = 0
+		self.enemy_spawn_timer_goal = 5 * 60
+		self.spawn_options = [1]
+		self.special_timer = 0
+		self.percent_value_special = 100 / self.special_timer_goal * self.special_timer
+		self.special_available = False
+		self.age = 1
+		self.enemy_age = 1
+		self.friendly_base_upgrade_state = 0
+		self.enemy_base_upgrade_state = 0
+		self.friendly_money = 300
+		self.enemy_money = 10
+		self.friendly_exp = 0
+		self.enemy_exp = 0
+		self.upgrade_cost = 200
+		self.blood_particles = []
+		self.meteors = []
+		self.arrows = []
+		self.planes = []
+		self.bullets = []
+		self.dirt_particles = []
+		self.particles = []
+		self.background_pos = (0 + self.camera_offset_x, -540)
+		friendly_base.health = 500
+		enemy_base.health = 500
 
 	def update_global_time(self):
 		self.frames_passed += 1
@@ -3963,3 +4050,4 @@ unit = Unit(False, 3)
 
 # starts the main game loop
 game.mainloop()
+
