@@ -211,6 +211,8 @@ class Game:
 		self.turret_3_button_rect = pygame.Rect(840, 72, 48, 48)
 		self.turret_sell_button_rect = pygame.Rect(904, 72, 48, 48)
 
+		self.pause_button_rect = pygame.Rect(0, 64, 32, 32)
+
 
 		self.pause_button_continue_rect = pygame.Rect(352, 192, 256, 64)
 		self.pause_button_restart_rect = pygame.Rect(352, 288, 256, 64)
@@ -296,6 +298,9 @@ class Game:
 		self.ui_turrets = pygame.image.load("assets/ui/aow_ui_turrets.png").convert_alpha()
 
 		self.ui_pause_menu = pygame.image.load("assets/ui/aow_ui_pause_menu.png").convert_alpha()
+
+		self.ui_pause_button = pygame.image.load("assets/ui/aow_ui_pause_button.png").convert_alpha()
+
 		#   load special attack spritesheets
 		#	tier 1
 		self.tier1_special_sheet_img = pygame.image.load("assets/special_attack/tier1/aow_special_meteor.png").convert_alpha()
@@ -621,8 +626,8 @@ class Game:
 
 			elif self.pause_button_restart_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
 				self.clicked = True
-				self.reset_everything()
-				self.aow_theme_music.play(loops= 20)
+				self.reset_everything(False)
+
 
 			elif self.pause_button_quit_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
 				pygame.quit()
@@ -682,14 +687,18 @@ class Game:
 
 
 
-	def reset_everything(self):
+	def reset_everything(self, menu:bool= True):
 		pygame.mixer.stop()
 		self.dev_mode = False
 		self.running = True
 		self.paused = False
 		self.game_won = False
 		self.game_over = False
-		self.main_menu = False # needs to be True
+		if menu:
+			self.main_menu = True
+		else:
+			self.main_menu = False
+			self.aow_theme_music.play(loops= 20)
 		self.frames_passed = 0
 		self.seconds_passed = 0
 		self.minutes_passed = 0
@@ -972,6 +981,9 @@ class Game:
 				self.turret_menu_open = False
 				self.age_advancment()
 				self.clicked = True
+			if self.pause_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+				self.paused = True
+		
 			if pygame.mouse.get_pressed()[0] == 0:
 				self.clicked = False
 
@@ -1536,6 +1548,7 @@ class Game:
 
 	def draw_ui(self):
 		self.screen.blit(self.ui_main, (0, 0))
+		self.screen.blit(self.ui_pause_button, self.pause_button_rect)
 		if self.unit_menu_open:
 			self.turret_menu_open = False
 			self.screen.blit(self.ui_units, (0, 0))
