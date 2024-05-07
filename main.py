@@ -29,6 +29,7 @@ class Game:
 		self.game_won = False
 		self.game_over = False
 		self.main_menu = True
+		self.choosing_difficulty = False
 
 		self.difficulty = "easy"
 
@@ -694,16 +695,35 @@ class Game:
 		self.calc_game_state()
 
 		# buttons
-		if not self.clicked:	
-			if self.menu_button_play_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
-				self.reset_everything(False)
+		if not self.choosing_difficulty:
+			if not self.clicked:	
+				if self.menu_button_play_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+					self.reset_everything(False)
+		
+				elif self.menu_button_difficulty_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+					self.clicked = True
+					self.choosing_difficulty = True
 	
-			elif self.menu_button_difficulty_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
-				self.clicked = True
+				elif self.menu_button_quit_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+					pygame.quit()
+					sys.exit()
+		else:
+			if not self.clicked:
+				if self.menu_button_play_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+					self.difficulty = "easy"
+					self.clicked = True
+					self.choosing_difficulty = False
 
-			elif self.menu_button_quit_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
-				pygame.quit()
-				sys.exit()
+				elif self.menu_button_difficulty_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+					self.difficulty = "hard"
+					self.clicked = True
+					self.choosing_difficulty = False
+	
+				elif self.menu_button_quit_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+					self.difficulty = "pain"
+					self.clicked = True
+					self.choosing_difficulty = False
+				print(self.difficulty)
 
 
 		# scenery
@@ -744,20 +764,36 @@ class Game:
 		turret.draw()
 
 		self.screen.blit(self.ui_main_menu, (0,0))
-		if not self.menu_button_play_rect.collidepoint(self.mouse_pos):
-			self.render_text("play", self.font_50, (0,0,0), (self.menu_button_play_rect.x + 47, self.menu_button_play_rect.y ))
+		if not self.choosing_difficulty:
+			if not self.menu_button_play_rect.collidepoint(self.mouse_pos):
+				self.render_text("play", self.font_50, (0,0,0), (self.menu_button_play_rect.x + 47, self.menu_button_play_rect.y ))
+			else:
+				self.render_text("play", self.font_50, (80,80,80), (self.menu_button_play_rect.x + 47, self.menu_button_play_rect.y ))
+	
+			if not self.menu_button_difficulty_rect.collidepoint(self.mouse_pos):
+				self.render_text(self.difficulty, self.font_50, (0,0,0), (self.menu_button_difficulty_rect.x + 47, self.menu_button_difficulty_rect.y))
+			else:
+				self.render_text(self.difficulty, self.font_50, (80,80,80), (self.menu_button_difficulty_rect.x + 47, self.menu_button_difficulty_rect.y))
+	
+			if not self.menu_button_quit_rect.collidepoint(self.mouse_pos):
+				self.render_text("quit", self.font_50, (0,0,0), (self.menu_button_quit_rect.x + 47, self.menu_button_quit_rect.y))
+			else:
+				self.render_text("quit", self.font_50, (80,80,80), (self.menu_button_quit_rect.x + 47, self.menu_button_quit_rect.y))
 		else:
-			self.render_text("play", self.font_50, (80,80,80), (self.menu_button_play_rect.x + 47, self.menu_button_play_rect.y ))
-
-		if not self.menu_button_difficulty_rect.collidepoint(self.mouse_pos):
-			self.render_text(self.difficulty, self.font_50, (0,0,0), (self.menu_button_difficulty_rect.x + 47, self.menu_button_difficulty_rect.y))
-		else:
-			self.render_text(self.difficulty, self.font_50, (80,80,80), (self.menu_button_difficulty_rect.x + 47, self.menu_button_difficulty_rect.y))
-
-		if not self.menu_button_quit_rect.collidepoint(self.mouse_pos):
-			self.render_text("quit", self.font_50, (0,0,0), (self.menu_button_quit_rect.x + 47, self.menu_button_quit_rect.y))
-		else:
-			self.render_text("quit", self.font_50, (80,80,80), (self.menu_button_quit_rect.x + 47, self.menu_button_quit_rect.y))
+			if not self.menu_button_play_rect.collidepoint(self.mouse_pos):
+				self.render_text("easy", self.font_50, (0,0,0), (self.menu_button_play_rect.x + 47, self.menu_button_play_rect.y ))
+			else:
+				self.render_text("easy", self.font_50, (80,80,80), (self.menu_button_play_rect.x + 47, self.menu_button_play_rect.y ))
+	
+			if not self.menu_button_difficulty_rect.collidepoint(self.mouse_pos):
+				self.render_text("hard", self.font_50, (0,0,0), (self.menu_button_difficulty_rect.x + 47, self.menu_button_difficulty_rect.y))
+			else:
+				self.render_text("hard", self.font_50, (80,80,80), (self.menu_button_difficulty_rect.x + 47, self.menu_button_difficulty_rect.y))
+	
+			if not self.menu_button_quit_rect.collidepoint(self.mouse_pos):
+				self.render_text("pain", self.font_50, (0,0,0), (self.menu_button_quit_rect.x + 47, self.menu_button_quit_rect.y))
+			else:
+				self.render_text("pain", self.font_50, (80,80,80), (self.menu_button_quit_rect.x + 47, self.menu_button_quit_rect.y))
 
 
 		self.display.blit(self.resize_screen(), (0,0))
