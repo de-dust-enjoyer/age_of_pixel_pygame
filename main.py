@@ -3519,7 +3519,11 @@ class UnitProjectile:
 		self.friendly = friendly
 		self.id = id
 		self.speed = projectile_info.unit_projectile_vel[self.id]
-		self.damage = unit_info.unit_damage[self.id]
+		if self.friendly:
+			self.damage = unit_info.unit_damage[self.id]
+		else:
+			self.damage = unit_info.unit_damage[self.id] * game.enemy_damage_difficulty_scaling[game.difficulty]
+
 		self.rotation = 0
 
 		if self.id == 2:
@@ -4172,7 +4176,7 @@ class Bullet:
 				try:
 					if bullet.rect.colliderect(unit.unit_rect):
 						game.bullets.pop(game.bullets.index(bullet))
-						unit.get_hurt(90)
+						unit.get_hurt(150)
 				except ValueError:
 					print("ValueError in A10 special check collision")
 
