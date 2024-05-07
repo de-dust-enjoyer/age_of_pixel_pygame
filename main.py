@@ -513,7 +513,8 @@ class Game:
 		projectile.update()
 		unit_projectile.update()
 		unit.update()
-		self.check_game_over_game_won()
+		friendly_base.check_health()
+		enemy_base.check_health()
 		self.handle_buttons()
 		self.handle_special_cooldown()
 		blood_master.update()
@@ -527,6 +528,8 @@ class Game:
 		self.handle_enemy_progression()
 		self.spawn_enemys()
 		self.give_money_when_in_dev_mode()
+		print(f"self.game_won = {self.game_won}")
+		print(f"self.game_over = {self.game_over}")
 
 #>>>>>>>>>>>>>>>>>>>>>>>>RENDERING>LOOP>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -602,7 +605,7 @@ class Game:
 			elif self.game_won:
 				self.game_won_loop()
 			elif self.game_over:
-				self.game_won_loop()
+				self.game_over_loop()
 			elif self.main_menu:
 				self.main_menu_loop()
 
@@ -1984,9 +1987,13 @@ class Base:
 			game.particles.append(particle)
 			game.particles.append(particle2)
 			game.particles.append(particle3)
-	
 
-
+	def check_health(self):
+		if self.health <= 0:
+			if self.friendly:
+				game.game_over = True
+			else:
+				game.game_won = True
 
 
 class Turret:
