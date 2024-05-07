@@ -31,7 +31,7 @@ class Game:
 		self.main_menu = True
 		self.choosing_difficulty = False
 
-		self.difficulty = "easy"
+		self.difficulty = "hard"
 
 		self.scaling_factor_x = 1
 		self.scaling_factor_y = 1
@@ -779,21 +779,22 @@ class Game:
 				self.render_text("quit", self.font_50, (0,0,0), (self.menu_button_quit_rect.x + 47, self.menu_button_quit_rect.y))
 			else:
 				self.render_text("quit", self.font_50, (80,80,80), (self.menu_button_quit_rect.x + 47, self.menu_button_quit_rect.y))
+		
 		else:
 			if not self.menu_button_play_rect.collidepoint(self.mouse_pos):
-				self.render_text("easy", self.font_50, (0,0,0), (self.menu_button_play_rect.x + 47, self.menu_button_play_rect.y ))
+				self.render_text("easy", self.font_50, (0,70,0), (self.menu_button_play_rect.x + 47, self.menu_button_play_rect.y ))
 			else:
-				self.render_text("easy", self.font_50, (80,80,80), (self.menu_button_play_rect.x + 47, self.menu_button_play_rect.y ))
+				self.render_text("easy", self.font_50, (30,150,30), (self.menu_button_play_rect.x + 47, self.menu_button_play_rect.y ))
 	
 			if not self.menu_button_difficulty_rect.collidepoint(self.mouse_pos):
-				self.render_text("hard", self.font_50, (0,0,0), (self.menu_button_difficulty_rect.x + 47, self.menu_button_difficulty_rect.y))
+				self.render_text("hard", self.font_50, (70,70,0), (self.menu_button_difficulty_rect.x + 47, self.menu_button_difficulty_rect.y))
 			else:
-				self.render_text("hard", self.font_50, (80,80,80), (self.menu_button_difficulty_rect.x + 47, self.menu_button_difficulty_rect.y))
+				self.render_text("hard", self.font_50, (150,150,30), (self.menu_button_difficulty_rect.x + 47, self.menu_button_difficulty_rect.y))
 	
 			if not self.menu_button_quit_rect.collidepoint(self.mouse_pos):
-				self.render_text("pain", self.font_50, (0,0,0), (self.menu_button_quit_rect.x + 47, self.menu_button_quit_rect.y))
+				self.render_text("pain", self.font_50, (70,0,0), (self.menu_button_quit_rect.x + 47, self.menu_button_quit_rect.y))
 			else:
-				self.render_text("pain", self.font_50, (80,80,80), (self.menu_button_quit_rect.x + 47, self.menu_button_quit_rect.y))
+				self.render_text("pain", self.font_50, (150,30,30), (self.menu_button_quit_rect.x + 47, self.menu_button_quit_rect.y))
 
 
 		self.display.blit(self.resize_screen(), (0,0))
