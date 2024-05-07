@@ -30,6 +30,8 @@ class Game:
 		self.game_over = False
 		self.main_menu = True
 
+		self.difficulty = "easy"
+
 		self.scaling_factor_x = 1
 		self.scaling_factor_y = 1
 
@@ -220,6 +222,11 @@ class Game:
 		self.pause_button_continue_rect = pygame.Rect(352, 192, 256, 64)
 		self.pause_button_restart_rect = pygame.Rect(352, 288, 256, 64)
 		self.pause_button_quit_rect = pygame.Rect(352, 384, 256, 64)
+
+		self.menu_button_play_rect = pygame.Rect(352, 192, 256, 64)
+		self.menu_button_difficulty_rect = pygame.Rect(352, 288, 256, 64)
+		self.menu_button_quit_rect = pygame.Rect(352, 384, 256, 64)
+	
 	
 
 		# importing game assets:
@@ -228,8 +235,7 @@ class Game:
 
 		#	music
 		self.aow_theme_music = pygame.mixer.Sound("assets/audio/music/aow_theme_music.mp3")
-		#	playing music
-		self.aow_theme_music.play(loops= 20)
+
 
 		#	setting the volume for every sound
 		self.aow_theme_music.set_volume(0.3)
@@ -687,6 +693,18 @@ class Game:
 		self.get_scaling_factors()
 		self.calc_game_state()
 
+		# buttons
+		if not self.clicked:	
+			if self.menu_button_play_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+				self.reset_everything(False)
+	
+			elif self.menu_button_difficulty_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+				self.clicked = True
+
+			elif self.menu_button_quit_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+				pygame.quit()
+				sys.exit()
+
 
 		# scenery
 		self.frames_passed += 10
@@ -726,6 +744,20 @@ class Game:
 		turret.draw()
 
 		self.screen.blit(self.ui_main_menu, (0,0))
+		if not self.menu_button_play_rect.collidepoint(self.mouse_pos):
+			self.render_text("play", self.font_50, (0,0,0), (self.menu_button_play_rect.x + 47, self.menu_button_play_rect.y ))
+		else:
+			self.render_text("play", self.font_50, (80,80,80), (self.menu_button_play_rect.x + 47, self.menu_button_play_rect.y ))
+
+		if not self.menu_button_difficulty_rect.collidepoint(self.mouse_pos):
+			self.render_text(self.difficulty, self.font_50, (0,0,0), (self.menu_button_difficulty_rect.x + 47, self.menu_button_difficulty_rect.y))
+		else:
+			self.render_text(self.difficulty, self.font_50, (80,80,80), (self.menu_button_difficulty_rect.x + 47, self.menu_button_difficulty_rect.y))
+
+		if not self.menu_button_quit_rect.collidepoint(self.mouse_pos):
+			self.render_text("quit", self.font_50, (0,0,0), (self.menu_button_quit_rect.x + 47, self.menu_button_quit_rect.y))
+		else:
+			self.render_text("quit", self.font_50, (80,80,80), (self.menu_button_quit_rect.x + 47, self.menu_button_quit_rect.y))
 
 
 		self.display.blit(self.resize_screen(), (0,0))
@@ -742,7 +774,14 @@ class Game:
 		self.game_over = False
 		if menu:
 			self.main_menu = True
+			self.camera_right = True
+			self.camera_left = False
+			self.camera_move_speed = 1.5
+
 		else:
+			self.camera_right = False
+			self.camera_left = False
+			self.camera_move_speed = 8
 			self.main_menu = False
 			self.aow_theme_music.play(loops= 20)
 		self.frames_passed = 0
