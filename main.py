@@ -33,6 +33,18 @@ class Game:
 
 		self.difficulty = "hard"
 
+		self.enemy_damage_difficulty_scaling = {
+			"easy": 0.7,
+			"hard": 1,
+			"pain": 2 
+		}
+
+		self.friendly_health_difficulty_scaling = {
+			"easy": 1.3,
+			"hard": 1,
+			"pain": 0.7
+		}
+
 		self.scaling_factor_x = 1
 		self.scaling_factor_y = 1
 
@@ -723,7 +735,6 @@ class Game:
 					self.difficulty = "pain"
 					self.clicked = True
 					self.choosing_difficulty = False
-				print(self.difficulty)
 
 
 		# scenery
@@ -2588,8 +2599,14 @@ class Unit:
 		self.cost = unit_info.unit_cost[self.id]
 		self.exp_value = unit_info.unit_cost[self.id]
 		self.kill_value = unit_info.unit_cost[self.id]
-		self.health = unit_info.unit_health[self.id]
-		self.damage = unit_info.unit_damage[self.id]
+		if self.friendly:
+			self.health = unit_info.unit_health[self.id] * game.friendly_health_difficulty_scaling[game.difficulty]
+		else:
+			self.health = unit_info.unit_health[self.id]
+		if self.friendly:
+			self.damage = unit_info.unit_damage[self.id]
+		else:
+			self.damage = unit_info.unit_damage[self.id] * game.enemy_damage_difficulty_scaling[game.difficulty]
 		self.animation_frames = unit_info.animation_frames[self.id]
 		self.animation_state = 0
 		self.animation_timer = 0
@@ -2599,6 +2616,7 @@ class Unit:
 		if self.ranged:
 			self.unit_in_range = False
 			self.projectiles = []
+		print(f"friendly: {self.friendly}, id: {self.id}, health: {self.health}, damage: {self.damage}")
 
 		# extracts the animation frames from spritesheet using the get_image method
 		if self.id == 1:
