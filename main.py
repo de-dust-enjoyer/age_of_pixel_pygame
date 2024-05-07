@@ -28,7 +28,7 @@ class Game:
 		self.paused = False
 		self.game_won = False
 		self.game_over = False
-		self.main_menu = False
+		self.main_menu = True
 
 		self.scaling_factor_x = 1
 		self.scaling_factor_y = 1
@@ -65,8 +65,11 @@ class Game:
 		
 		# camera setup
 		self.camera_offset_x = 0
-		self.camera_move_speed = 10
+		self.camera_move_speed = 1.5
 		self.scroll_speed = 20
+
+		self.camera_left = False
+		self.camera_right = True
 
 		# key_pressed variables
 		self.pan_right = False
@@ -297,6 +300,7 @@ class Game:
 		self.ui_units = pygame.image.load("assets/ui/aow_ui_units.png").convert_alpha()
 		self.ui_turrets = pygame.image.load("assets/ui/aow_ui_turrets.png").convert_alpha()
 
+		self.ui_main_menu = pygame.image.load("assets/ui/aow_ui_main_menu.png").convert_alpha()
 		self.ui_pause_menu = pygame.image.load("assets/ui/aow_ui_pause_menu.png").convert_alpha()
 
 		self.ui_pause_button = pygame.image.load("assets/ui/aow_ui_pause_button.png").convert_alpha()
@@ -421,7 +425,7 @@ class Game:
 
 	def get_input(self):
 		self.mouse_pos = (pygame.mouse.get_pos()[0] / self.scaling_factor_x, pygame.mouse.get_pos()[1] / self.scaling_factor_y)
-		if not self.pan_right and not self.pan_left:	
+		if not self.pan_right and not self.pan_left and not self.paused and not self.main_menu:	
 			if self.screen_pan_rect_left.collidepoint(self.mouse_pos):
 				if self.camera_offset_x <= -8:
 					self.camera_offset_x += self.camera_move_speed
@@ -561,7 +565,7 @@ class Game:
 	def mainloop(self):
 		# main game loop (doesnt stop until game.running is set to false)
 		while self.running:
-			if not self.paused and not self.game_over and not self.game_won:
+			if not self.paused and not self.game_over and not self.game_won and not self.main_menu:
 				# get user input:
 				self.get_input()
 				# do all the game logic:
@@ -626,7 +630,8 @@ class Game:
 
 			elif self.pause_button_restart_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
 				self.clicked = True
-				self.reset_everything(False)
+				self.paused = False
+				self.reset_everything(True)
 
 
 			elif self.pause_button_quit_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
@@ -680,8 +685,49 @@ class Game:
 
 	def calc_game_state_main_menu(self):
 		self.get_scaling_factors()
+		self.calc_game_state()
+
+
+		# scenery
+		self.frames_passed += 10
+		self.age = self.enemy_age
+		self.friendly_base_upgrade_state = self.enemy_base_upgrade_state
+		friendly_base.health = 500
+		enemy_base.health = 500
+	
+		if self.camera_left:
+			if self.camera_offset_x <= -8:
+				self.pan_left = True
+			
+			else:
+				self.pan_left = False
+				self.camera_right = True
+				self.camera_left = False
+
+		elif self.camera_right:
+			if self.camera_offset_x >= -1912 + self.SCREEN_SIZE[0]:
+				self.pan_right = True
+				
+			else:
+				self.pan_left = False
+				self.camera_right = False
+				self.camera_left = True
 
 	def render_new_frame_main_menu(self):
+		self.screen.blit(self.background, self.background_pos)
+		self.draw_upgrade_modules()
+		self.draw_bases_1()
+		unit.draw()
+		blood_master.draw()
+		particle.draw()
+		self.draw_bases_2()
+		projectile.draw()
+		unit_projectile.draw()
+		turret.draw()
+
+		self.screen.blit(self.ui_main_menu, (0,0))
+
+
 		self.display.blit(self.resize_screen(), (0,0))
 		pygame.display.flip()
 
@@ -760,10 +806,10 @@ class Game:
 
 	def update_global_time(self):
 		self.frames_passed += 1
-		if self.frames_passed == 60:
+		if self.frames_passed >= 60:
 			self.frames_passed = 0
 			self.seconds_passed += 1
-			if self.seconds_passed == 60:
+			if self.seconds_passed >= 60:
 				self.seconds_passed = 0
 				self.minutes_passed += 1
 				
@@ -899,6 +945,11 @@ class Game:
 		if self.enemy_spawn_timer >= self.enemy_spawn_timer_goal:
 			unit.spawn_enemy(random.choice(self.spawn_options))
 			self.enemy_spawn_timer = 0
+			if self.main_menu:
+				unit.spawn_friendly(random.choice(self.spawn_options))
+
+
+			
 
 	def buy_turret_enemy(self):
 		for slot in self.enemy_slots_free:
