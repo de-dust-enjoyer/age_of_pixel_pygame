@@ -321,6 +321,8 @@ class Game:
 
 		self.ui_main_menu = pygame.image.load("assets/ui/aow_ui_main_menu.png").convert_alpha()
 		self.ui_pause_menu = pygame.image.load("assets/ui/aow_ui_pause_menu.png").convert_alpha()
+		self.ui_game_won_menu = pygame.image.load("assets/ui/aow_ui_game_won_menu.png").convert_alpha()
+		self.ui_game_over_menu = pygame.image.load("assets/ui/aow_ui_game_over_menu.png").convert_alpha()
 
 		self.ui_pause_button = pygame.image.load("assets/ui/aow_ui_pause_button.png").convert_alpha()
 
@@ -468,7 +470,7 @@ class Game:
 			
 			if event.type == pygame.KEYDOWN:
 				if event.key == pygame.K_ESCAPE:
-					if not self.paused:
+					if not self.paused and not self.main_menu and not self.game_won and not self.game_over:
 						self.paused = True
 					else:
 						self.paused = False
@@ -481,6 +483,7 @@ class Game:
 
 				elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
 					self.pan_right = True
+
 				elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
 					self.pan_left = True
 
@@ -676,29 +679,83 @@ class Game:
 			self.render_text("continue", self.font_35, (80,80,80), (self.pause_button_continue_rect.x + 10, self.pause_button_continue_rect.y + 10))
 
 		if not self.pause_button_restart_rect.collidepoint(self.mouse_pos):
-			self.render_text("restart", self.font_35, (0,0,0), (self.pause_button_restart_rect.x + 10, self.pause_button_restart_rect.y + 10))
+			self.render_text("restart", self.font_35, (0,0,0), (self.pause_button_restart_rect.x + 30, self.pause_button_restart_rect.y + 10))
 		else:
-			self.render_text("restart", self.font_35, (80,80,80), (self.pause_button_restart_rect.x + 10, self.pause_button_restart_rect.y + 10))
+			self.render_text("restart", self.font_35, (80,80,80), (self.pause_button_restart_rect.x + 30, self.pause_button_restart_rect.y + 10))
 
 		if not self.pause_button_quit_rect.collidepoint(self.mouse_pos):
-			self.render_text("quit", self.font_35, (0,0,0), (self.pause_button_quit_rect.x + 10, self.pause_button_quit_rect.y + 10))
+			self.render_text("quit", self.font_35, (0,0,0), (self.pause_button_quit_rect.x + 70, self.pause_button_quit_rect.y + 10))
 		else:
-			self.render_text("quit", self.font_35, (80,80,80), (self.pause_button_quit_rect.x + 10, self.pause_button_quit_rect.y + 10))
+			self.render_text("quit", self.font_35, (80,80,80), (self.pause_button_quit_rect.x + 70, self.pause_button_quit_rect.y + 10))
 
 		self.display.blit(self.resize_screen(), (0,0))
 		pygame.display.flip()
 
 	def calc_game_state_game_won(self):
+
 		self.get_scaling_factors()
+		if not self.clicked:
+			if self.pause_button_restart_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+				self.clicked = True
+				self.reset_everything(True)
+	
+			elif self.pause_button_quit_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+				pygame.quit()
+				sys.exit(0)
 
 	def render_new_frame_game_won(self):
+		self.screen.blit(self.background, self.background_pos)
+		self.draw_upgrade_modules()
+		self.draw_bases_1()
+		unit.draw()
+		self.draw_bases_2()
+		projectile.draw()
+		unit_projectile.draw()
+		turret.draw()
+		self.screen.blit(self.ui_game_won_menu, (0,0))
+		if not self.pause_button_restart_rect.collidepoint(self.mouse_pos):
+			self.render_text("restart", self.font_35, (0,0,0), (self.pause_button_restart_rect.x + 30, self.pause_button_restart_rect.y + 10))
+		else:
+			self.render_text("restart", self.font_35, (80,80,80), (self.pause_button_restart_rect.x + 30, self.pause_button_restart_rect.y + 10))
+
+		if not self.pause_button_quit_rect.collidepoint(self.mouse_pos):
+			self.render_text("quit", self.font_35, (0,0,0), (self.pause_button_quit_rect.x + 70, self.pause_button_quit_rect.y + 10))
+		else:
+			self.render_text("quit", self.font_35, (80,80,80), (self.pause_button_quit_rect.x + 70, self.pause_button_quit_rect.y + 10))
+
 		self.display.blit(self.resize_screen(), (0,0))
 		pygame.display.flip()
 
 	def calc_game_state_game_over(self):
 		self.get_scaling_factors()
+		if not self.clicked:
+			if self.pause_button_restart_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+				self.clicked = True
+				self.reset_everything(True)
+	
+			elif self.pause_button_quit_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+				pygame.quit()
+				sys.exit(0)
 
 	def render_new_frame_game_over(self):
+		self.screen.blit(self.background, self.background_pos)
+		self.draw_upgrade_modules()
+		self.draw_bases_1()
+		unit.draw()
+		self.draw_bases_2()
+		projectile.draw()
+		unit_projectile.draw()
+		turret.draw()
+		self.screen.blit(self.ui_game_over_menu, (0,0))
+		if not self.pause_button_restart_rect.collidepoint(self.mouse_pos):
+			self.render_text("restart", self.font_35, (0,0,0), (self.pause_button_restart_rect.x + 30, self.pause_button_restart_rect.y + 10))
+		else:
+			self.render_text("restart", self.font_35, (80,80,80), (self.pause_button_restart_rect.x + 30, self.pause_button_restart_rect.y + 10))
+
+		if not self.pause_button_quit_rect.collidepoint(self.mouse_pos):
+			self.render_text("quit", self.font_35, (0,0,0), (self.pause_button_quit_rect.x + 70, self.pause_button_quit_rect.y + 10))
+		else:
+			self.render_text("quit", self.font_35, (80,80,80), (self.pause_button_quit_rect.x + 70, self.pause_button_quit_rect.y + 10))
 		self.display.blit(self.resize_screen(), (0,0))
 		pygame.display.flip()
 
@@ -820,6 +877,7 @@ class Game:
 		self.paused = False
 		self.game_won = False
 		self.game_over = False
+		self.choosing_difficulty = False
 		if menu:
 			self.main_menu = True
 			self.camera_right = True
@@ -2138,8 +2196,8 @@ class Turret:
 					unit_y = game.FLOOR_LEVEL - turret.units_in_range[0].unit_rect.height / 2
 					unit_x = turret.units_in_range[0].unit_rect.x - turret.units_in_range[0].unit_rect.width / 2
 					# get x and y pos of turret
-					turret_y = turret.turret_rect.center[1]
-					turret_x = turret.turret_rect.center[0]
+					turret_y = turret.turret_rect_rotate.center[1]
+					turret_x = turret.turret_rect_rotate.center[0]
 					# calculate differece beweet unit and turret
 					delta_y = unit_y - turret_y
 					delta_x = unit_x - turret_x
@@ -2155,8 +2213,8 @@ class Turret:
 					unit_y = game.FLOOR_LEVEL - turret.units_in_range[0].unit_rect.height / 2
 					unit_x = turret.units_in_range[0].unit_rect.x + turret.units_in_range[0].unit_rect.width / 2
 					# get x and y pos of turret
-					turret_y = turret.turret_rect.center[1]
-					turret_x = turret.turret_rect.center[0]
+					turret_y = turret.turret_rect_rotate.center[1]
+					turret_x = turret.turret_rect_rotate.center[0]
 					# calculate differece beweet unit and turret
 					delta_y = unit_y - turret_y
 					delta_x = turret_x - unit_x
@@ -2616,7 +2674,7 @@ class Unit:
 		if self.ranged:
 			self.unit_in_range = False
 			self.projectiles = []
-		print(f"friendly: {self.friendly}, id: {self.id}, health: {self.health}, damage: {self.damage}")
+
 
 		# extracts the animation frames from spritesheet using the get_image method
 		if self.id == 1:
