@@ -245,6 +245,7 @@ class Game:
 		# importing game assets:
 
 		#	sounds
+		self.click_sfx = pygame.mixer.Sound("assets/audio/ui/click.wav")
 
 		#	music
 		self.aow_theme_music = pygame.mixer.Sound("assets/audio/music/aow_theme_music.mp3")
@@ -254,6 +255,7 @@ class Game:
 		#	setting the volume for every sound
 		self.aow_theme_music.set_volume(0.3)
 		self.aow_menu_music.set_volume(0.4)
+		self.click_sfx.set_volume(0.6)
 
 		#	playing the menu music on first start
 		self.aow_menu_music.play(loops= 20)
@@ -657,14 +659,17 @@ class Game:
 			if self.pause_button_continue_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
 				self.clicked = True
 				self.paused = False
+				self.click_sfx.play()
 
 			elif self.pause_button_restart_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
 				self.clicked = True
 				self.paused = False
+				self.click_sfx.play()
 				self.reset_everything(True)
 
 
 			elif self.pause_button_quit_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+				self.click_sfx.play()
 				pygame.quit()
 				sys.exit(0)
 
@@ -704,10 +709,12 @@ class Game:
 		self.get_scaling_factors()
 		if not self.clicked:
 			if self.pause_button_restart_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+				self.click_sfx.play()
 				self.clicked = True
 				self.reset_everything(True)
 	
 			elif self.pause_button_quit_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+				self.click_sfx.play()
 				pygame.quit()
 				sys.exit(0)
 
@@ -738,10 +745,12 @@ class Game:
 		self.get_scaling_factors()
 		if not self.clicked:
 			if self.pause_button_restart_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+				self.click_sfx.play()
 				self.clicked = True
 				self.reset_everything(True)
 	
 			elif self.pause_button_quit_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+				self.click_sfx.play()
 				pygame.quit()
 				sys.exit(0)
 
@@ -775,28 +784,34 @@ class Game:
 		if not self.choosing_difficulty:
 			if not self.clicked:	
 				if self.menu_button_play_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+					self.click_sfx.play()
 					self.reset_everything(False)
 		
 				elif self.menu_button_difficulty_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+					self.click_sfx.play()
 					self.clicked = True
 					self.choosing_difficulty = True
 	
 				elif self.menu_button_quit_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+					self.click_sfx.play()
 					pygame.quit()
 					sys.exit()
 		else:
 			if not self.clicked:
 				if self.menu_button_play_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+					self.click_sfx.play()
 					self.difficulty = "easy"
 					self.clicked = True
 					self.choosing_difficulty = False
 
 				elif self.menu_button_difficulty_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+					self.click_sfx.play()
 					self.difficulty = "hard"
 					self.clicked = True
 					self.choosing_difficulty = False
 	
 				elif self.menu_button_quit_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+					self.click_sfx.play()
 					self.difficulty = "pain"
 					self.clicked = True
 					self.choosing_difficulty = False
@@ -894,6 +909,7 @@ class Game:
 			self.aow_menu_music.play(loops= 20)
 
 		else:
+			self.click_sfx.play()
 			self.camera_right = False
 			self.camera_left = False
 			self.camera_move_speed = 8
@@ -1152,6 +1168,7 @@ class Game:
 	def handle_buttons(self):
 		if not self.clicked:
 			if self.turret_upgrade_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+				self.click_sfx.play()
 				self.unit_menu_open = False
 				self.turret_menu_open = False
 				self.turret_buy_mode = False
@@ -1164,6 +1181,7 @@ class Game:
 						self.upgrade_cost *= 4
 				self.clicked = True
 			elif self.special_attack_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+				self.click_sfx.play()
 				self.turret_buy_mode = False
 				self.turret_sell_mode = False
 				if self.age == 1:
@@ -1180,6 +1198,7 @@ class Game:
 						self.special_available = False
 				self.clicked = True
 			elif self.age_advance_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+				self.click_sfx.play()
 				self.turret_buy_mode = False
 				self.turret_sell_mode = False
 				self.unit_menu_open = False
@@ -1187,6 +1206,7 @@ class Game:
 				self.age_advancment()
 				self.clicked = True
 			if self.pause_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+				self.click_sfx.play()
 				self.paused = True
 		
 			if pygame.mouse.get_pressed()[0] == 0:
@@ -1196,6 +1216,7 @@ class Game:
 	def handle_menu_selection(self):
 		if not self.clicked:
 			if self.unit_select_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+				self.click_sfx.play()
 				self.turret_buy_mode = False
 				self.turret_sell_mode = False
 				if self.unit_menu_open == False:
@@ -1205,6 +1226,7 @@ class Game:
 				self.turret_menu_open = False
 				self.clicked = True
 			if self.turret_select_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+				self.click_sfx.play()
 				self.turret_buy_mode = False
 				self.turret_sell_mode = False
 				if self.turret_menu_open == False:
@@ -1221,12 +1243,15 @@ class Game:
 			if self.age == 1:
 				if not self.clicked:
 					if self.unit_1_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.click_sfx.play()
 						self.buy_unit(1)
 						self.clicked = True
 					elif self.unit_2_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.click_sfx.play()
 						self.buy_unit(2)
 						self.clicked = True
 					elif self.unit_3_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.click_sfx.play()
 						self.buy_unit(3)
 						self.clicked = True
 				if pygame.mouse.get_pressed()[0] == 0:
@@ -1234,12 +1259,15 @@ class Game:
 			if self.age == 2:
 				if not self.clicked:
 					if self.unit_1_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.click_sfx.play()
 						self.buy_unit(4)
 						self.clicked = True
 					elif self.unit_2_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.click_sfx.play()
 						self.buy_unit(5)
 						self.clicked = True
 					elif self.unit_3_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.click_sfx.play()
 						self.buy_unit(6)
 						self.clicked = True
 				if pygame.mouse.get_pressed()[0] == 0:
@@ -1247,12 +1275,15 @@ class Game:
 			if self.age == 3:
 				if not self.clicked:
 					if self.unit_1_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.click_sfx.play()
 						self.buy_unit(7)
 						self.clicked = True
 					elif self.unit_2_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.click_sfx.play()
 						self.buy_unit(8)
 						self.clicked = True
 					elif self.unit_3_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.click_sfx.play()
 						self.buy_unit(9)
 						self.clicked = True
 				if pygame.mouse.get_pressed()[0] == 0:
@@ -1262,6 +1293,7 @@ class Game:
 		if self.turret_menu_open:
 			if not self.clicked:
 				if self.turret_sell_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+					self.click_sfx.play()
 					self.clicked = True
 					if not self.turret_sell_mode:
 						self.turret_sell_mode = True
@@ -1271,16 +1303,19 @@ class Game:
 			if self.age == 1:
 				if not self.clicked:
 					if self.turret_1_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.click_sfx.play()
 						self.turret_buy_mode = True
 						self.turret_sell_mode = False
 						self.turret_id_to_buy = 1
 						self.clicked = True
 					elif self.turret_2_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.click_sfx.play()
 						self.turret_buy_mode = True
 						self.turret_sell_mode = False
 						self.turret_id_to_buy = 2
 						self.clicked = True
 					elif self.turret_3_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.click_sfx.play()
 						self.turret_buy_mode = True
 						self.turret_sell_mode = False
 						self.turret_id_to_buy = 3
@@ -1290,16 +1325,19 @@ class Game:
 			if self.age == 2:
 				if not self.clicked:
 					if self.turret_1_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.click_sfx.play()
 						self.turret_buy_mode = True
 						self.turret_sell_mode = False
 						self.turret_id_to_buy = 4
 						self.clicked = True
 					elif self.turret_2_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.click_sfx.play()
 						self.turret_buy_mode = True
 						self.turret_sell_mode = False
 						self.turret_id_to_buy = 5
 						self.clicked = True
 					elif self.turret_3_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.click_sfx.play()
 						self.turret_buy_mode = True
 						self.turret_sell_mode = False
 						self.turret_id_to_buy = 6
@@ -1309,16 +1347,19 @@ class Game:
 			if self.age == 3:
 				if not self.clicked:
 					if self.turret_1_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.click_sfx.play()
 						self.turret_buy_mode = True
 						self.turret_sell_mode = False
 						self.turret_id_to_buy = 7
 						self.clicked = True
 					elif self.turret_2_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.click_sfx.play()
 						self.turret_buy_mode = True
 						self.turret_sell_mode = False
 						self.turret_id_to_buy = 8
 						self.clicked = True
 					elif self.turret_3_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+						self.click_sfx.play()
 						self.turret_buy_mode = True
 						self.turret_sell_mode = False
 						self.turret_id_to_buy = 9
@@ -1333,14 +1374,17 @@ class Game:
 			if pygame.mouse.get_pressed()[0] == 1 and not self.clicked:
 				self.clicked = True
 				if self.friendly_slots_free[1] and self.base_upgrade_1_rect.collidepoint(self.mouse_pos):
+					self.click_sfx.play()
 					self.buy_turret_friendly(self.turret_id_to_buy, 1)
 					self.turret_id_to_buy = 0
 					self.turret_buy_mode = False
 				elif self.friendly_slots_free[2] and self.base_upgrade_2_rect.collidepoint(self.mouse_pos):
+					self.click_sfx.play()
 					self.buy_turret_friendly(self.turret_id_to_buy, 2)
 					self.turret_id_to_buy = 0
 					self.turret_buy_mode = False
 				elif self.friendly_slots_free[3] and self.base_upgrade_3_rect.collidepoint(self.mouse_pos):
+					self.click_sfx.play()
 					self.buy_turret_friendly(self.turret_id_to_buy, 3)
 					self.turret_id_to_buy = 0
 					self.turret_buy_mode = False
@@ -1669,6 +1713,7 @@ class Game:
 		if self.turret_sell_mode:
 			for turret in self.friendly_turrets:
 				if turret.sell_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1 and not self.clicked:
+					self.click_sfx.play()
 					self.clicked = True
 					self.friendly_turrets.pop(self.friendly_turrets.index(turret))
 					self.friendly_money += turret.sell_value
