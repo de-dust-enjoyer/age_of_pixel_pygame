@@ -1,9 +1,6 @@
 # import essential modules
 # system modules:
-import pygame
-import random
-import sys
-import json
+import pygame, sys, random, json
 from math import atan, degrees
 # custom modules:
 import unit_info, turret_info, projectile_info
@@ -57,6 +54,8 @@ class Game:
 		self.easy_beaten = self.player_stats["easy_beaten"]
 		self.hard_beaten = self.player_stats["hard_beaten"]
 		self.pain_beaten = self.player_stats["pain_beaten"]
+
+		self.new_high_score = False
 
 
 
@@ -759,8 +758,8 @@ class Game:
 		pygame.display.flip()
 
 	def calc_game_state_game_won(self):
-
 		self.get_scaling_factors()
+		self.calculate_highscore()
 		if self.difficulty == "easy":
 			self.easy_beaten = True
 		if self.difficulty == "hard":
@@ -800,11 +799,17 @@ class Game:
 		else:
 			self.render_text("quit", self.font_35, (80,80,80), (self.pause_button_quit_rect.x + 70, self.pause_button_quit_rect.y + 10))
 
+		if self.new_high_score:
+			self.render_text(f"new highscore: {self.high_score}", self.font_40, (0,0,0), (160,200))
+		else:
+			self.render_text(f"score: {self.score} highscore: {self.high_score}", self.font_40, (0,0,0), (0,200))
+
 		self.display.blit(self.resize_screen(), (0,0))
 		pygame.display.flip()
 
 	def calc_game_state_game_over(self):
 		self.get_scaling_factors()
+		self.calculate_highscore()
 		if not self.clicked:
 			if self.pause_button_restart_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
 				self.click_sfx.play()
@@ -973,7 +978,6 @@ class Game:
 		self.click_sfx.set_volume(self.click_sfx_volume * self.master_volume)
 
 	def save_game(self):
-		self.calculate_highscore()
 		player_stats = {
 			"difficulty": self.difficulty,
 			"high_score": self.high_score,
@@ -992,18 +996,21 @@ class Game:
 	def calculate_highscore(self):
 		if self.score > self.high_score:
 			self.high_score = self.score
+			self.new_high_score = True
+
 	
 
 
 	def reset_everything(self, menu:bool= True):
 		pygame.mixer.stop()
+		self.new_high_score = False
 		self.dev_mode = False
 		self.running = True
 		self.paused = False
-		self.game_won = False
+		self.game_won = True
 		self.game_over = False
 		self.choosing_difficulty = False
-		self.score = 0
+		self.score = 100
 		if menu:
 			self.main_menu = True
 			self.camera_right = True
@@ -1028,8 +1035,8 @@ class Game:
 		self.pan_right = False
 		self.pan_left = False
 		self.friendly_units_queue = []
-		self.training = []
 		self.training_timer = 0
+		self.training = []
 		self.friendly_unit_buffer = []
 		self.enemy_unit_buffer = []
 		self.friendly_spawn_allowed = True
