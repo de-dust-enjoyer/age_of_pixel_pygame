@@ -1083,7 +1083,8 @@ class Game:
 		if self.frames_passed >= 60:
 			self.frames_passed = 0
 			self.seconds_passed += 1
-			self.score = round(self.friendly_exp / (self.minutes_passed))
+			if not self.main_menu:
+				self.score = round(self.friendly_exp / (self.minutes_passed + 1))
 			if self.seconds_passed >= 60:
 				self.seconds_passed = 0
 				self.minutes_passed += 1
