@@ -1079,7 +1079,6 @@ class Game:
 
 	def update_global_time(self):
 		self.frames_passed += 1
-		print(self.score)
 		if self.frames_passed >= 60:
 			self.frames_passed = 0
 			self.seconds_passed += 1
@@ -2765,7 +2764,7 @@ class Projectile:
 								particle.spawn_explosion(projectile.rect.center, (30,30,30), 1, (255,100,0), 0.3, (255,165,0), 0.7, (4,4), 10)
 
 						except ValueError:
-							print("ValueError in turret projectile check collision friendly")
+							pass
 
 		for turret in game.enemy_turrets:
 			for projectile in turret.projectiles:
@@ -2791,7 +2790,7 @@ class Projectile:
 								particle.spawn_explosion(projectile.rect.center, (30,30,30), 1, (255,100,0), 0.3, (255,165,0), 0.7, (4,4), 10)
 
 						except ValueError:
-							print("ValueError in turret projectile check collision enemy")
+							pass
 
 	def update(self):
 		projectile.move()
@@ -3843,7 +3842,7 @@ class UnitProjectile:
 								try:
 									unit.projectiles.pop(unit.projectiles.index(projectile))
 								except ValueError:
-									print("ValueError in unit projectile 'check for collision friendly'")
+									pass
 						
 		for unit in game.enemy_units:
 			if unit.ranged:
@@ -3865,7 +3864,7 @@ class UnitProjectile:
 								try:
 									unit.projectiles.pop(unit.projectiles.index(projectile))
 								except ValueError:
-									print("ValueError in unit projectile 'check for collision enemy'")
+									pass
 
 
 	def check_for_base_collision(self):
@@ -3887,7 +3886,7 @@ class UnitProjectile:
 						try:
 							unit.projectiles.pop(unit.projectiles.index(projectile))
 						except ValueError:
-							print("ValueError in unit projectile 'check for collision friendly' (targeting base)")
+							pass
 
 		for unit in game.enemy_units:
 			if unit.ranged:
@@ -3907,7 +3906,7 @@ class UnitProjectile:
 						try:
 							unit.projectiles.pop(unit.projectiles.index(projectile))
 						except ValueError:
-							print("ValueError in unit projectile 'check for collision enemy' (targeting base)")
+							pass
 
 
 	def rotate(self):
@@ -4426,7 +4425,7 @@ class Bullet:
 						game.bullets.pop(game.bullets.index(bullet))
 						unit.get_hurt(150)
 				except ValueError:
-					print("ValueError in A10 special check collision")
+					pass
 
 	def draw(self):
 		for bullet in game.bullets:
