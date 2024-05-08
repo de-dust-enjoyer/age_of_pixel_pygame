@@ -248,10 +248,15 @@ class Game:
 
 		#	music
 		self.aow_theme_music = pygame.mixer.Sound("assets/audio/music/aow_theme_music.mp3")
+		self.aow_menu_music = pygame.mixer.Sound("assets/audio/music/aow_menu_music.mp3")
 
 
 		#	setting the volume for every sound
 		self.aow_theme_music.set_volume(0.3)
+		self.aow_menu_music.set_volume(0.4)
+
+		#	playing the menu music on first start
+		self.aow_menu_music.play(loops= 20)
 
 		#	 font
 		self.font_10 = pygame.font.Font("assets/font/pixel_font.otf", 10)
@@ -886,6 +891,7 @@ class Game:
 			self.camera_right = True
 			self.camera_left = False
 			self.camera_move_speed = 1.5
+			self.aow_menu_music.play(loops= 20)
 
 		else:
 			self.camera_right = False
