@@ -1,18 +1,14 @@
 small remake of the iconic age of war game
 
-if you want to play it, python must be installed and you also need to have pygame
+if you want to play it, python and pygame must be installed
 
 after installing python open console and type:
 
 pip install pygame
 
-if this doesnt work type:
+remember that this is an unfinished project and I am still a beginner 
+so be ready to encounter some bugs or bad performance
 
-pip3 install pygame
+this is my first "big" project with pygame
 
-
-the purpose of this project is to teach myself python while builbing a fun little game.
-
-I am aware that the code quality is quite poor because this is my first project am I am still a beginner.
-
-I am open for feedback :)
+also thanks for playing
