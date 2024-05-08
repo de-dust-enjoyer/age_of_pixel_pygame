@@ -973,7 +973,6 @@ class Game:
 			"hard_beaten": self.hard_beaten,
 			"pain_beaten": self.pain_beaten
 		}
-		print(player_stats)
 		try:	
 			with open("player.txt", "w") as player_data:
 				json.dump(player_stats, player_data)
