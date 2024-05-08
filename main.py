@@ -33,6 +33,7 @@ class Game:
 		self.game_over = False
 		self.main_menu = True
 		self.choosing_difficulty = False
+		self.score = 0
 
 		self.player_stats = {
 			"difficulty": "hard",
@@ -760,6 +761,13 @@ class Game:
 	def calc_game_state_game_won(self):
 
 		self.get_scaling_factors()
+		if self.difficulty == "easy":
+			self.easy_beaten = True
+		if self.difficulty == "hard":
+			self.hard_beaten = True
+		if self.difficulty == "pain":
+			self.pain_beaten = True
+
 		if not self.clicked:
 			if self.pause_button_restart_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
 				self.click_sfx.play()
@@ -965,6 +973,7 @@ class Game:
 		self.click_sfx.set_volume(self.click_sfx_volume * self.master_volume)
 
 	def save_game(self):
+		self.calculate_highscore()
 		player_stats = {
 			"difficulty": self.difficulty,
 			"high_score": self.high_score,
@@ -979,6 +988,10 @@ class Game:
 		except FileNotFoundError:
 			with open("player.txt", "w") as player_data:
 				json.dump(player_stats, player_data)
+
+	def calculate_highscore(self):
+		if self.score > self.high_score:
+			self.high_score = self.score
 	
 
 
@@ -990,6 +1003,7 @@ class Game:
 		self.game_won = False
 		self.game_over = False
 		self.choosing_difficulty = False
+		self.score = 0
 		if menu:
 			self.main_menu = True
 			self.camera_right = True
@@ -1065,9 +1079,11 @@ class Game:
 
 	def update_global_time(self):
 		self.frames_passed += 1
+		print(self.score)
 		if self.frames_passed >= 60:
 			self.frames_passed = 0
 			self.seconds_passed += 1
+			self.score = round(self.friendly_exp / (self.minutes_passed))
 			if self.seconds_passed >= 60:
 				self.seconds_passed = 0
 				self.minutes_passed += 1
