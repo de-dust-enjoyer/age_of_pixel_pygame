@@ -33,6 +33,8 @@ class Game:
 
 		self.difficulty = "hard"
 
+
+
 		self.enemy_damage_difficulty_scaling = {
 			"easy": 0.7,
 			"hard": 1,
@@ -229,7 +231,10 @@ class Game:
 		self.turret_3_button_rect = pygame.Rect(840, 72, 48, 48)
 		self.turret_sell_button_rect = pygame.Rect(904, 72, 48, 48)
 
-		self.pause_button_rect = pygame.Rect(0, 64, 32, 32)
+		self.pause_button_rect = pygame.Rect(0, 63, 32, 32)
+		self.mute_button_rect = pygame.Rect(31, 63, 32, 32)
+
+		self.mute_button_rect_menu = pygame.Rect(0, 0, 32, 32)
 
 
 		self.pause_button_continue_rect = pygame.Rect(352, 192, 256, 64)
@@ -253,9 +258,14 @@ class Game:
 
 
 		#	setting the volume for every sound
-		self.aow_theme_music.set_volume(0.3)
-		self.aow_menu_music.set_volume(0.4)
-		self.click_sfx.set_volume(0.6)
+		#	master volume
+		self.master_volume = 1
+		self.theme_music_volume = 0.3
+		self.aow_theme_music.set_volume(self.theme_music_volume * self.master_volume)
+		self.menu_music_volume = 0.4
+		self.aow_menu_music.set_volume(self.menu_music_volume * self.master_volume)
+		self.click_sfx_volume = 0.6
+		self.click_sfx.set_volume(self.click_sfx_volume * self.master_volume)
 
 		#	playing the menu music on first start
 		self.aow_menu_music.play(loops= 20)
@@ -332,6 +342,8 @@ class Game:
 		self.ui_game_over_menu = pygame.image.load("assets/ui/aow_ui_game_over_menu.png").convert_alpha()
 
 		self.ui_pause_button = pygame.image.load("assets/ui/aow_ui_pause_button.png").convert_alpha()
+		self.ui_mute_button_1 = pygame.image.load("assets/ui/aow_ui_mute_1_button.png").convert_alpha()
+		self.ui_mute_button_2 = pygame.image.load("assets/ui/aow_ui_mute_2_button.png").convert_alpha()
 
 		#   load special attack spritesheets
 		#	tier 1
@@ -535,8 +547,6 @@ class Game:
 		self.handle_enemy_progression()
 		self.spawn_enemys()
 		self.give_money_when_in_dev_mode()
-		print(f"self.game_won = {self.game_won}")
-		print(f"self.game_over = {self.game_over}")
 
 #>>>>>>>>>>>>>>>>>>>>>>>>RENDERING>LOOP>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -615,6 +625,7 @@ class Game:
 				self.game_over_loop()
 			elif self.main_menu:
 				self.main_menu_loop()
+			self.update_master_volume()
 
 
 #>>>>>>>>>>>>>>>>>>>>>>MAIN>LOOP>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>	
@@ -673,6 +684,16 @@ class Game:
 				pygame.quit()
 				sys.exit(0)
 
+			elif self.mute_button_rect_menu.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+				self.click_sfx.play()
+				self.clicked = True
+				if self.master_volume == 1:
+					self.master_volume = 0
+				else:
+					self.master_volume = 1
+		if pygame.mouse.get_pressed()[0] == 0:
+			self.clicked = False
+
 	def render_new_frame_pause(self):
 		self.screen.blit(self.background, self.background_pos)
 		self.draw_upgrade_modules()
@@ -700,6 +721,11 @@ class Game:
 			self.render_text("quit", self.font_35, (0,0,0), (self.pause_button_quit_rect.x + 70, self.pause_button_quit_rect.y + 10))
 		else:
 			self.render_text("quit", self.font_35, (80,80,80), (self.pause_button_quit_rect.x + 70, self.pause_button_quit_rect.y + 10))
+
+		if self.master_volume == 1:
+			self.screen.blit(self.ui_mute_button_1, self.mute_button_rect_menu)
+		else:
+			self.screen.blit(self.ui_mute_button_2, self.mute_button_rect_menu)
 
 		self.display.blit(self.resize_screen(), (0,0))
 		pygame.display.flip()
@@ -815,6 +841,14 @@ class Game:
 					self.difficulty = "pain"
 					self.clicked = True
 					self.choosing_difficulty = False
+		if not self.clicked:
+			if self.mute_button_rect_menu.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
+				self.click_sfx.play()
+				self.clicked = True
+				if self.master_volume == 1:
+					self.master_volume = 0
+				else:
+					self.master_volume = 1
 
 
 		# scenery
@@ -886,10 +920,21 @@ class Game:
 				self.render_text("pain", self.font_50, (70,0,0), (self.menu_button_quit_rect.x + 47, self.menu_button_quit_rect.y))
 			else:
 				self.render_text("pain", self.font_50, (150,30,30), (self.menu_button_quit_rect.x + 47, self.menu_button_quit_rect.y))
+		if self.master_volume == 1:
+			self.screen.blit(self.ui_mute_button_1, self.mute_button_rect_menu)
+		else:
+			self.screen.blit(self.ui_mute_button_2, self.mute_button_rect_menu)
 
 
 		self.display.blit(self.resize_screen(), (0,0))
 		pygame.display.flip()
+
+	def update_master_volume(self):
+		self.aow_theme_music.set_volume(self.theme_music_volume * self.master_volume)
+		self.aow_menu_music.set_volume(self.menu_music_volume * self.master_volume)
+		self.click_sfx.set_volume(self.click_sfx_volume * self.master_volume)
+		print("suii")
+
 
 
 
@@ -1205,9 +1250,19 @@ class Game:
 				self.turret_menu_open = False
 				self.age_advancment()
 				self.clicked = True
-			if self.pause_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
-				self.click_sfx.play()
-				self.paused = True
+			if not self.paused and not self.main_menu and not self.game_over and not self.game_won:
+				if self.pause_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+					self.click_sfx.play()
+					self.paused = True
+				elif self.mute_button_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0] == 1:
+					self.click_sfx.play()
+					self.clicked = True
+					if self.master_volume == 1:
+						self.master_volume = 0
+					elif self.master_volume == 0:
+						self.master_volume = 1
+					print(self.master_volume)
+
 		
 			if pygame.mouse.get_pressed()[0] == 0:
 				self.clicked = False
@@ -1409,7 +1464,7 @@ class Game:
 		# draws unit health bar on mouse hover
 		for unit in self.friendly_units + self.enemy_units:
 			if unit.unit_rect.collidepoint(self.mouse_pos):
-				max_health = unit_info.unit_health[unit.id]
+				max_health = unit.max_health
 				health_percent = 100/max_health * unit.health
 				health_pixel = unit.unit_rect.width/100 * health_percent
 				red_rect = pygame.Surface((unit.unit_rect.width, 5))
@@ -1799,6 +1854,10 @@ class Game:
 	def draw_ui(self):
 		self.screen.blit(self.ui_main, (0, 0))
 		self.screen.blit(self.ui_pause_button, self.pause_button_rect)
+		if self.master_volume == 1:
+			self.screen.blit(self.ui_mute_button_1, self.mute_button_rect)
+		else:
+			self.screen.blit(self.ui_mute_button_2, self.mute_button_rect)
 		if self.unit_menu_open:
 			self.turret_menu_open = False
 			self.screen.blit(self.ui_units, (0, 0))
@@ -2717,8 +2776,10 @@ class Unit:
 		self.kill_value = unit_info.unit_cost[self.id]
 		if self.friendly:
 			self.health = unit_info.unit_health[self.id] * game.friendly_health_difficulty_scaling[game.difficulty]
+			self.max_health = unit_info.unit_health[self.id] * game.friendly_health_difficulty_scaling[game.difficulty]
 		else:
 			self.health = unit_info.unit_health[self.id]
+			self.max_health = unit_info.unit_health[self.id] * game.friendly_health_difficulty_scaling[game.difficulty]
 		if self.friendly:
 			self.damage = unit_info.unit_damage[self.id]
 		else:
