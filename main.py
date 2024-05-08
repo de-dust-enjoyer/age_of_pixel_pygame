@@ -1007,10 +1007,10 @@ class Game:
 		self.dev_mode = False
 		self.running = True
 		self.paused = False
-		self.game_won = True
+		self.game_won = False
 		self.game_over = False
 		self.choosing_difficulty = False
-		self.score = 100
+		self.score = 0
 		if menu:
 			self.main_menu = True
 			self.camera_right = True
@@ -3531,7 +3531,7 @@ class Unit:
 			elif unit.ranged and len(game.enemy_units) == 0:
 				if unit.range_rect.colliderect(enemy_base.base_rect):
 					unit.unit_in_range = True
-				if not enemy.range_rect.colliderect(enemy_base.base_rect):
+				if not unit.range_rect.colliderect(enemy_base.base_rect):
 					unit.unit_in_range = False
 
 		for enemy in game.enemy_units:
