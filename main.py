@@ -3,6 +3,7 @@
 import pygame
 import random
 import sys
+import json
 from math import atan, degrees
 # custom modules:
 import unit_info, turret_info, projectile_info
@@ -14,6 +15,8 @@ pygame.init()
 # main game class
 class Game:
 	def __init__(self):
+		
+
 		# constants:
 		self.WINDOWTITLE = "AGE OF PIXEL"
 		self.FLOOR_LEVEL = 460
@@ -31,7 +34,29 @@ class Game:
 		self.main_menu = True
 		self.choosing_difficulty = False
 
-		self.difficulty = "hard"
+		self.player_stats = {
+			"difficulty": "hard",
+			"high_score": 0,
+			"master_volume": 1,
+			"easy_beaten": 0,
+			"hard_beaten": 0,
+			"pain_beaten": 0
+		}
+
+		try:
+			with open("player.txt") as player_data:
+				self.player_stats = json.load(player_data)
+		except FileNotFoundError:
+			with open("player.txt","w") as player_data:
+				json.dump(self.player_stats, player_data)
+
+
+		self.difficulty = self.player_stats["difficulty"]
+		self.high_score = self.player_stats["high_score"]
+		self.easy_beaten = self.player_stats["easy_beaten"]
+		self.hard_beaten = self.player_stats["hard_beaten"]
+		self.pain_beaten = self.player_stats["pain_beaten"]
+
 
 
 
@@ -259,7 +284,7 @@ class Game:
 
 		#	setting the volume for every sound
 		#	master volume
-		self.master_volume = 1
+		self.master_volume = self.player_stats["master_volume"]
 		self.theme_music_volume = 0.3
 		self.aow_theme_music.set_volume(self.theme_music_volume * self.master_volume)
 		self.menu_music_volume = 0.4
@@ -478,6 +503,7 @@ class Game:
 		for event in pygame.event.get():
 			# quits pygame if game window is closed
 			if event.type == pygame.QUIT:
+				self.save_game()
 				pygame.quit()
 				sys.exit()
 
@@ -681,6 +707,7 @@ class Game:
 
 			elif self.pause_button_quit_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
 				self.click_sfx.play()
+				self.save_game()
 				pygame.quit()
 				sys.exit(0)
 
@@ -741,6 +768,7 @@ class Game:
 	
 			elif self.pause_button_quit_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
 				self.click_sfx.play()
+				self.save_game()
 				pygame.quit()
 				sys.exit(0)
 
@@ -777,6 +805,7 @@ class Game:
 	
 			elif self.pause_button_quit_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
 				self.click_sfx.play()
+				self.save_game()
 				pygame.quit()
 				sys.exit(0)
 
@@ -820,6 +849,7 @@ class Game:
 	
 				elif self.menu_button_quit_rect.collidepoint(self.mouse_pos) and pygame.mouse.get_pressed()[0]:
 					self.click_sfx.play()
+					self.save_game()
 					pygame.quit()
 					sys.exit()
 		else:
@@ -933,9 +963,24 @@ class Game:
 		self.aow_theme_music.set_volume(self.theme_music_volume * self.master_volume)
 		self.aow_menu_music.set_volume(self.menu_music_volume * self.master_volume)
 		self.click_sfx.set_volume(self.click_sfx_volume * self.master_volume)
-		print("suii")
 
-
+	def save_game(self):
+		player_stats = {
+			"difficulty": self.difficulty,
+			"high_score": self.high_score,
+			"master_volume": self.master_volume,
+			"easy_beaten": self.easy_beaten,
+			"hard_beaten": self.hard_beaten,
+			"pain_beaten": self.pain_beaten
+		}
+		print(player_stats)
+		try:	
+			with open("player.txt", "w") as player_data:
+				json.dump(player_stats, player_data)
+		except FileNotFoundError:
+			with open("player.txt", "w") as player_data:
+				json.dump(player_stats, player_data)
+	
 
 
 	def reset_everything(self, menu:bool= True):
@@ -962,7 +1007,7 @@ class Game:
 			self.aow_theme_music.play(loops= 20)
 		self.frames_passed = 0
 		self.seconds_passed = 0
-		self.minutes_passed = 0
+		self.minutes_passed = 17
 		self.unit_menu_open = False
 		self.turret_menu_open = False
 		self.clicked = False
@@ -1261,7 +1306,7 @@ class Game:
 						self.master_volume = 0
 					elif self.master_volume == 0:
 						self.master_volume = 1
-					print(self.master_volume)
+
 
 		
 			if pygame.mouse.get_pressed()[0] == 0:
@@ -3461,6 +3506,11 @@ class Unit:
 					unit.unit_in_range = True
 				if not unit.range_rect.colliderect(game.enemy_units[0].unit_rect) and not unit.range_rect.colliderect(enemy_base.base_rect):
 					unit.unit_in_range = False
+			elif unit.ranged and len(game.enemy_units) == 0:
+				if unit.range_rect.colliderect(enemy_base.base_rect):
+					unit.unit_in_range = True
+				if not enemy.range_rect.colliderect(enemy_base.base_rect):
+					unit.unit_in_range = False
 
 		for enemy in game.enemy_units:
 			enemy.update_range_rect()
@@ -3468,6 +3518,11 @@ class Unit:
 				if enemy.range_rect.colliderect(game.friendly_units[0].unit_rect) or enemy.range_rect.colliderect(friendly_base.base_rect):
 					enemy.unit_in_range = True
 				if not enemy.range_rect.colliderect(game.friendly_units[0].unit_rect) and not enemy.range_rect.colliderect(friendly_base.base_rect):
+					enemy.unit_in_range = False
+			elif enemy.ranged and len(game.friendly_units) == 0:
+				if enemy.range_rect.colliderect(friendly_base.base_rect):
+					enemy.unit_in_range = True
+				if not enemy.range_rect.colliderect(friendly_base.base_rect):
 					enemy.unit_in_range = False
 				
 
