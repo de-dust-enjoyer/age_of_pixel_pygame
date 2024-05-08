@@ -1020,7 +1020,7 @@ class Game:
 			self.aow_theme_music.play(loops= 20)
 		self.frames_passed = 0
 		self.seconds_passed = 0
-		self.minutes_passed = 17
+		self.minutes_passed = 0
 		self.unit_menu_open = False
 		self.turret_menu_open = False
 		self.clicked = False
