@@ -1163,7 +1163,7 @@ class Game:
 
 		elif self.minutes_passed == 15:
 			self.enemy_age = 3
-			self.spawn_options = [7,7,8,8,8,9,9]
+			self.spawn_options = [7,7,8,8,8]
 			self.enemy_spawn_timer_goal = 4 * 60
 			self.buy_turret_enemy()
 
@@ -1184,16 +1184,17 @@ class Game:
 
 		elif self.minutes_passed == 19:
 			self.enemy_age = 3
-			self.spawn_options = [7,8,9]
+			self.spawn_options = [7,8]
 			self.enemy_spawn_timer_goal = 3 * 60
 			self.remove_turrets_from_the_past()
+			self.buy_turret_enemy()
 
 
 		elif self.minutes_passed >= 20:
 			self.enemy_age = 3
 			self.spawn_options = [9,9,9]
 			self.enemy_spawn_timer_goal = 3 * 60
-			self.buy_turret_enemy()
+			
 
 	def resize_screen(self):
 		screen = self.screen
@@ -1857,7 +1858,10 @@ class Game:
 
 	def draw_units_in_training(self):
 		for unit in self.training:
-			self.screen.blit(pygame.transform.scale(unit.frame1_surf, (32, 32)), (16, 16))
+
+			unit_image = pygame.transform.scale(unit.frame1_surf, (32, 32))
+			unit_image.set_colorkey((1,0,0))
+			self.screen.blit(unit_image, (16, 16))
 
 	def draw_training_progress_bar(self):
 		pygame.draw.rect(self.screen, (100, 200, 100), pygame.Rect(70, 27, self.training_timer * 0.943, 10))
