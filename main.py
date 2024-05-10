@@ -19,9 +19,6 @@ class Game:
 		self.FLOOR_LEVEL = 460
 		self.GRAVITY = 0.4
 
-
-		# dev mode
-		self.dev_mode = False
 		
 		# normal variables:
 		self.running = True
@@ -514,17 +511,11 @@ class Game:
 			# sets key_pressed variables to True if key is pressed
 			
 			if event.type == pygame.KEYDOWN:
-				if event.key == pygame.K_ESCAPE:
+				if event.key == pygame.K_ESCAPE or event.key == pygame.K_TAB:
 					if not self.paused and not self.main_menu and not self.game_won and not self.game_over:
 						self.paused = True
 					else:
 						self.paused = False
-				elif event.key == pygame.K_TAB:
-					# avtivates dev mode
-					if not self.dev_mode:
-						self.dev_mode = True
-					else:
-						self.dev_mode = False
 
 				elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
 					self.pan_right = True
@@ -572,7 +563,6 @@ class Game:
 		self.update_global_time()
 		self.handle_enemy_progression()
 		self.spawn_enemys()
-		self.give_money_when_in_dev_mode()
 
 #>>>>>>>>>>>>>>>>>>>>>>>>RENDERING>LOOP>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -607,18 +597,7 @@ class Game:
 
 		# render ui at last pos to keep it in foreground!!
 		self.draw_ui()
-		if self.dev_mode:
-			self.render_text(f"FPS           : {round(self.clock.get_fps())}", self.font_16, "black", (0,64))
-			self.render_text(f"MINUTES PASSED: {self.minutes_passed}", self.font_16, "black", (0,80))
-			self.render_text(f"ENEMY AGE     : {self.enemy_age}", self.font_16, "black", (0,96))
-			self.render_text(f"SPAWN OPTIONS : {self.spawn_options}", self.font_16, "black", (0,112))
-			self.render_text(f"SPAWN FREQ    : {round(self.enemy_spawn_timer_goal / 60)}", self.font_16, "black", (0,128))
-			self.draw_transparent_rect(friendly_base.base_rect.size, (0,200,0), 50, friendly_base.base_rect.topleft)
-			self.draw_transparent_rect(enemy_base.base_rect.size, (200,0,0), 50, enemy_base.base_rect.topleft)
-			self.draw_transparent_rect(friendly_base.base_spawn_rect.size, (200,0,0), 50, friendly_base.base_spawn_rect.topleft)
-			self.draw_transparent_rect(enemy_base.base_spawn_rect.size, (0,200,0), 50, enemy_base.base_spawn_rect.topleft)
-			self.draw_transparent_rect(self.screen_pan_rect_left.size, (255,255,255), 20, self.screen_pan_rect_left.topleft)
-			self.draw_transparent_rect(self.screen_pan_rect_right.size, (255,255,255), 20, self.screen_pan_rect_right.topleft)
+
 
 		self.display.blit(self.resize_screen(), (0,0))
 		# update the frame
@@ -732,7 +711,7 @@ class Game:
 		turret.draw()
 		self.draw_transparent_rect(self.SCREEN_SIZE, (0,0,0), 40, (0,0))
 		
-		self.render_text("paused", self.font_80, (0,0,0), (self.SCREEN_SIZE[0] / 2 - 190, self.SCREEN_SIZE[1] / 2  - 200))
+		self.render_text_center("paused", self.font_80, (0,0,0), (self.SCREEN_SIZE[0] / 2, self.SCREEN_SIZE[1] / 2  - 170))
 		self.screen.blit(self.ui_pause_menu, (0,0))
 		if not self.pause_button_continue_rect.collidepoint(self.mouse_pos):
 			self.render_text("continue", self.font_35, (0,0,0), (self.pause_button_continue_rect.x + 10, self.pause_button_continue_rect.y + 10))
@@ -800,9 +779,9 @@ class Game:
 			self.render_text("quit", self.font_35, (80,80,80), (self.pause_button_quit_rect.x + 70, self.pause_button_quit_rect.y + 10))
 
 		if self.new_high_score:
-			self.render_text(f"new highscore: {self.high_score}", self.font_40, (0,0,0), (160,200))
+			self.render_text_center(f"new highscore: {self.high_score}", self.font_40, (0,0,0), (self.SCREEN_SIZE[0]/2, self.SCREEN_SIZE[1]/2 - 30))
 		else:
-			self.render_text(f"score: {self.score} highscore: {self.high_score}", self.font_40, (0,0,0), (0,200))
+			self.render_text_center(f"score: {self.score} highscore: {self.high_score}", self.font_40, (0,0,0), (self.SCREEN_SIZE[0]/2, self.SCREEN_SIZE[1]/2 -30))
 
 		self.display.blit(self.resize_screen(), (0,0))
 		pygame.display.flip()
@@ -841,6 +820,12 @@ class Game:
 			self.render_text("quit", self.font_35, (0,0,0), (self.pause_button_quit_rect.x + 70, self.pause_button_quit_rect.y + 10))
 		else:
 			self.render_text("quit", self.font_35, (80,80,80), (self.pause_button_quit_rect.x + 70, self.pause_button_quit_rect.y + 10))
+
+		if self.new_high_score:
+			self.render_text_center(f"new highscore: {self.high_score}", self.font_40, (0,0,0), (self.SCREEN_SIZE[0]/2, self.SCREEN_SIZE[1]/2 -30))
+		else:
+			self.render_text_center(f"score: {self.score} highscore: {self.high_score}", self.font_40, (0,0,0), (self.SCREEN_SIZE[0]/2, self.SCREEN_SIZE[1]/2 -30))
+
 		self.display.blit(self.resize_screen(), (0,0))
 		pygame.display.flip()
 
@@ -1004,7 +989,6 @@ class Game:
 	def reset_everything(self, menu:bool= True):
 		pygame.mixer.stop()
 		self.new_high_score = False
-		self.dev_mode = False
 		self.running = True
 		self.paused = False
 		self.game_won = False
@@ -1883,6 +1867,12 @@ class Game:
 		text = font.render(text, False, color)
 		self.screen.blit(text, pos)
 
+	def render_text_center(self, text:str, font:pygame.font.Font, color:tuple, pos:tuple):
+		text = font.render(text, False, color)
+		text_rect = text.get_rect(center= pos)
+		self.screen.blit(text, text_rect)
+
+
 
 	def draw_money_and_exp(self):
 		self.render_text(f"coins: {round(self.friendly_money)}", self.font_20, (0,0,0), (70,1))
@@ -2111,11 +2101,6 @@ class Game:
 				self.screen.blit(module, self.enemy_module_pos2_t3)
 				self.screen.blit(module, self.enemy_module_pos3_t3)
 
-
-	def give_money_when_in_dev_mode(self):
-		if self.dev_mode:
-			self.friendly_money = 99999999
-			self.friendly_exp = 99999999
 
 
 class Base:
@@ -2607,14 +2592,12 @@ class Turret:
 	def draw(self):
 		for turret in game.friendly_turrets:
 			game.screen.blit(turret.rotate_turret(), turret.turret_rect_rotate)
-			if game.dev_mode:
-				game.draw_transparent_rect(turret.turret_range_rect.size, (0,255,0), 50, turret.turret_range_rect.topleft)
+
 			if turret.drawing_line:
 				pygame.draw.line(game.screen, (200,0,0), (turret.turret_rect.midright[0] - 5, turret.turret_rect.midright[1] + 6), turret.target_pos)
 		for turret in game.enemy_turrets:
 			game.screen.blit(turret.rotate_turret(), turret.turret_rect_rotate)
-			if game.dev_mode:
-				game.draw_transparent_rect(turret.turret_range_rect.size, (255,0,0), 50, turret.turret_range_rect.topleft)
+
 			if turret.drawing_line:
 				pygame.draw.line(game.screen, (200,0,0), (turret.turret_rect.midleft[0] + 5, turret.turret_rect.midleft[1] + 6), turret.target_pos)
 
@@ -3734,8 +3717,6 @@ class Unit:
 			unit.draw_buff_crown()
 			if unit.has_weapon:
 				game.screen.blit(unit.rotate_weapon(), unit.weapon_rect_rotate)
-			if unit.ranged and game.dev_mode:
-				pygame.draw.rect(game.screen, "red", unit.range_rect)
 			
 
 
@@ -3744,8 +3725,7 @@ class Unit:
 			unit.draw_buff_crown()
 			if unit.has_weapon:
 				game.screen.blit(unit.rotate_weapon(), unit.weapon_rect_rotate)
-			if unit.ranged and game.dev_mode:
-				pygame.draw.rect(game.screen, "red", unit.range_rect)
+
 			
 
 	def update(self):
