@@ -563,6 +563,7 @@ class Game:
 		self.update_global_time()
 		self.handle_enemy_progression()
 		self.spawn_enemys()
+		self.cancel_buy_and_sell_mode_on_click()
 
 #>>>>>>>>>>>>>>>>>>>>>>>>RENDERING>LOOP>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -1808,6 +1809,11 @@ class Game:
 		elif self.age == 2 and self.friendly_exp >= self.age3_treshhold:
 			self.age = 3
 
+	def cancel_buy_and_sell_mode_on_click(self):
+		if pygame.mouse.get_pressed()[2]:
+			self.turret_sell_mode = False
+			self.turret_buy_mode = False
+
 
 
 	def buy_turret_friendly(self, id:int, slot:int):
@@ -1858,7 +1864,6 @@ class Game:
 
 	def draw_units_in_training(self):
 		for unit in self.training:
-
 			unit_image = pygame.transform.scale(unit.frame1_surf, (32, 32))
 			unit_image.set_colorkey((1,0,0))
 			self.screen.blit(unit_image, (16, 16))
