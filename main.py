@@ -523,6 +523,12 @@ class Game:
 				elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
 					self.pan_left = True
 
+				# cheats need to be removed for release !!!!
+				if self.paused:
+					if event.key == pygame.K_m:
+						self.friendly_money += 100000
+						self.friendly_exp += 100000
+
 
 			# sets key_pressed variables back to false if key is realeased
 			if event.type == pygame.KEYUP:
