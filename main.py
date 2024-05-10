@@ -2833,7 +2833,7 @@ class Unit:
 		if self.has_weapon:
 			self.weapon_rotation = 0
 			self.idle_swinging_direction = 0
-		self.movement_speed = 1
+		self.movement_speed = 4
 		self.fall_speed = 0
 		self.ranged = unit_info.is_unit_ranged[self.id]
 		self.cost = unit_info.unit_cost[self.id]
@@ -3429,7 +3429,7 @@ class Unit:
 					self.weapon_rotation += 2
 				if self.attack_timer >= self.attack_timer_goal - 15 and self.weapon_rotation >= 0:
 					self.weapon_rotation -= 15
-				if self.attack_timer >= self.attack_timer_goal:
+				if self.weapon_rotation <= 0 and self.attack_timer >= round(self.attack_timer_goal/1.2):
 					self.attack_timer = 0
 					self.weapon_rotation = 0
 					if not self.buffed:
@@ -3443,7 +3443,7 @@ class Unit:
 					self.weapon_rotation -= 1
 				if self.attack_timer >= self.attack_timer_goal - 15 and self.weapon_rotation <= 0:
 					self.weapon_rotation += 10
-				if self.attack_timer >= self.attack_timer_goal:
+				if self.weapon_rotation >= 0 and self.attack_timer >= round(self.attack_timer_goal/1.2):
 					self.attack_timer = 0
 					self.weapon_rotation = 0
 					if not self.buffed:
@@ -3454,10 +3454,10 @@ class Unit:
 			elif self.id == 8:
 				self.attack_timer += 1
 				if self.attack_timer >= round(self.attack_timer_goal / 2):
-					self.weapon_rotation -= 1
+					self.weapon_rotation -= 1.2
 				if self.attack_timer >= self.attack_timer_goal - 10 and self.weapon_rotation <= 10:
-					self.weapon_rotation += 10
-				if self.attack_timer >= self.attack_timer_goal:
+					self.weapon_rotation += 15
+				if self.weapon_rotation >= 0 and self.attack_timer >= round(self.attack_timer_goal/1.2):
 					self.attack_timer = 0
 					self.weapon_rotation = 0
 					if not self.buffed:
@@ -3472,7 +3472,7 @@ class Unit:
 					self.weapon_rotation -= 2
 				if self.attack_timer >= self.attack_timer_goal - 15 and self.weapon_rotation <= 0:
 					self.weapon_rotation += 15
-				if self.attack_timer >= self.attack_timer_goal:
+				if self.weapon_rotation >= 0 and self.attack_timer >= round(self.attack_timer_goal/1.2):
 					self.attack_timer = 0
 					self.weapon_rotation = 0
 					if not self.buffed:
@@ -3486,7 +3486,7 @@ class Unit:
 					self.weapon_rotation += 1
 				if self.attack_timer >= self.attack_timer_goal - 15 and self.weapon_rotation >= 0:
 					self.weapon_rotation -= 10
-				if self.attack_timer >= self.attack_timer_goal:
+				if self.weapon_rotation <= 0 and self.attack_timer >= round(self.attack_timer_goal/1.2):
 					self.attack_timer = 0
 					self.weapon_rotation = 0
 					if not self.buffed:
@@ -3497,10 +3497,10 @@ class Unit:
 			elif self.id == 8:
 				self.attack_timer += 1
 				if self.attack_timer >= round(self.attack_timer_goal / 2):
-					self.weapon_rotation += 1
+					self.weapon_rotation += 1.2
 				if self.attack_timer >= self.attack_timer_goal - 10 and self.weapon_rotation >= 10:
-					self.weapon_rotation -= 10
-				if self.attack_timer >= self.attack_timer_goal:
+					self.weapon_rotation -= 15
+				if self.weapon_rotation >= 0 and self.attack_timer >= round(self.attack_timer_goal/1.2):
 					self.attack_timer = 0
 					self.weapon_rotation = 0
 					if not self.buffed:
