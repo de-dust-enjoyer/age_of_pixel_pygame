@@ -67,7 +67,7 @@ turret_fire_rate = {
 	# tier3
 	7: 5,
 	8: 2,
-	9: 0.1
+	9: 0.2
 }
 turret_frames = {
 	# tier1
