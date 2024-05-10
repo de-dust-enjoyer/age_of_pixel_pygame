@@ -563,7 +563,7 @@ class Game:
 		self.update_global_time()
 		self.handle_enemy_progression()
 		self.spawn_enemys()
-		self.cancel_buy_and_sell_mode_on_click()
+		self.cancel_buy_and_sell_mode_on_right_click()
 
 #>>>>>>>>>>>>>>>>>>>>>>>>RENDERING>LOOP>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
@@ -1785,23 +1785,23 @@ class Game:
 	def draw_turrets_to_cursor(self):
 		if self.turret_buy_mode and self.turret_id_to_buy != 0:
 			if self.turret_id_to_buy == 1:
-				self.screen.blit(self.turret_1_sheet.get_image(0, (32, 32), (1,0,0), 2), self.mouse_pos)
+				self.screen.blit(self.turret_1_sheet.get_image(0, (32, 32), (1,0,0), 2), (self.mouse_pos[0] - 32, self.mouse_pos[1] - 32))
 			if self.turret_id_to_buy == 2:
-				self.screen.blit(self.turret_2_sheet.get_image(0, (32, 32), (1,0,0), 2), self.mouse_pos)
+				self.screen.blit(self.turret_2_sheet.get_image(0, (32, 32), (1,0,0), 2), (self.mouse_pos[0] - 32, self.mouse_pos[1] - 32))
 			if self.turret_id_to_buy == 3:
-				self.screen.blit(self.turret_3_sheet.get_image(0, (32, 64), (1,0,0), 1), self.mouse_pos)
+				self.screen.blit(self.turret_3_sheet.get_image(0, (32, 64), (1,0,0), 1), (self.mouse_pos[0] - 16, self.mouse_pos[1] - 32))
 			if self.turret_id_to_buy == 4:
-				self.screen.blit(self.turret_4_sheet.get_image(0, (48, 64), (1,0,0), 1), self.mouse_pos)
+				self.screen.blit(self.turret_4_sheet.get_image(0, (48, 64), (1,0,0), 1), (self.mouse_pos[0] - 24, self.mouse_pos[1] - 32))
 			if self.turret_id_to_buy == 5:
-				self.screen.blit(self.turret_5_sheet.get_image(0, (48, 64), (1,0,0), 1), self.mouse_pos)
+				self.screen.blit(self.turret_5_sheet.get_image(0, (48, 64), (1,0,0), 1), (self.mouse_pos[0] - 24, self.mouse_pos[1] - 32))
 			if self.turret_id_to_buy == 6:
-				self.screen.blit(self.turret_6_sheet.get_image(0, (64, 64), (1,0,0), 1), self.mouse_pos)
+				self.screen.blit(self.turret_6_sheet.get_image(0, (64, 64), (1,0,0), 1), (self.mouse_pos[0] - 32, self.mouse_pos[1] - 32))
 			if self.turret_id_to_buy == 7:
-				self.screen.blit(self.turret_7_sheet.get_image(0, (64, 64), (1,0,0), 1), self.mouse_pos)
+				self.screen.blit(self.turret_7_sheet.get_image(0, (64, 64), (1,0,0), 1), (self.mouse_pos[0] - 32, self.mouse_pos[1] - 32))
 			if self.turret_id_to_buy == 8:
-				self.screen.blit(self.turret_8_sheet.get_image(0, (64, 64), (1,0,0), 1), self.mouse_pos)
+				self.screen.blit(self.turret_8_sheet.get_image(0, (64, 64), (1,0,0), 1), (self.mouse_pos[0] - 32, self.mouse_pos[1] - 32))
 			if self.turret_id_to_buy == 9:
-				self.screen.blit(self.turret_9_sheet.get_image(0, (64, 64), (1,0,0), 1), self.mouse_pos)
+				self.screen.blit(self.turret_9_sheet.get_image(0, (64, 64), (1,0,0), 1), (self.mouse_pos[0] - 32, self.mouse_pos[1] - 32))
 
 	def age_advancment(self):
 		if self.age == 1 and self.friendly_exp >= self.age2_treshhold:
@@ -1809,7 +1809,7 @@ class Game:
 		elif self.age == 2 and self.friendly_exp >= self.age3_treshhold:
 			self.age = 3
 
-	def cancel_buy_and_sell_mode_on_click(self):
+	def cancel_buy_and_sell_mode_on_right_click(self):
 		if pygame.mouse.get_pressed()[2]:
 			self.turret_sell_mode = False
 			self.turret_buy_mode = False
