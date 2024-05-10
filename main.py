@@ -3556,11 +3556,11 @@ class Unit:
 						unit.weapon_rotation += 3
 					if unit.attack_timer >= unit.attack_timer_goal - 20:
 						unit.weapon_rotation -= 15
-					if unit.attack_timer == unit.attack_timer_goal:
+					if unit.weapon_rotation <= 0 and unit.attack_timer >= round(unit.attack_timer_goal / 1.2):
 						unit.attack_timer = 0
 						unit.weapon_rotation = 0
 						unit.weapon_animation_state = 1
-						projectile = UnitProjectile((unit.unit_rect.topright[0] - 4, unit.unit_rect.topright[1] + 10), True, 2)
+						projectile = UnitProjectile((unit.unit_rect.topright[0] - 4, unit.unit_rect.topright[1] + 17), True, 2)
 						unit.projectiles.append(projectile)
 
 			elif unit.id == 5:
@@ -3636,11 +3636,11 @@ class Unit:
 						unit.weapon_rotation -= 3
 					if unit.attack_timer >= unit.attack_timer_goal - 20:
 						unit.weapon_rotation += 15
-					if unit.attack_timer == unit.attack_timer_goal:
+					if unit.weapon_rotation >= 0 and unit.attack_timer >= round(unit.attack_timer_goal / 1.2):
 						unit.attack_timer = 0
 						unit.weapon_rotation = 0
 						unit.weapon_animation_state = 1
-						projectile = UnitProjectile((unit.unit_rect.topleft[0] + 4, unit.unit_rect.topright[1] + 10), False, 2)
+						projectile = UnitProjectile((unit.unit_rect.topleft[0] + 4, unit.unit_rect.topright[1] + 17), False, 2)
 						unit.projectiles.append(projectile)
 
 			elif unit.id == 5:
@@ -3801,6 +3801,7 @@ class UnitProjectile:
 						projectile.x_pos += projectile.speed
 						if projectile.id == 2 or projectile.id == 5:
 							projectile.rotation -= 10
+
 						if projectile.id == 5:
 							particle = Particle((50,50,255), (3,3), projectile.rect.center, 0.05, "no_gravity")
 							game.particles.append(particle)
@@ -3808,6 +3809,8 @@ class UnitProjectile:
 							game.particles.append(particle)
 						elif projectile.id == 9:
 							projectile.y_pos += 0.5
+						if projectile.id == 2:
+							projectile.y_pos += 0.4
 					else:
 						projectile.x_pos -= projectile.speed
 						if projectile.id == 2 or projectile.id == 5:
@@ -3819,6 +3822,8 @@ class UnitProjectile:
 							game.particles.append(particle)
 						elif projectile.id == 9:
 							projectile.y_pos += 0.5
+						if projectile.id == 2:
+							projectile.y_pos += 0.4
 
 					projectile.rect.center = (projectile.x_pos - x_camera_offset_dif, projectile.y_pos)
 
