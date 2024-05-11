@@ -273,6 +273,9 @@ class Game:
 
 		#	sounds
 		self.click_sfx = pygame.mixer.Sound("assets/audio/ui/click.wav")
+		self.hurt_sound = pygame.mixer.Sound("assets/audio/hurt_sound/aow_hurt_sound.mp3")
+		self.turret_1_sound = pygame.mixer.Sound("assets/audio/turrets/aow_blowpipe.mp3")
+		self.turret_2_sound = pygame.mixer.Sound("assets/audio/turrets/aow_chicken_plop.mp3")
 
 		#	music
 		self.aow_theme_music = pygame.mixer.Sound("assets/audio/music/aow_theme_music.mp3")
@@ -288,6 +291,12 @@ class Game:
 		self.aow_menu_music.set_volume(self.menu_music_volume * self.master_volume)
 		self.click_sfx_volume = 0.6
 		self.click_sfx.set_volume(self.click_sfx_volume * self.master_volume)
+		self.hurt_sound_volume = 0.1
+		self.hurt_sound.set_volume(self.hurt_sound_volume * self.master_volume)
+		self.turret_1_sound_volume = 0.2
+		self.turret_1_sound.set_volume(self.turret_1_sound_volume * self.master_volume)
+		self.turret_2_sound_volume = 0.2
+		self.turret_2_sound.set_volume(self.turret_2_sound_volume * self.master_volume)
 
 		#	playing the menu music on first start
 		self.aow_menu_music.play(loops= 20)
@@ -2540,6 +2549,7 @@ class Turret:
 							turret.rockets = 2
 					if turret.shoottimer == turret.shoottimer_goal:
 						turret.shoottimer = 0
+
 						if turret.id != 8:
 							projectile = Projectile(turret.turret_rect.center,
 							 (turret.units_in_range[0].unit_rect.center[0] - turret.turret_rect.center[0],
@@ -2558,10 +2568,30 @@ class Turret:
 							  turret.rotation, turret.id, True)
 
 						turret.projectiles.append(projectile)
+
 						if turret.id == 8:
 							if turret.rockets > 0:
 								turret.rockets -= 1
-							
+
+						# play sounds:
+						if turret.id == 1:
+							game.turret_1_sound.play()
+						if turret.id == 2:
+							game.turret_2_sound.play()
+						if turret.id == 3:
+							pass
+						if turret.id == 4:
+							pass
+						if turret.id == 5:
+							pass
+						if turret.id == 6:
+							pass
+						if turret.id == 7:
+							pass
+						if turret.id == 8:
+							pass
+						if turret.id == 9:
+							pass	
 		
 		for turret in game.enemy_turrets:
 			if not turret.is_catapult and not turret.is_static:
@@ -3719,6 +3749,7 @@ class Unit:
 		else:
 			self.health -= amount
 		if not self.id == 9:
+			game.hurt_sound.play()
 			blood_master.spawn_cluster(self.unit_rect.center, self.friendly, (200,0,0), (8,8), True, 20)
 		else:
 			blood_master.spawn_cluster(self.unit_rect.center, self.friendly, (249,233,9), (4,4), False, 10)
