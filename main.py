@@ -138,6 +138,8 @@ class Game:
 		self.friendly_turrets = []
 		self.enemy_turrets = []
 
+		self.static_turrets = []
+
 		# variables determening if turret slot is taken
 		# friendly:
 		self.friendly_slots_free = {
@@ -2209,6 +2211,9 @@ class Turret:
 			self.animation_timer = 0
 			self.animation_timer_goal = 60/self.frames
 
+		if self.is_static:
+			self.target = 0
+
 
 		if self.id == 1:
 			self.frame1_surf = game.turret_1_sheet.get_image(0, (32,32), (1,0,0), 2)
@@ -2419,6 +2424,18 @@ class Turret:
 
 
 	
+	def get_num_of_static_turrets(self):
+		for turret in game.friendly_turrets:
+			if turret.is_static:
+				game.static_turrets.append(turret)
+				turret.target = game.static_turrets.index(turret)
+
+
+
+
+
+
+
 	def attack_static(self):
 		for turret in game.friendly_turrets:
 			if turret.is_static and len(turret.units_in_range) > 0:
@@ -2431,9 +2448,20 @@ class Turret:
 					turret.drawing_line = False
 					turret.shoottimer = 0
 					if turret.units_in_range[0].moving:
-						projectile = Projectile((turret.units_in_range[0].unit_rect.center[0] - unit.movement_speed* 240 + random.randint(-20,20), -32 - random.randint(1,32)), (0,1), 0, turret.id, True)
+						if len(turret.units_in_range) == 1:
+							projectile = Projectile((turret.units_in_range[0].unit_rect.center[0] - unit.movement_speed* 240 + random.randint(-20,20), -32 - random.randint(1,32)), (0,1), 0, turret.id, True)
+						elif len(turret.units_in_range) == 2 and len(game.static_turrets) == 2:
+							projectile = Projectile((turret.units_in_range[0 + turret.target].unit_rect.center[0] - unit.movement_speed* 240 + random.randint(-20,20), -32 - random.randint(1,32)), (0,1), 0, turret.id, True)
+						elif len(turret.units_in_range) >= 3:
+							projectile = Projectile((turret.units_in_range[0 + turret.target].unit_rect.center[0] - unit.movement_speed* 240 + random.randint(-20,20), -32 - random.randint(1,32)), (0,1), 0, turret.id, True)
 					else:
-						projectile = Projectile((turret.units_in_range[0].unit_rect.center[0] - 180 + random.randint(-20,20), -32 - random.randint(1,32)), (0,0), 0, turret.id, True)
+						if len(turret.units_in_range) == 1:
+							projectile = Projectile((turret.units_in_range[0].unit_rect.center[0] - 180 + random.randint(-20,20), -32 - random.randint(1,32)), (0,0), 0, turret.id, True)
+						elif len(turret.units_in_range) == 2 and len(game.static_turrets) == 2:
+							projectile = Projectile((turret.units_in_range[0].unit_rect.center[0] - 180 + random.randint(-20,20), -32 - random.randint(1,32)), (0,0), 0, turret.id, True)
+						elif len(turret.units_in_range) >= 3:
+							projectile = Projectile((turret.units_in_range[0].unit_rect.center[0] - 180 + random.randint(-20,20), -32 - random.randint(1,32)), (0,0), 0, turret.id, True)
+
 					turret.projectiles.append(projectile)
 
 		for turret in game.enemy_turrets:
@@ -2656,6 +2684,7 @@ class Turret:
 		self.update_animation_state()
 		self.shoot_enemy()
 		self.attack_catapult()
+		self.get_num_of_static_turrets()
 		self.attack_static()
 
 
@@ -2863,7 +2892,7 @@ class Unit:
 		if self.has_weapon:
 			self.weapon_rotation = 0
 			self.idle_swinging_direction = 0
-		self.movement_speed = 4
+		self.movement_speed = 1
 		self.fall_speed = 0
 		self.ranged = unit_info.is_unit_ranged[self.id]
 		self.cost = unit_info.unit_cost[self.id]
